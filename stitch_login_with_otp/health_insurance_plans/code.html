@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Health Insurance Plans</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center justify-between p-4 h-16 max-w-md mx-auto">
+<button class="flex items-center justify-center p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-800 dark:text-slate-200">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Health Insurance</h1>
+<button class="flex items-center gap-1 px-3 py-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
+<span class="material-symbols-outlined text-primary text-[18px]">support_agent</span>
+<span class="text-primary text-xs font-bold uppercase tracking-wider">Claims</span>
+</button>
+</div>
+</header>
+<main class="max-w-md mx-auto pb-24">
+<!-- Tabs Section -->
+<div class="px-4 py-4">
+<div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+<button class="flex-1 py-2 text-sm font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white transition-all">Individual</button>
+<button class="flex-1 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Family</button>
+<button class="flex-1 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Senior Citizen</button>
+</div>
+</div>
+<!-- Featured Plans Slider -->
+<section class="mt-2">
+<div class="flex items-center justify-between px-4 mb-4">
+<h2 class="text-xl font-extrabold text-slate-900 dark:text-white">Premium Plans</h2>
+<a class="text-primary text-sm font-bold" href="#">View All</a>
+</div>
+<div class="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar">
+<!-- Card 1 -->
+<div class="min-w-[280px] bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="w-full h-32 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 mb-4 flex items-center justify-center overflow-hidden">
+<div class="w-full h-full bg-center bg-cover" data-alt="Healthy person jogging in a park" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCc59tUyrPiyraNCFu9qcHQPDGu2bnp1iWfT4X00NEBJSKdfSxdlGHv1nUf9BevqIT6OfHp7pkws5cKr2hq3rq0PxRm-RcFwazbdzPTfnc6SduULyylqBgyj9bbqOueOA8wL-rj5PqmUz4q9bZXZDPfbvyk6WKGJ5P8TZht6CRIke55Xqeq9fRYSPyiK5YUuCx9IZ3WkXARw-369NFdh5b326tGRbFc-RIueGXAG00_qgU_uuBSaUrm9v8AupmlDcfBCYfx6wBWQw');"></div>
+</div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">Popular</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white leading-tight">Elite Personal</h3>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-slate-400 dark:text-slate-500 line-through">₹750/mo</p>
+<p class="text-lg font-extrabold text-primary leading-none">₹599<span class="text-xs font-normal text-slate-500">/mo</span></p>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Comprehensive coverage for young professionals with daily health perks.</p>
+<button class="w-full py-2.5 bg-primary text-white font-bold rounded-lg text-sm hover:opacity-90 transition-opacity">Select Plan</button>
+</div>
+<!-- Card 2 -->
+<div class="min-w-[280px] bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="w-full h-32 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 mb-4 flex items-center justify-center overflow-hidden">
+<div class="w-full h-full bg-center bg-cover" data-alt="Family laughing together on a sofa" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnfN_EO4a25yyKXGPOHnsrpwt_sBxbAZ14_eh4N5UUuDEPtyyHTrN7Z0tLgL4ND3d8wJa68TmdFBFpQJPL63SBHifIM0YT8lKZ5Giy_fj1aEmdtBEdPns_pTt7heqonbl606R8bdLT_QwiwqpuT7yP_d7zQH2aOHi686UOmdPDiajOUIlywoJkmp4KmPHDcwylabzvslIOk0phmSabxe7qdoNZa6ZFia1OcbYSyJ-wz8-X-IfNU53AIPB31NYrutgZ2qf8zpzVjA');"></div>
+</div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="text-[10px] font-extrabold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Value</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white leading-tight">Family Floater</h3>
+</div>
+<div class="text-right">
+<p class="text-lg font-extrabold text-primary leading-none">₹1,249<span class="text-xs font-normal text-slate-500">/mo</span></p>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">One single cover for up to 4 family members with maternity benefits.</p>
+<button class="w-full py-2.5 bg-slate-900 dark:bg-slate-700 text-white font-bold rounded-lg text-sm hover:opacity-90 transition-opacity">Select Plan</button>
+</div>
+</div>
+</section>
+<!-- Premium Calculator -->
+<section class="mt-6 px-4">
+<div class="bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 border border-primary/20">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary">calculate</span>
+<h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Premium Calculator</h2>
+</div>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between items-center mb-3">
+<label class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Coverage Amount</label>
+<span class="text-primary text-xl font-extrabold">₹10 Lakhs</span>
+</div>
+<input class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="5" type="range" value="10"/>
+<div class="flex justify-between mt-2">
+<span class="text-[10px] font-bold text-slate-400">₹5L</span>
+<span class="text-[10px] font-bold text-slate-400">₹1Cr</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-primary/20">
+<div>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Estimated Monthly Premium</p>
+<p class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">₹842<span class="text-xs font-normal text-slate-500 ml-1">/ month*</span></p>
+</div>
+<button class="bg-primary text-white p-3 rounded-xl shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Key Benefits -->
+<section class="mt-8 px-4">
+<h2 class="text-xl font-extrabold text-slate-900 dark:text-white mb-4">Plan Benefits</h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary text-[24px]">local_hospital</span>
+</div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1">Cashless Claims</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">12,000+ Network Hospitals</p>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary text-[24px]">workspace_premium</span>
+</div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1">No Claim Bonus</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">Up to 150% SI bonus</p>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary text-[24px]">eco</span>
+</div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1">AYUSH Cover</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">Ayurveda &amp; Homeopathy</p>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-primary text-[24px]">timer</span>
+</div>
+<p class="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1">Quick Assist</p>
+<p class="text-[10px] text-slate-500 dark:text-slate-400">30 min claim response</p>
+</div>
+</div>
+</section>
+<!-- Help Banner -->
+<section class="mt-8 px-4">
+<div class="relative overflow-hidden bg-slate-900 dark:bg-slate-950 rounded-2xl p-6 text-white">
+<div class="relative z-10">
+<h3 class="text-lg font-bold mb-1">Confused about plans?</h3>
+<p class="text-slate-400 text-xs mb-4">Talk to our certified insurance experts for free guidance.</p>
+<button class="bg-white text-slate-900 px-6 py-2 rounded-lg text-sm font-bold hover:bg-slate-100 transition-colors">Call Expert</button>
+</div>
+<!-- Abstract visual element -->
+<div class="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl"></div>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
+<span class="material-symbols-outlined text-[80px]">headset_mic</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Bottom CTA -->
+<div class="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 p-4 z-50">
+<div class="max-w-md mx-auto flex gap-3">
+<button class="flex-1 py-4 bg-primary text-white font-extrabold rounded-xl shadow-lg shadow-primary/25 hover:bg-opacity-90 transition-all active:scale-[0.98]">
+                Get A Quote
+            </button>
+</div>
+</div>
+</body></html>

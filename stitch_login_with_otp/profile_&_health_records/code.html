@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile &amp; Health Records</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .silver-badge-gradient {
+            background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d1b19] dark:text-white antialiased font-display">
+<!-- Main Container (iOS Phone Form Factor) -->
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden max-w-[430px] mx-auto bg-white dark:bg-background-dark shadow-2xl">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-50 flex items-center bg-white/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-[#cfe7e3] dark:border-white/10">
+<div class="flex items-center gap-3">
+<button class="text-[#0d1b19] dark:text-white p-1">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios</span>
+</button>
+<h2 class="text-[#0d1b19] dark:text-white text-lg font-bold leading-tight tracking-tight">Profile &amp; Records</h2>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-2 text-[#0d1b19] dark:text-white">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+<!-- Profile Header Section -->
+<div class="flex p-6 flex-col items-center bg-gradient-to-b from-primary/5 to-transparent">
+<div class="relative mb-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full border-4 border-white dark:border-background-dark shadow-lg h-28 w-28" data-alt="Professional headshot of an Indian male user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDkpez7e2kSEq-iE6mB3Ee0AC35IKc3zzQLGdHVWZ968Mz4WgtD8UYwC32jihyhxj7_vHQp_Dp5uFTY45B5izk2R2radh16urBduzZ-4SldySevM25SIZQmT2-0QedOlWc8hZrDB8B6FJ1g6maIZ9NQ-Db0eUJU2oi2rbE0wL_E6saXVupWD6MfGZmvnUYaRZdJBFIkuP5diT8CHMdJ2efHyhuymIgVCLmRG4PxmtTjnRkKDohyK7iTaXHKxvS6tsMYtfhkDtVnsg");'>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full border-2 border-white dark:border-background-dark shadow-sm">
+<span class="material-symbols-outlined text-[16px] block">edit</span>
+</div>
+</div>
+<div class="flex flex-col items-center text-center">
+<div class="flex items-center gap-2 mb-1">
+<p class="text-[#0d1b19] dark:text-white text-2xl font-extrabold tracking-tight">Rajesh Kumar</p>
+<span class="material-symbols-outlined text-primary fill-1">verified</span>
+</div>
+<div class="flex items-center gap-3 mb-4">
+<span class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100 dark:border-red-800">
+                        O+ Positive
+                    </span>
+<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">workspace_premium</span>
+                        Silver Member
+                    </span>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-xl h-11 px-8 bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform w-full">
+<span>Complete Medical Bio</span>
+</button>
+</div>
+</div>
+<!-- Health Vitals Grid -->
+<div class="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar">
+<div class="flex min-w-[110px] flex-1 flex-col items-center gap-1 rounded-xl p-3 bg-background-light dark:bg-white/5 border border-[#cfe7e3] dark:border-white/10">
+<p class="text-[#4c9a8d] dark:text-primary/70 text-[11px] font-bold uppercase tracking-wider">Height</p>
+<p class="text-[#0d1b19] dark:text-white text-lg font-bold">178 <span class="text-xs font-normal">cm</span></p>
+</div>
+<div class="flex min-w-[110px] flex-1 flex-col items-center gap-1 rounded-xl p-3 bg-background-light dark:bg-white/5 border border-[#cfe7e3] dark:border-white/10">
+<p class="text-[#4c9a8d] dark:text-primary/70 text-[11px] font-bold uppercase tracking-wider">Weight</p>
+<p class="text-[#0d1b19] dark:text-white text-lg font-bold">72 <span class="text-xs font-normal">kg</span></p>
+</div>
+<div class="flex min-w-[110px] flex-1 flex-col items-center gap-1 rounded-xl p-3 bg-background-light dark:bg-white/5 border border-[#cfe7e3] dark:border-white/10">
+<p class="text-[#4c9a8d] dark:text-primary/70 text-[11px] font-bold uppercase tracking-wider">Age</p>
+<p class="text-[#0d1b19] dark:text-white text-lg font-bold">34 <span class="text-xs font-normal">yrs</span></p>
+</div>
+</div>
+<!-- Digital Health Vault -->
+<div class="px-4 pt-6 pb-2 flex justify-between items-end">
+<h3 class="text-[#0d1b19] dark:text-white text-lg font-bold leading-tight">Digital Health Vault</h3>
+<button class="text-primary text-sm font-bold">View All</button>
+</div>
+<div class="grid grid-cols-2 gap-3 p-4">
+<!-- Records Card -->
+<div class="flex flex-col gap-3 rounded-xl border border-[#cfe7e3] dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm active:bg-primary/5 transition-colors">
+<div class="flex items-center justify-between">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">folder_open</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-lg">chevron_right</span>
+</div>
+<div>
+<h2 class="text-[#0d1b19] dark:text-white text-[15px] font-bold">Health Records</h2>
+<p class="text-[#4c9a8d] dark:text-slate-400 text-xs mt-0.5">12 Documents</p>
+</div>
+</div>
+<!-- Prescriptions Card -->
+<div class="flex flex-col gap-3 rounded-xl border border-[#cfe7e3] dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm active:bg-primary/5 transition-colors">
+<div class="flex items-center justify-between">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">prescriptions</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-lg">chevron_right</span>
+</div>
+<div>
+<h2 class="text-[#0d1b19] dark:text-white text-[15px] font-bold">Prescriptions</h2>
+<p class="text-[#4c9a8d] dark:text-slate-400 text-xs mt-0.5">8 Files</p>
+</div>
+</div>
+<!-- Vaccinations Card -->
+<div class="flex flex-col gap-3 rounded-xl border border-[#cfe7e3] dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm active:bg-primary/5 transition-colors">
+<div class="flex items-center justify-between">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">vaccines</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-lg">chevron_right</span>
+</div>
+<div>
+<h2 class="text-[#0d1b19] dark:text-white text-[15px] font-bold">Vaccination Logs</h2>
+<p class="text-green-500 text-xs mt-0.5 font-medium">Fully Vaccinated</p>
+</div>
+</div>
+<!-- Lab Reports Card -->
+<div class="flex flex-col gap-3 rounded-xl border border-[#cfe7e3] dark:border-white/10 bg-white dark:bg-white/5 p-4 shadow-sm active:bg-primary/5 transition-colors">
+<div class="flex items-center justify-between">
+<div class="bg-primary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">biotech</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-lg">chevron_right</span>
+</div>
+<div>
+<h2 class="text-[#0d1b19] dark:text-white text-[15px] font-bold">Lab Reports</h2>
+<p class="text-[#4c9a8d] dark:text-slate-400 text-xs mt-0.5">5 Recent Tests</p>
+</div>
+</div>
+</div>
+<!-- Manage Family Section -->
+<div class="px-4 pt-4 pb-2">
+<h3 class="text-[#0d1b19] dark:text-white text-lg font-bold leading-tight">Manage Family</h3>
+<p class="text-[#4c9a8d] text-sm mb-4">Manage medical records for your dependents</p>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<!-- User (Self) -->
+<div class="flex flex-col items-center gap-2 min-w-[70px]">
+<div class="size-14 rounded-full border-2 border-primary p-0.5">
+<div class="w-full h-full rounded-full bg-cover bg-center" data-alt="Avatar of Rajesh Kumar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDouuKsevnK-2KIioxX1yFWjGYHFHRpE4BrHEhmAjfWlTB2f5SjZ4omFxb5m0P0eS3GC3JT3n4oXsi9Mpr8Bud179Ve5D3NU7VrSkmdnMMau8YFYOoSTdvjfFfssz0-O64bOVETLcZe9Z-VFhpaqfIlupcjyXATxSNyry-1k0SNex894t75zrqzYJYdnOzPk_jUiNeTmOmEIBN4w8o0kcU4VMsiMK_I61P3_MlT2Ipecp73oijacuXJGwcQ3D221PKKm6VEmLAQew');"></div>
+</div>
+<p class="text-xs font-bold text-primary">Me</p>
+</div>
+<!-- Dependent 1 -->
+<div class="flex flex-col items-center gap-2 min-w-[70px]">
+<div class="size-14 rounded-full border-2 border-transparent hover:border-primary/30 p-0.5 transition-colors">
+<div class="w-full h-full rounded-full bg-cover bg-center" data-alt="Avatar of Spouse Priya" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD7HXm6XodLeUPejIAaClgtpo_r3D5gK8vp6oMVzRmGqKyWNFFn3szN8O-RZXFMLG8f3iydxtlYkIwJb-Q0gHZB8G2nDf7MTzQUqf5HhSI7T-oixiCyBRoKQC9Du12DGPplZ7Wh7C6b9QMmeq1-aXAgom0vRNy182aGy5J5z10cAKEArhZsO1cxQsrkOnyqc2TmFzX2NvmXnQq08YtE-8nnKgPnRI9fNRpBAbaGKpWHNQR53aS_jav0eUiGk_mWjBFICgPdcohlJg');"></div>
+</div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Priya</p>
+</div>
+<!-- Dependent 2 -->
+<div class="flex flex-col items-center gap-2 min-w-[70px]">
+<div class="size-14 rounded-full border-2 border-transparent hover:border-primary/30 p-0.5 transition-colors">
+<div class="w-full h-full rounded-full bg-cover bg-center" data-alt="Avatar of Son Aarav" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0d5FNjVB51yJOD8uMeBAXvahddjZwFlMWRnp79Y1JJH75q_fthk2z6nz67Pz9VnIk8ydLvq-MWti9JmVGnOy2d4c7BvOWM3LRXKsG2l_kYOrDNIjONYrgoSea1p3NEl5VOocETn_vG-FQRyctqGZwUy2Fs8Bc9gosmly6KucIGWKNNVTe1aCejuYIX1KX7ZXgT4TFNa2UpTFd3wY92b_6xtZfZjrYPYQhEgVRw22AsWP8hyqzMKhgj472Jr-mTkLenrgeS9ZoUQ');"></div>
+</div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Aarav</p>
+</div>
+<!-- Add Button -->
+<button class="flex flex-col items-center gap-2 min-w-[70px]">
+<div class="size-14 rounded-full border-2 border-dashed border-[#cfe7e3] dark:border-white/20 flex items-center justify-center text-[#4c9a8d] dark:text-slate-400">
+<span class="material-symbols-outlined">add</span>
+</div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Add</p>
+</button>
+</div>
+</div>
+<!-- Additional Actions -->
+<div class="p-4 mt-2 space-y-2 mb-10">
+<div class="flex items-center justify-between p-4 bg-background-light dark:bg-white/5 rounded-xl border border-transparent active:border-primary/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400">health_and_safety</span>
+<span class="text-sm font-semibold">Insurance Details</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-background-light dark:bg-white/5 rounded-xl border border-transparent active:border-primary/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400">emergency</span>
+<span class="text-sm font-semibold">Emergency Contacts</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-transparent active:border-red-200">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-red-400">logout</span>
+<span class="text-sm font-semibold text-red-600 dark:text-red-400">Sign Out</span>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Spacer (iOS Home Indicator) -->
+<div class="h-8 w-full"></div>
+<!-- Navigation Bar -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/90 dark:bg-background-dark/90 backdrop-blur-xl border-t border-[#cfe7e3] dark:border-white/10 px-6 py-3 flex justify-between items-center z-50">
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-[10px] font-bold">Book</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined fill-1">account_circle</span>
+<span class="text-[10px] font-bold">Profile</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="text-[10px] font-bold">Concierge</span>
+</div>
+</div>
+</div>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .fill-1 {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</body></html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Care Subscription Plans - Premium Medical Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0D9488", // Refined Teal
+                        "secondary": "#0284C7", // Medical Blue
+                        "background": "#F8FAFC",
+                        "surface": "#FFFFFF",
+                        "accent-gold": "#B45309",
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    boxShadow: {
+                        "premium": "0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 12px -4px rgba(0, 0, 0, 0.03)",
+                        "soft": "0 2px 8px rgba(0, 0, 0, 0.04)"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: theme('colors.background');
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-slate-900">
+<div class="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto shadow-2xl overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background/90 ios-blur pt-12 pb-4 px-5">
+<div class="flex items-center justify-between mb-2">
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-800">Care Plans</h1>
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</button>
+</div>
+</header>
+<main class="flex-1 px-5 py-2 space-y-6 pb-24">
+<div class="space-y-1">
+<h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Choose your care level</h2>
+<p class="text-sm text-slate-500 font-medium">Tailored medical support for you and your family.</p>
+</div>
+<div class="space-y-4">
+<div class="relative overflow-hidden rounded-3xl bg-white p-6 shadow-premium border border-slate-100/50">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Essential Care</span>
+<h3 class="text-xl font-bold text-slate-800">Basic Plus</h3>
+</div>
+<div class="text-right">
+<span class="text-2xl font-extrabold text-slate-900">₹999</span>
+<span class="block text-[10px] font-bold text-slate-400">PER MONTH</span>
+</div>
+</div>
+<ul class="space-y-3 mb-6">
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-600">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        2 Home Nurse Visits / Mo
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-600">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        Unlimited Tele-consultations
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-600">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        15% Discount on Lab Tests
+                    </li>
+</ul>
+<button class="w-full h-12 rounded-xl border border-slate-200 bg-white text-slate-700 text-[14px] font-bold transition-all active:scale-95">
+                    Select Plan
+                </button>
+</div>
+<div class="relative overflow-hidden rounded-3xl bg-white p-6 shadow-xl border-2 border-primary ring-4 ring-primary/5">
+<div class="absolute top-0 right-0 bg-primary px-4 py-1.5 rounded-bl-2xl">
+<span class="text-[10px] font-extrabold text-white uppercase tracking-widest">Recommended</span>
+</div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-primary">Priority Care</span>
+<h3 class="text-xl font-bold text-slate-800">Premium Pro</h3>
+</div>
+<div class="text-right">
+<span class="text-2xl font-extrabold text-slate-900">₹2,499</span>
+<span class="block text-[10px] font-bold text-slate-400">PER MONTH</span>
+</div>
+</div>
+<ul class="space-y-3 mb-6">
+<li class="flex items-center gap-3 text-[13px] font-semibold text-slate-700">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Daily Nursing Support (12h)
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-semibold text-slate-700">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Dedicated Care Manager
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-semibold text-slate-700">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Full Body Checkups (Quarterly)
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-semibold text-slate-700">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Priority Emergency Response
+                    </li>
+</ul>
+<button class="w-full h-12 rounded-xl bg-primary text-white text-[14px] font-bold shadow-lg shadow-primary/20 transition-all active:scale-95">
+                    Get Premium Access
+                </button>
+</div>
+<div class="relative overflow-hidden rounded-3xl bg-slate-900 p-6 shadow-premium border border-slate-800">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-teal-400">VIP Medical</span>
+<h3 class="text-xl font-bold text-white">Elite Care</h3>
+</div>
+<div class="text-right">
+<span class="text-2xl font-extrabold text-white">₹5,999</span>
+<span class="block text-[10px] font-bold text-slate-500">PER MONTH</span>
+</div>
+</div>
+<ul class="space-y-3 mb-6">
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        24/7 At-home ICU Setup
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        Doctor-on-call 24/7
+                    </li>
+<li class="flex items-center gap-3 text-[13px] font-medium text-slate-300">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                        Home Pharmacy Delivery (Free)
+                    </li>
+</ul>
+<button class="w-full h-12 rounded-xl bg-white/10 text-white border border-white/20 text-[14px] font-bold backdrop-blur-sm transition-all active:scale-95">
+                    Contact for Elite
+                </button>
+</div>
+</div>
+<div class="rounded-2xl bg-primary/5 border border-primary/10 p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">support_agent</span>
+</div>
+<div>
+<p class="text-[13px] font-bold text-slate-800">Need help choosing?</p>
+<p class="text-[11px] text-slate-500">Speak to a health consultant</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">chevron_right</span>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex h-20 items-center justify-around bg-white/90 ios-blur border-t border-slate-100 px-6 pb-4 max-w-[430px] mx-auto">
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Bookings</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">card_membership</span>
+<span class="text-[10px] font-black uppercase tracking-tighter">Plans</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</div>
+</nav>
+</div>
+
+</body></html>

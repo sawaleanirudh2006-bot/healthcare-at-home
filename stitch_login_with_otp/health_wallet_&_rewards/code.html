@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Health Wallet &amp; Rewards</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .premium-gradient {
+            background: linear-gradient(135deg, #11d4b4 0%, #0d5c63 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d1b19] dark:text-white min-h-screen">
+<div class="max-w-md mx-auto min-h-screen flex flex-col relative bg-background-light dark:bg-background-dark overflow-x-hidden pb-10">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 justify-between bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<div class="cursor-pointer flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[#0d1b19] dark:text-white">arrow_back</span>
+</div>
+<h1 class="text-lg font-bold leading-tight tracking-tight">Health Wallet &amp; Rewards</h1>
+</div>
+<div class="flex items-center">
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[#0d1b19] dark:text-white">help</span>
+</button>
+</div>
+</div>
+<!-- Wallet Balance Card -->
+<div class="px-4 py-2">
+<div class="premium-gradient rounded-xl p-6 shadow-lg shadow-primary/20 relative overflow-hidden flex flex-col gap-4" data-alt="Teal and deep blue premium gradient background">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+<div class="flex justify-between items-start">
+<div>
+<p class="text-white/80 text-sm font-medium">Available Health Credits</p>
+<h2 class="text-white text-4xl font-extrabold mt-1 tracking-tight">₹ 12,450.00</h2>
+</div>
+<div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+<span class="material-symbols-outlined text-white">account_balance_wallet</span>
+</div>
+</div>
+<div class="flex gap-3 mt-2">
+<button class="flex-1 bg-white text-[#0d5c63] py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                        Top Up
+                    </button>
+<button class="flex-1 bg-[#0d5c63]/30 border border-white/20 text-white py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 backdrop-blur-sm">
+<span class="material-symbols-outlined text-sm">receipt_long</span>
+                        Details
+                    </button>
+</div>
+</div>
+</div>
+<!-- Loyalty Tier Section -->
+<div class="px-4 py-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-[#0d1b19] dark:text-white text-lg font-bold">Loyalty Tier</h3>
+<button class="text-primary text-sm font-bold">Benefit Details</button>
+</div>
+<div class="bg-white dark:bg-background-dark/50 p-5 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+<div class="flex items-center gap-4 mb-4">
+<div class="size-14 rounded-full bg-yellow-50 dark:bg-yellow-500/10 flex items-center justify-center border-4 border-yellow-100 dark:border-yellow-500/20">
+<span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-3xl">workspace_premium</span>
+</div>
+<div>
+<h4 class="text-xl font-bold">Gold Member</h4>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Valid until Dec 2024</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-medium">
+<span class="text-gray-600 dark:text-gray-300">Next: Platinum Status</span>
+<span class="text-primary">250 points to go</span>
+</div>
+<div class="w-full h-2.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 75%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Transactions -->
+<div class="px-4 py-2">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-[#0d1b19] dark:text-white text-lg font-bold">Recent Transactions</h3>
+<span class="material-symbols-outlined text-gray-400">history</span>
+</div>
+<div class="space-y-1">
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-background-dark/30 rounded-lg mb-2 border border-transparent hover:border-gray-100 dark:hover:border-white/5 transition-all">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400">medical_services</span>
+</div>
+<div>
+<p class="font-bold text-sm">Full Body Checkup</p>
+<p class="text-xs text-gray-500">24 Oct, 2023 • Earned</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-green-600 dark:text-green-400 font-bold text-sm">+500 pts</p>
+</div>
+</div>
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-background-dark/30 rounded-lg mb-2 border border-transparent hover:border-gray-100 dark:hover:border-white/5 transition-all">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">medication</span>
+</div>
+<div>
+<p class="font-bold text-sm">Pharmacy Order</p>
+<p class="text-xs text-gray-500">18 Oct, 2023 • Redeemed</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-gray-400 dark:text-gray-500 font-bold text-sm">-200 pts</p>
+</div>
+</div>
+<!-- Transaction Item -->
+<div class="flex items-center justify-between p-4 bg-white dark:bg-background-dark/30 rounded-lg mb-2 border border-transparent hover:border-gray-100 dark:hover:border-white/5 transition-all">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400">video_chat</span>
+</div>
+<div>
+<p class="font-bold text-sm">Doctor Consultation</p>
+<p class="text-xs text-gray-500">12 Oct, 2023 • Earned</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-green-600 dark:text-green-400 font-bold text-sm">+150 pts</p>
+</div>
+</div>
+</div>
+<button class="w-full text-center py-3 text-sm font-semibold text-gray-500 dark:text-gray-400 border-t border-dashed border-gray-200 dark:border-white/10 mt-2">
+                View All Transactions
+            </button>
+</div>
+<!-- Exclusive Offers Grid -->
+<div class="px-4 py-6">
+<h3 class="text-[#0d1b19] dark:text-white text-lg font-bold mb-4">Exclusive Offers</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Offer Card 1 -->
+<div class="bg-white dark:bg-background-dark/50 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/5 group">
+<div class="h-24 bg-gray-100 dark:bg-white/5 relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl">lab_research</span>
+</div>
+<div class="absolute top-2 right-2 bg-white/90 dark:bg-background-dark/80 px-2 py-1 rounded text-[10px] font-bold text-primary">
+                            SAVE 15%
+                        </div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-sm leading-tight mb-1">15% Off Lab Tests</h4>
+<p class="text-xs text-gray-500 mb-3">Redeem for 450 pts</p>
+<button class="w-full py-2 bg-primary/10 hover:bg-primary transition-colors group-hover:bg-primary text-primary group-hover:text-white text-xs font-bold rounded-lg">
+                            Claim Now
+                        </button>
+</div>
+</div>
+<!-- Offer Card 2 -->
+<div class="bg-white dark:bg-background-dark/50 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/5 group">
+<div class="h-24 bg-gray-100 dark:bg-white/5 relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl">dentistry</span>
+</div>
+<div class="absolute top-2 right-2 bg-white/90 dark:bg-background-dark/80 px-2 py-1 rounded text-[10px] font-bold text-primary uppercase">
+                            Free
+                        </div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-sm leading-tight mb-1">Free Dental Scan</h4>
+<p class="text-xs text-gray-500 mb-3">Redeem for 800 pts</p>
+<button class="w-full py-2 bg-primary/10 hover:bg-primary transition-colors group-hover:bg-primary text-primary group-hover:text-white text-xs font-bold rounded-lg">
+                            Claim Now
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation Bar Spacer -->
+<div class="h-16"></div>
+<!-- iOS Bottom Nav Placeholder -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-t border-gray-100 dark:border-white/5 flex items-center justify-around p-3 z-20">
+<div class="flex flex-col items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined">book_online</span>
+<span class="text-[10px] font-medium">Bookings</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">wallet</span>
+<span class="text-[10px] font-bold">Wallet</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-400">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</div>
+</div>
+</div>
+</body></html>

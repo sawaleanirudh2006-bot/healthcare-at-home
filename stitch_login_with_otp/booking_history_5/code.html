@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nurse Task Overview - Premium Medical Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0D9488", // Refined Teal
+                        "secondary": "#0284C7", // Medical Blue
+                        "background": "#F8FAFC",
+                        "surface": "#FFFFFF",
+                        "accent-red": "#EF4444",
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    boxShadow: {
+                        "premium": "0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 12px -4px rgba(0, 0, 0, 0.03)",
+                        "soft": "0 2px 8px rgba(0, 0, 0, 0.04)"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: theme('colors.background');
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-slate-900">
+<div class="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto shadow-2xl overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background/90 ios-blur pt-12 pb-4 px-5">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="size-10 overflow-hidden rounded-full border-2 border-primary/20">
+<img alt="Nurse Profile" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyrzjc7szRaU0qAkw34Yfb2bcsMrE4d9PwdN0v8_shKe-h-6dDk4OaHShF4LhxLoOqw6cL97EUkV-Bt8u3jv1qBKPksio1Tm6WVFl_Fp1kxWQ-yIgX6SSFzvCOP3xYOdoKeQnDRchUUEi1iadsOr15sOvdfWvxPcLzifsgqwXdCqwtVcreoH6f20rQLa3aqa2-l1Vw4H8qPItW_5rUK2oMdmG6B-L8i5n0wmUX5B88wRFTyUyjoBdZstIg4v8EIYikoznxHMO2HQ"/>
+</div>
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Welcome Back</p>
+<h2 class="text-sm font-bold text-slate-800">Nurse Priya Sharma</h2>
+</div>
+</div>
+<div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+<span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">On Duty</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-6">
+<h1 class="text-xl font-extrabold tracking-tight text-slate-900">Task Overview</h1>
+<div class="flex gap-2">
+<button class="flex size-9 items-center justify-center rounded-xl bg-white shadow-soft text-slate-600">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+</button>
+<button class="flex size-9 items-center justify-center rounded-xl bg-white shadow-soft text-slate-600">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-1 px-5 py-2 space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Today's Schedule</h3>
+<span class="text-[11px] font-bold text-primary px-2 py-1 bg-primary/5 rounded-md">Oct 26, 2023</span>
+</div>
+<div class="space-y-4">
+<div class="relative overflow-hidden rounded-3xl bg-white p-5 shadow-premium border border-slate-100/50">
+<div class="absolute top-0 right-0 p-4">
+<span class="inline-flex items-center rounded-full bg-orange-50 px-2 py-1 text-[10px] font-bold text-orange-600 uppercase border border-orange-100">Upcoming</span>
+</div>
+<div class="flex flex-col gap-4">
+<div class="flex items-start gap-4">
+<div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-50 border border-slate-100">
+<img alt="Patient" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC16LrS9ErNC57oEF4RwzynVKEKXM2bXG6XlU-2G8gYneKc3pNyTv5QoAH0Aj-3YNQkO--dGHSWjSP-EgOHiu3L3Q-h8IX73kaz3sKbZY8MKYN8LJYH0zgS_s8Lji1He0ET4uqnx4lYEYS5RpFaxmZe_EnAN-0GNd3u9ZIHa8jEIm9A3dDftFugaKCvJLnLJtlcrsWPKCyZt5R-ySzOHEtpJcsnpqVmxNmNHkPKZLTYtqdSIRT9I3w0RTXYBDx2egoevIOMSXWCZA"/>
+</div>
+<div class="flex flex-1 flex-col">
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Post-Op Care</span>
+<h4 class="text-[16px] font-extrabold leading-tight mt-0.5 text-slate-800">Mr. Rajesh Iyer</h4>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
+<p class="text-[12px] font-medium text-slate-500 truncate max-w-[180px]">Block 4, HSR Layout, Bengaluru</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-50">
+<div class="flex items-center gap-2">
+<div class="size-8 rounded-lg bg-primary/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Time Slot</p>
+<p class="text-[12px] font-bold text-slate-700">08:00 AM - 08:00 PM</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-8 rounded-lg bg-secondary/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[18px]">medical_information</span>
+</div>
+<div>
+<p class="text-[9px] font-bold text-slate-400 uppercase">Service ID</p>
+<p class="text-[12px] font-bold text-slate-700">#BK-9021</p>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 flex h-12 items-center justify-center rounded-2xl bg-primary text-white text-[14px] font-bold tracking-wide shadow-lg shadow-primary/20">
+                            Check-in
+                        </button>
+<button class="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 text-slate-600">
+<span class="material-symbols-outlined text-[22px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-3xl bg-white p-5 shadow-premium border border-slate-100/50">
+<div class="flex flex-col gap-4">
+<div class="flex items-start gap-4">
+<div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-50 border border-slate-100">
+<img alt="Patient" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWl2IZlSdn3Mv4BFJrEl3EM2LWujiDxSga5kfu660FojED5oi636O84taXBNDe5nsgUePQVG3t8Fmx_3gMkvMIuAIL_aoTAZ855F5BcItc4TFHSdKrzru5z-JwmisMPnDv0s6pgXNz6PEJFA3VRviE_JtsKDrOXer2Z7wPXhPdjmpsXkdGyYqBqFeKqJh8LTpIIDdv2ytzXwpoWpRNS8mlxWAZlibAiinBaMIAxrFUsr_Z88P6S5-YKYyeCH-ECovRVwtzk4xHGg"/>
+</div>
+<div class="flex flex-1 flex-col">
+<div class="flex justify-between items-center w-full">
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">General Nursing</span>
+<span class="text-[10px] font-bold text-slate-400">#BK-8842</span>
+</div>
+<h4 class="text-[16px] font-extrabold leading-tight mt-0.5 text-slate-800">Mrs. Lakshmi Devi</h4>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
+<p class="text-[12px] font-medium text-slate-500 truncate max-w-[180px]">Indiranagar, 12th Main</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">history_toggle_off</span>
+<span class="text-[13px] font-bold text-slate-600">Starts at 09:30 PM</span>
+</div>
+<button class="text-[12px] font-bold text-primary">View Details</button>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-3xl bg-white p-5 shadow-premium border border-slate-100/50">
+<div class="flex flex-col gap-4">
+<div class="flex items-start gap-4">
+<div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-50 border border-slate-100">
+<img alt="Patient" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDq1voxsft-Gcv3U2CvpoyJf0qovyIJsXwPDZDMYqCeiX-g65lDtdigzh372acFH2nzZe9JB_50k6N_dOYSnjStgbeQiZH1MZiIaEGJj_SwJrzHZ1LDB8AH6DX90WjPBFUj7pAyLN3qABa7FnW6C2q5I39Qf9VBcItVpGOvDwHwDm1VpnGjnLtS0mGOfRIBAoDeGEr5NCOpx0l5Zl6tjsUPJQddeJIgkbQFZaPucL0hNoOZXjTuWR8H97tH9JZs7dBD1CxNsmi0Q"/>
+</div>
+<div class="flex flex-1 flex-col">
+<div class="flex justify-between items-center w-full">
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Physiotherapy Assist</span>
+<span class="text-[10px] font-bold text-slate-400">#BK-8722</span>
+</div>
+<h4 class="text-[16px] font-extrabold leading-tight mt-0.5 text-slate-800">Amit Vikram</h4>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
+<p class="text-[12px] font-medium text-slate-500 truncate max-w-[180px]">Koramangala 4th Block</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-slate-400">history_toggle_off</span>
+<span class="text-[13px] font-bold text-slate-600">Tomorrow, 08:00 AM</span>
+</div>
+<button class="text-[12px] font-bold text-primary">View Details</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-24 right-5 z-40">
+<button class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30">
+<span class="material-symbols-outlined text-[28px]">support_agent</span>
+</button>
+</div>
+<nav class="sticky bottom-0 z-50 flex h-20 items-center justify-around bg-white/95 ios-blur border-t border-slate-100 px-6 pb-4">
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="text-[10px] font-black uppercase tracking-tighter">Tasks</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">history</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">History</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">insights</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Earnings</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</div>
+</nav>
+<div class="h-2 bg-white"></div>
+</div>
+
+</body></html>

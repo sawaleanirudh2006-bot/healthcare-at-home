@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Claims Tracker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<!-- Main Container -->
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-[430px] mx-auto shadow-2xl border-x border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 ios-blur px-4 pt-12 pb-4">
+<div class="flex items-center justify-between">
+<button class="flex h-10 w-10 items-center justify-start text-slate-800 dark:text-white">
+<span class="material-symbols-outlined">arrow_back_ios</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-center flex-1 pr-10">Claims Tracker</h1>
+</div>
+<!-- Segmented Control -->
+<div class="mt-6 flex h-11 w-full items-center justify-center rounded-xl bg-slate-200/50 dark:bg-white/5 p-1">
+<label class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg transition-all has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:checked]:text-primary dark:has-[:checked]:bg-slate-700 text-slate-500 dark:text-slate-400 font-semibold text-sm">
+<span>Active</span>
+<input checked="" class="hidden" name="claim-filter" type="radio" value="active"/>
+</label>
+<label class="flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg transition-all has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:checked]:text-primary dark:has-[:checked]:bg-slate-700 text-slate-500 dark:text-slate-400 font-semibold text-sm">
+<span>Past</span>
+<input class="hidden" name="claim-filter" type="radio" value="past"/>
+</label>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<main class="flex-1 overflow-y-auto px-4 pt-4 pb-32 space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-500">Active Claims (2)</h2>
+<span class="material-symbols-outlined text-slate-400">filter_list</span>
+</div>
+<!-- Active Claim Card 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-slate-800 overflow-hidden">
+<div class="p-4 border-b border-slate-50 dark:border-slate-800">
+<div class="flex justify-between items-start mb-3">
+<div class="px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                            Under Review
+                        </div>
+<p class="text-[10px] text-slate-400 font-medium">SUBMITTED 2 DAYS AGO</p>
+</div>
+<div class="flex gap-4">
+<div class="h-14 w-14 rounded-lg bg-cover bg-center shrink-0 border border-slate-100 dark:border-slate-700" data-alt="Apollo Hospital branding logo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAu2uj6jLoykr8qPL_uPXfdkf4U7f9B0YUuqc8p6I2WDbK3fD7GQGWi4BEZcKUnNYWXSya_FbT8m7W6Jlno39YkeflIqqNvyXzFYcoWWfyw7PL8EQIHSWailHZE8ZV98SR-B-1ZigSgVRxIfXrf4Q54l4T1YvF0ywabS1thCPp_PP1w758aog2rYHSKraCRZTM2da07PYV0_2WYU4dgpZalScRpyhT6nhgGtfBXThfFv4NchcoclpI9Vkye9zc3vzMdCN701WSevA')"></div>
+<div class="flex flex-col justify-center">
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Apollo Hospital, Chennai</h3>
+<p class="text-xs text-slate-500 mt-1">ID: CLM-8823190 • <span class="font-bold text-slate-700 dark:text-slate-300">₹45,000</span></p>
+</div>
+</div>
+</div>
+<!-- Progress Stepper -->
+<div class="p-4 bg-slate-50/50 dark:bg-slate-800/20">
+<div class="relative flex items-center justify-between mb-2">
+<!-- Connecting Lines -->
+<div class="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 dark:bg-slate-700 -translate-y-1/2"></div>
+<div class="absolute top-1/2 left-0 w-[66%] h-0.5 bg-primary -translate-y-1/2"></div>
+<!-- Steps -->
+<div class="relative flex flex-col items-center">
+<div class="h-4 w-4 rounded-full bg-primary flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[10px] text-white font-bold">check</span>
+</div>
+</div>
+<div class="relative flex flex-col items-center">
+<div class="h-4 w-4 rounded-full bg-primary flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-[10px] text-white font-bold">hourglass_empty</span>
+</div>
+</div>
+<div class="relative flex flex-col items-center">
+<div class="h-4 w-4 rounded-full bg-slate-200 dark:bg-slate-700 z-10"></div>
+</div>
+</div>
+<div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+<span class="text-primary">Docs Verified</span>
+<span class="text-primary">Medical Review</span>
+<span>Settlement</span>
+</div>
+<p class="mt-4 text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">info</span>
+                        Medical officer is reviewing the discharge summary.
+                    </p>
+</div>
+</div>
+<!-- Active Claim Card 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-slate-800 overflow-hidden opacity-90">
+<div class="p-4 border-b border-slate-50 dark:border-slate-800">
+<div class="flex justify-between items-start mb-3">
+<div class="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                            Processing
+                        </div>
+<p class="text-[10px] text-slate-400 font-medium">SUBMITTED 1 WEEK AGO</p>
+</div>
+<div class="flex gap-4">
+<div class="h-14 w-14 rounded-lg bg-cover bg-center shrink-0 border border-slate-100 dark:border-slate-700" data-alt="Max Healthcare branding logo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0-fmYSZD52-YiFyBYqcgh3QhMDm6ookCD_oQ0wERbJQI6YDPVzmPJZm6F8wYkB7A_InGMr3DqSKYyQSAgo0-gK-xSjHJNM8hqz7xQqwBX_hbGpbMifLFxoeqd0kdUd2LwrCFzgC6xyQ_gv_qxZnNvG7-xZWgqwxSfz8yKo8FPeuxZn7UvJVmXI2R95SkbeTD8-o_sWEMbyYL6gsiJa9iZYNlkaZD3p1t-u0l9S_Ic02u4TPpSczAaFt6vvXZuIyZlgMxivfPW9g')"></div>
+<div class="flex flex-col justify-center">
+<h3 class="font-bold text-slate-900 dark:text-white leading-tight">Max Healthcare, Delhi</h3>
+<p class="text-xs text-slate-500 mt-1">ID: CLM-9901422 • <span class="font-bold text-slate-700 dark:text-slate-300">₹1,12,500</span></p>
+</div>
+</div>
+</div>
+<!-- Simplified Progress for secondary card -->
+<div class="p-4 bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex justify-between items-center mb-2">
+<p class="text-[11px] font-bold text-slate-500 uppercase">Settlement Progress</p>
+<p class="text-[11px] font-bold text-primary">80%</p>
+</div>
+<div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 80%"></div>
+</div>
+<p class="mt-3 text-[11px] text-slate-500">Next: Bank account credit initiation.</p>
+</div>
+</div>
+<!-- Past Claims Preview Header -->
+<div class="pt-6 flex items-center justify-between">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-500">Recently Settled</h2>
+<button class="text-xs font-bold text-primary uppercase">View All</button>
+</div>
+<!-- Past Claim Card (Settled) -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+<div>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">Fortis Memorial</h3>
+<p class="text-[11px] text-slate-500">Settled on 14 Jan 2024</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 dark:text-white">₹28,400</p>
+<p class="text-[10px] text-emerald-500 font-bold uppercase">Paid Full</p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-400">cancel</span>
+</div>
+<div>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">Manipal Hospital</h3>
+<p class="text-[11px] text-slate-500">Rejected on 02 Jan 2024</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-400">₹12,000</p>
+<p class="text-[10px] text-rose-500 font-bold uppercase">Rejected</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Bottom Action Area -->
+<div class="absolute bottom-0 left-0 w-full p-4 pb-10 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pointer-events-none">
+<button class="pointer-events-auto flex w-full h-14 items-center justify-center gap-2 bg-primary text-white rounded-xl font-bold shadow-[0_8px_20px_rgba(17,212,180,0.3)] hover:scale-[1.02] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add_circle</span>
+                File New Claim
+            </button>
+</div>
+<!-- iOS Home Indicator Notch -->
+<div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
+</div>
+</body></html>

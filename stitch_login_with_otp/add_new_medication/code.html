@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add New Medication</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#11d4b4",
+                "background-light": "#f6f8f8",
+                "background-dark": "#10221f",
+              },
+              fontFamily: {
+                "display": ["Manrope"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen">
+<div class="max-w-[480px] mx-auto bg-white dark:bg-background-dark min-h-screen flex flex-col relative">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center border-b border-gray-100 dark:border-gray-800">
+<button class="text-gray-900 dark:text-white p-2 -ml-2">
+<span class="material-symbols-outlined align-middle">arrow_back_ios</span>
+</button>
+<h1 class="flex-1 text-center text-lg font-bold text-gray-900 dark:text-white pr-8">Add New Medication</h1>
+</header>
+<main class="flex-1 overflow-y-auto pb-32">
+<!-- Section: Medicine Details -->
+<div class="px-5 pt-6">
+<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">Medicine Details</h2>
+<div class="space-y-4">
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Medicine Name</label>
+<input class="w-full h-14 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:text-white placeholder:text-gray-400" placeholder="e.g., Metformin" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Dosage</label>
+<div class="relative">
+<input class="w-full h-14 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all dark:text-white placeholder:text-gray-400" placeholder="e.g., 500" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-500 border-l border-gray-200 dark:border-gray-700 pl-4">
+<span class="text-sm font-medium">mg</span>
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Frequency -->
+<div class="px-5 pt-8">
+<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">Frequency</h2>
+<div class="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
+<button class="shrink-0 px-5 py-3 rounded-full bg-primary text-white font-semibold text-sm ios-shadow">Daily</button>
+<button class="shrink-0 px-5 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm">Twice a day</button>
+<button class="shrink-0 px-5 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm">Weekly</button>
+<button class="shrink-0 px-5 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm">As needed</button>
+</div>
+</div>
+<!-- Section: Time Slots -->
+<div class="px-5 pt-8">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Time Slots</h2>
+<button class="text-primary text-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                        Add Time
+                    </button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 ios-shadow">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="text-xs text-gray-500">Morning Dose</p>
+<p class="text-base font-bold text-gray-900 dark:text-white">08:30 AM</p>
+</div>
+</div>
+<button class="text-gray-400"><span class="material-symbols-outlined">edit</span></button>
+</div>
+<div class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 ios-shadow opacity-60">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="text-xs text-gray-400">Night Dose</p>
+<p class="text-base font-bold text-gray-400">09:00 PM</p>
+</div>
+</div>
+<button class="text-gray-400"><span class="material-symbols-outlined">edit</span></button>
+</div>
+</div>
+</div>
+<!-- Section: Inventory & Refill -->
+<div class="px-5 pt-8">
+<div class="p-5 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/20">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">notifications_active</span>
+<span class="font-bold text-gray-900 dark:text-white">Refill Reminder</span>
+</div>
+<div class="relative inline-block w-12 h-6 transition duration-200 ease-in-out bg-primary rounded-full cursor-pointer">
+<div class="absolute right-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out"></div>
+</div>
+</div>
+<p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Get notified when your medicine stock is running low so you can order in time.</p>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-[10px] font-bold uppercase text-gray-500">Current Stock</label>
+<input class="w-full h-12 bg-white dark:bg-gray-800 border-none rounded-lg text-center font-bold text-gray-900 dark:text-white focus:ring-primary" type="number" value="30"/>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold uppercase text-gray-500">Alert at</label>
+<input class="w-full h-12 bg-white dark:bg-gray-800 border-none rounded-lg text-center font-bold text-gray-900 dark:text-white focus:ring-primary" type="number" value="5"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Decorative Element -->
+<div class="px-5 py-8 flex justify-center">
+<div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center border-4 border-white dark:border-background-dark ios-shadow">
+<span class="material-symbols-outlined text-4xl text-primary">pill</span>
+</div>
+</div>
+</main>
+<!-- Fixed Footer Action -->
+<div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto p-5 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800">
+<button class="w-full h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 active:scale-[0.98]">
+<span class="material-symbols-outlined">save</span>
+                Save Reminder
+            </button>
+<div class="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mt-4 mb-2"></div> <!-- iOS Home Indicator Mockup -->
+</div>
+</div>
+</body></html>

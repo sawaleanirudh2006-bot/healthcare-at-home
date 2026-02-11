@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage Family Members</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d1b19] dark:text-white transition-colors duration-300">
+<!-- iOS Status Bar Simulation -->
+<div class="h-11 w-full bg-background-light dark:bg-background-dark flex items-center justify-between px-6">
+<span class="text-sm font-semibold">9:41</span>
+<div class="flex gap-1.5">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span class="material-symbols-outlined text-sm">battery_full</span>
+</div>
+</div>
+<!-- Main Container -->
+<div class="relative flex flex-col h-[calc(100vh-2.75rem)] w-full max-w-md mx-auto overflow-hidden">
+<!-- Header Section -->
+<header class="flex items-center px-4 py-2 bg-background-light dark:bg-background-dark border-b border-gray-100 dark:border-gray-800">
+<button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+<span class="material-symbols-outlined align-middle">arrow_back_ios</span>
+</button>
+<h1 class="text-lg font-bold flex-1 text-center pr-10">Manage Family Members</h1>
+</header>
+<!-- Scrollable Content -->
+<main class="flex-1 overflow-y-auto px-4 pt-6 pb-24">
+<!-- Account Holder Info (Contextual Header) -->
+<div class="mb-6">
+<p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Primary Account</p>
+<div class="flex items-center gap-4 bg-white dark:bg-[#1a2e2a] p-4 rounded-xl shadow-sm border border-gray-50 dark:border-gray-800">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl border-2 border-primary/20">
+                        AK
+                    </div>
+<div>
+<h3 class="text-base font-bold">Arjun Kapoor</h3>
+<p class="text-sm text-primary font-medium">Self</p>
+</div>
+</div>
+</div>
+<!-- List Title -->
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-base font-bold">Family Group</h2>
+<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">3 Members</span>
+</div>
+<!-- Member List -->
+<div class="space-y-4">
+<!-- Member Card: Father -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#1a2e2a] p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all duration-200">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg bg-center bg-cover overflow-hidden" data-alt="Portrait of an elderly Indian man with a kind smile" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCjkgldi31ZMO9wHlsS2BP6cCl68nv0g10O1sf1scKO5VDQKpCHHjhEQHqIGlrOPkLaXuo8GMAM-pHYI15eRGWY0_7gtECk45wEOf6xDvgBBTZFA12i8FouMJTDxn2YFyKeqODeD7fqR6KKv-EagvdC9GY4uf3GWS8Ob-bEedaAFk6sPzk0ZFya-2L3UvJ9sPG-aGuAM1Ysf1CKU6DzDjkzg-zRsFKBp9ORYZ-VyNdj1dMjbLMs4fZIhYh5KT0ivNdChj4kv9lmhg');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d1b19] dark:text-white text-base font-bold leading-tight">Rajesh Khanna</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Father</p>
+</div>
+</div>
+<button class="flex items-center gap-1 text-primary text-sm font-bold hover:underline">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Member Card: Spouse -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#1a2e2a] p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all duration-200">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg bg-center bg-cover overflow-hidden" data-alt="Modern professional Indian woman portrait" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAxi619jzopjM68UNu6vfJqcWqwPpGEFfIXXv0jYk3P3Jr4tNGfgsej_oz25iIMt-kZLELivHyI3uvlPYsIhCCMtLm-pAtBlIRuFKuwfI1ZFvwJnM2Lk47VpoYstH9TIg6ZYQQV1gtYuHUubF-bcsFlU_lCIukpXuN5zwMU7_jfClNduiYKnpf5vo4HI0WaXOHxTR9k0fJNG_F9e2sfsSCErbdM4kAN1V-6o-tx00Wj1oFAJnDAxD_FcqBXZY4-hTmkKwIAjYIghQ');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d1b19] dark:text-white text-base font-bold leading-tight">Priya Khanna</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Spouse</p>
+</div>
+</div>
+<button class="flex items-center gap-1 text-primary text-sm font-bold hover:underline">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Member Card: Son -->
+<div class="group flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#1a2e2a] p-4 shadow-sm border border-transparent hover:border-primary/30 transition-all duration-200">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-lg bg-center bg-cover overflow-hidden" data-alt="Happy young Indian boy smiling" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCWlLENULXE_nTKWx1hTIfD7tKgKapDGMM2hzDzA4oWjuL07jziYFOfw80uILVib2q0Fm1_UuwKTK4tHRiYjkYS75eD8D40s7hx_sxuEXB_1mCfw_8xm5RkAKaE7sWgI0ceGOqIilW4Vyqg4NCPwPTbi23ukyvvH4oFB4CM4Ovh7eaJHXDCDzfDdK-qHtbs3V2_LRrBOKtf78EYsk9_p_Gd_WDs2uBgNPA5AwbGfww64LJLJwPItOaxCv9KoH1iM_jTVWG50tnyBA');">
+</div>
+<div class="flex flex-col">
+<p class="text-[#0d1b19] dark:text-white text-base font-bold leading-tight">Aarav Khanna</p>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Son</p>
+</div>
+</div>
+<button class="flex items-center gap-1 text-primary text-sm font-bold hover:underline">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Helper text for large households -->
+<p class="text-center text-xs text-gray-400 dark:text-gray-500 px-8 mt-6">
+                    Add up to 6 family members to manage their health records, book appointments, and receive unified medical updates.
+                </p>
+</div>
+</main>
+<!-- Bottom Fixed Button Area -->
+<div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark">
+<button class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary text-[#0d1b19] h-14 px-6 text-base font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">add</span>
+<span>Add New Family Member</span>
+</button>
+<!-- iOS Home Indicator -->
+<div class="w-32 h-1 bg-gray-300 dark:bg-gray-700 mx-auto mt-6 rounded-full"></div>
+</div>
+</div>
+</body></html>

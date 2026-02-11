@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Secure Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#11d4b4",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#10221f",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ios-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d1b19] dark:text-white antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-md mx-auto bg-white dark:bg-[#10221f]">
+<!-- Header -->
+<div class="flex items-center px-4 pt-12 pb-4 justify-between bg-white dark:bg-[#10221f]">
+<div class="flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Secure Checkout</h2>
+</div>
+<div class="flex-1 overflow-y-auto px-4 pb-32">
+<!-- Selected Service Card -->
+<div class="mt-4 p-4 rounded-xl bg-white dark:bg-[#1a2e2a] ios-shadow border border-gray-100 dark:border-white/5">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-1.5">
+<span class="text-primary text-[10px] font-bold uppercase tracking-wider">Confirmed Service</span>
+<h3 class="text-lg font-bold leading-none">12hr Nurse Shift</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Professional In-Home Care</p>
+<div class="flex items-center gap-2 mt-2">
+<span class="material-symbols-outlined text-sm text-gray-400">calendar_today</span>
+<span class="text-xs text-gray-600 dark:text-gray-300">Oct 24, 2023 • 08:00 AM</span>
+</div>
+</div>
+<div class="size-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+<img alt="Nurse attending a patient" class="w-full h-full object-cover" data-alt="Professional nurse providing medical assistance to elderly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2P3zwWOqiA-1ck2Y2rzBCTbFdaEk-JOCyoa15HsBOsBb3ysHykzO0Zv-E-j_nzLLKX6a60XVSbUFWeZpzrlosTfKYuBDGAHUq2rPqNLg5X7gO-dhNOo8t0a5ejs5J10UdAlbLJ3BQsPn8o8CO07SxOnotYBy4_csJVOzpMOKlMZ3rh0HbOGDr4idbhdiNeeyJSg_88j8Dqc9nmFmnXnlB3NjNfhycN3lYNTdu727U2zDH6BmoDQXj3lUpW67X8vmwwQN9eCKNEg"/>
+</div>
+</div>
+</div>
+<!-- Billing Details -->
+<div class="mt-8">
+<h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 px-1">Bill Summary</h3>
+<div class="space-y-3 px-1">
+<div class="flex justify-between items-center">
+<p class="text-gray-600 dark:text-gray-300">Subtotal</p>
+<p class="font-medium">₹3,814</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-gray-600 dark:text-gray-300">GST (18%)</p>
+<p class="font-medium">₹686</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-gray-600 dark:text-gray-300">Service Fee</p>
+<p class="text-primary font-medium">FREE</p>
+</div>
+<div class="pt-3 border-t border-dashed border-gray-200 dark:border-white/10 flex justify-between items-center">
+<p class="text-base font-bold">Total Payable</p>
+<p class="text-xl font-extrabold text-[#0d1b19] dark:text-white">₹4,500</p>
+</div>
+</div>
+</div>
+<!-- Payment Methods -->
+<div class="mt-10">
+<h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 px-1">Payment Methods</h3>
+<!-- UPI Section -->
+<div class="mb-6">
+<p class="text-xs font-semibold text-gray-500 mb-3 px-1">UPI (Recommended)</p>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-primary bg-primary/5 transition-all">
+<div class="size-10 bg-white rounded-lg flex items-center justify-center mb-2 shadow-sm">
+<span class="material-symbols-outlined text-blue-600">account_balance_wallet</span>
+</div>
+<span class="text-[10px] font-bold">GPay</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a2e2a] hover:border-primary/50 transition-all">
+<div class="size-10 bg-white rounded-lg flex items-center justify-center mb-2 shadow-sm">
+<span class="material-symbols-outlined text-purple-600">payments</span>
+</div>
+<span class="text-[10px] font-bold">PhonePe</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a2e2a] hover:border-primary/50 transition-all">
+<div class="size-10 bg-white rounded-lg flex items-center justify-center mb-2 shadow-sm">
+<span class="material-symbols-outlined text-sky-500">qr_code_2</span>
+</div>
+<span class="text-[10px] font-bold">Other UPI</span>
+</button>
+</div>
+</div>
+<!-- Saved Cards -->
+<div class="space-y-3">
+<p class="text-xs font-semibold text-gray-500 mb-1 px-1">Saved Cards</p>
+<div class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a2e2a] ios-shadow">
+<div class="size-10 rounded-md bg-gray-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-600">credit_card</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold">HDFC Bank •••• 4242</p>
+<p class="text-[10px] text-gray-400">Expires 12/26</p>
+</div>
+<div class="size-5 rounded-full border-2 border-primary flex items-center justify-center">
+<div class="size-2.5 rounded-full bg-primary"></div>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a2e2a]">
+<div class="size-10 rounded-md bg-gray-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-600">add_card</span>
+</div>
+<p class="flex-1 text-sm font-medium">Add New Card</p>
+<span class="material-symbols-outlined text-gray-400">chevron_right</span>
+</div>
+</div>
+<!-- Net Banking -->
+<div class="mt-4 flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a2e2a]">
+<div class="size-10 rounded-md bg-gray-50 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-600">account_balance</span>
+</div>
+<p class="flex-1 text-sm font-medium">Net Banking</p>
+<span class="material-symbols-outlined text-gray-400 text-xl">expand_more</span>
+</div>
+</div>
+<!-- Trust Badge -->
+<div class="mt-12 mb-8 flex flex-col items-center gap-2">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-white/5 rounded-full">
+<span class="material-symbols-outlined text-xs text-gray-500">lock</span>
+<span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">SSL Secured &amp; PCI-DSS Compliant</span>
+</div>
+<p class="text-[11px] text-gray-400 text-center">Your transaction is 100% secure and encrypted</p>
+</div>
+</div>
+<!-- Sticky Bottom Button -->
+<div class="absolute bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-[#10221f]/80 backdrop-blur-md border-t border-gray-100 dark:border-white/5">
+<button class="w-full bg-primary hover:bg-[#0eb89c] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl">shield_with_heart</span>
+                Secure Payment • ₹4,500
+            </button>
+<div class="h-6 flex items-center justify-center mt-2">
+<div class="w-32 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+</div>
+</div>
+</div>
+</body></html>

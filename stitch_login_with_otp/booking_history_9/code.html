@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOS Emergency Help - Premium Medical Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0D9488", // Refined Teal
+                        "secondary": "#0284C7", // Medical Blue
+                        "background": "#F8FAFC",
+                        "surface": "#FFFFFF",
+                        "coral-sos": "#F87171", // Soft coral red
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    boxShadow: {
+                        "premium": "0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 12px -4px rgba(0, 0, 0, 0.03)",
+                        "soft": "0 2px 8px rgba(0, 0, 0, 0.04)",
+                        "sos": "0 0 0 10px rgba(248, 113, 113, 0.1), 0 0 0 25px rgba(248, 113, 113, 0.05)"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: theme('colors.background');
+        }
+        .ios-blur {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sos-active-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-slate-900">
+<div class="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto shadow-2xl overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background/90 ios-blur pt-12 pb-4 px-5">
+<div class="flex items-center justify-between">
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-800">SOS Emergency Help</h1>
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[22px]">info</span>
+</button>
+</div>
+</header>
+<main class="flex-1 px-5 py-6 flex flex-col items-center">
+<div class="text-center mb-10">
+<h2 class="text-xl font-extrabold text-slate-800">Need Immediate Help?</h2>
+<p class="text-sm text-slate-500 mt-2">Hold the button for 3 seconds to notify emergency responders</p>
+</div>
+<div class="relative flex items-center justify-center my-12">
+<div class="absolute inset-0 animate-ping rounded-full bg-coral-sos/10 opacity-75"></div>
+<button class="relative z-10 flex h-48 w-48 flex-col items-center justify-center rounded-full bg-coral-sos text-white shadow-sos active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-[56px] sos-active-fill mb-2">emergency</span>
+<span class="text-3xl font-black tracking-widest">SOS</span>
+</button>
+</div>
+<div class="flex items-center gap-3 rounded-2xl bg-primary/5 px-6 py-4 mb-10 border border-primary/10">
+<span class="material-symbols-outlined text-primary text-[24px]">verified_user</span>
+<p class="text-[13px] font-semibold text-primary leading-tight">Our 24/7 Response Team is ready to assist you instantly.</p>
+</div>
+<div class="w-full space-y-4">
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1">Quick Assistance</h3>
+<div class="grid grid-cols-1 gap-3">
+<div class="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[28px]">ambulance</span>
+</div>
+<div>
+<h4 class="text-[15px] font-bold text-slate-800">Ambulance</h4>
+<p class="text-xs font-medium text-slate-500">Dispatch nearest ICU unit</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-md">
+<span class="material-symbols-outlined text-[20px] sos-active-fill">call</span>
+</button>
+</div>
+<div class="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+<span class="material-symbols-outlined text-[28px]">medical_services</span>
+</div>
+<div>
+<h4 class="text-[15px] font-bold text-slate-800">On-call Doctor</h4>
+<p class="text-xs font-medium text-slate-500">Instant video consultation</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-white shadow-md">
+<span class="material-symbols-outlined text-[20px] sos-active-fill">videocam</span>
+</button>
+</div>
+<div class="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+<span class="material-symbols-outlined text-[28px]">group</span>
+</div>
+<div>
+<h4 class="text-[15px] font-bold text-slate-800">Family &amp; Guardians</h4>
+<p class="text-xs font-medium text-slate-500">Alert your emergency contacts</p>
+</div>
+</div>
+<button class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
+<span class="material-symbols-outlined text-[20px] sos-active-fill">share_location</span>
+</button>
+</div>
+</div>
+</div>
+<div class="h-10"></div>
+</main>
+<nav class="sticky bottom-0 z-50 flex h-20 items-center justify-around bg-white/90 ios-blur border-t border-slate-100 px-6 pb-4">
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Bookings</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-coral-sos">
+<span class="material-symbols-outlined text-[24px] sos-active-fill">emergency</span>
+<span class="text-[10px] font-black uppercase tracking-tighter">SOS</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</div>
+</nav>
+<div class="h-2 bg-white"></div>
+</div>
+
+</body></html>

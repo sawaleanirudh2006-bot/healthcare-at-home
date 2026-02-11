@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Medicine Order - Premium Medical Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0D9488", // Refined Teal
+                        "secondary": "#0284C7", // Medical Blue
+                        "background": "#F8FAFC",
+                        "surface": "#FFFFFF",
+                        "accent-teal-light": "#F0FDFA",
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    boxShadow: {
+                        "premium": "0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 12px -4px rgba(0, 0, 0, 0.03)",
+                        "soft": "0 2px 8px rgba(0, 0, 0, 0.04)"
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    background-color: theme("colors.background")
+    }
+.ios-blur {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px)
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.dashed-border {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCMvbcO_OosGDzgNEJBb6QZznLgKdLsYtqpj_Eb6fqSGAY22FPhEQ-0qlOijvBx8X_HbGqCyClAOdL5RMZmO3AmJkoQE9JBnxnzUm9dt8rRd4Lb4fktEbmp18wJt40qfmSgUyFLBScOydm_gtQCekjyIYP9-3zqzCYfRuKdd62c3pxxKIPN50nAblE5MvHPd4I4Qzje78uFooaZ8zlISKfdXBuVw3dLbalirqE_yhMvAtwAb4FqDac2r8iwsJ3drl8gmLJc7ilxMw);
+    border-radius: 16px
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-slate-900">
+<div class="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto shadow-2xl overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-background/90 ios-blur pt-12 pb-4 px-5">
+<div class="flex items-center justify-between mb-4">
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold tracking-tight text-slate-800">Order Medicines</h1>
+<button class="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700">
+<span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+</button>
+</div>
+<div class="relative mt-2">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full h-12 pl-11 pr-4 rounded-xl border-none bg-white shadow-soft text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400" placeholder="Search medicines, health products..." type="text"/>
+</div>
+</header>
+<main class="flex-1 px-5 pb-32 space-y-8">
+<section>
+<div class="dashed-border bg-accent-teal-light/50 p-6 flex flex-col items-center text-center">
+<div class="size-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-[32px]">upload_file</span>
+</div>
+<h3 class="text-[16px] font-bold text-slate-800 mb-1">Upload Prescription</h3>
+<p class="text-[13px] text-slate-500 max-w-[240px] leading-relaxed mb-4">Upload your prescription and we'll help you find the right medicines</p>
+<button class="px-6 py-2.5 bg-primary text-white rounded-full text-[13px] font-bold shadow-md shadow-primary/20">
+                        Choose File
+                    </button>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[14px] font-bold text-slate-800 uppercase tracking-wide">Shop by Categories</h3>
+<button class="text-primary text-[12px] font-bold uppercase tracking-wide">View All</button>
+</div>
+<div class="grid grid-cols-4 gap-4">
+<div class="flex flex-col items-center gap-2">
+<div class="size-16 rounded-2xl bg-white shadow-soft border border-slate-100 flex items-center justify-center">
+<img alt="Medicine" class="size-10 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6gKfXSwX5KO-eEi_KhJl-vCgEl0dd5l-rIrTPXK76oAKNXEHxiZCX3nonpvJr-XEH-Kg-NDkWVpVn5hCmlUXAyye5KO0Te7rjpxQBqlUAfGjuX7GBieQyKOorvWfxiYwNUcrodAzE94jkhIzGkdORprhlOadYsLhQgjHjcYYVmfyjzvo7UcpgLc5d4XcCgN79RKj2XRubx1jiIJGjQV-Xw2PZNN9J0K_fcJ5Y9Sv_lAjh4Ox4bg-bBWrBe5i-mXya8MSyc4Yt-A"/>
+</div>
+<span class="text-[11px] font-semibold text-slate-600 text-center">General</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="size-16 rounded-2xl bg-white shadow-soft border border-slate-100 flex items-center justify-center">
+<img alt="Protection" class="size-10 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCayFlxG8G8-rWRCgbo4hXDAEkPsAlQ4nT-JJKURbCEekNicgs20kjypJhPc3V8IRlf4TsK4xQJO2fJxboJBBuyL6_rWsyRSUzBroJyVBHrIBZ4H5aFa7-2uzB34Y48K1BEQdvR5OhEnFb53gN-ONHCBuhegpg4iq7jRnjSbRU3jAMUbZuIUKIR5BmlCv4raXjvpkYDjTAVFD_rLYuWkzBkyRdKZaPEZsRwsbsbivCKbiqdjFTzPcvg1O-v7nNIA77cPghPugPQjw"/>
+</div>
+<span class="text-[11px] font-semibold text-slate-600 text-center">Safety</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="size-16 rounded-2xl bg-white shadow-soft border border-slate-100 flex items-center justify-center">
+<img alt="Wellness" class="size-10 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcEby6Z1ZBgxa91nuf57gFcKfWAXPGzhkW6RE6HoNQ_DpHpGhBAskHuBLOjVgCr_2ZOZFc4laJvzfS60xrgvfXirJbxwfBbPwlOWyQ8KHc8JUsOXJEuQr3kEobVO0b4OQD9CE-a0WtGCObB18xdVH0E9OoRILFy1Y-iOjCcoOwxD5rv8eriH6_sT_avEL3cxwhMHKXCvXsYtcdUIpOoxijdLldygtpJhFrmP-IJH-EUpfiXMB_wVp3pdBmxj_9KjjWJajT3DP1Jg"/>
+</div>
+<span class="text-[11px] font-semibold text-slate-600 text-center">Wellness</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="size-16 rounded-2xl bg-white shadow-soft border border-slate-100 flex items-center justify-center">
+<img alt="Baby Care" class="size-10 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBifr5XYJQZ-ZmvGDk0GRLJMiJaZ1j0fSfWhCxQ6cVoKOJU5VL4-8EYAYn6oZXSH_PILixtpgkgAKKgmeiXXNYVCpjVjlwSvEaUqF2oLNrWkkD7MffvXjHGuvtLS2bIrgMO5JHH9bMKc7tayFJwQkO6w0CYmrxUYjv9ZLZzzOwZI0vrjMmO8BQ-8XmrZObhNuQcGrRiaZeCSCTGqkYz_jaN6HH3JAi84J8RRyl7nNFSbUcZPyR95ozcvj_AAC-Pf9kdfmJ4ScuB3w"/>
+</div>
+<span class="text-[11px] font-semibold text-slate-600 text-center">Baby Care</span>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-[14px] font-bold text-slate-800 uppercase tracking-wide">Quick Buy</h3>
+<div class="flex items-center gap-1.5">
+<span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-[10px] font-bold text-primary uppercase">Best Sellers</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50 flex gap-4">
+<div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 flex items-center justify-center p-2">
+<img alt="Medicine" class="h-full w-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbbcTgaR6HfQ1R3kyPJwYdwpWO5HX7C7WBYRuxjsAmB0VuZa1EKDs4xnnzME0jPJvZgbY9MxR8ooj4EE3NwZAqujdooO3vLilZh1a-5aBzb9uGNYi7WoO0u_j0bvxU_8IF3DFPtmOp-xVHpmWEEb-vlwPDbx2VSQFAWp1NW-BgKfbQYGCccxw14dy36Ml6vZ8Jbb8ruJ5phpqVU6qKI7WFi4RKh1qVq3PedL3F-X5M4YQON8A5MDWBO7w5NfxWj-07zVtmT35vqA"/>
+</div>
+<div class="flex flex-1 flex-col justify-between py-0.5">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Healthcare</span>
+<h4 class="text-[15px] font-bold leading-tight mt-0.5 text-slate-800">Advanced Pain Relief Gel</h4>
+<p class="text-[11px] font-medium text-slate-400 mt-1">Tube of 30g • Pharma Brand</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="text-sm font-bold text-slate-900">₹145.00</span>
+<button class="h-8 px-4 rounded-lg bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
+                                    Add
+                                </button>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50 flex gap-4">
+<div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 flex items-center justify-center p-2">
+<img alt="Medicine" class="h-full w-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0ANkPTNV3SZxEWt_Hhqs3d8Z8mLbpHUdbUK6Eikr9eh0WjUdGlWSpHDuMxNRkGfcDJGHIYzMkLKGCO4zL77d5vGlISz4vRjW2V6oW9BK9qXBhX9brdunPlvIupPJ90TZ1EU7K-1g7pIgNa3ILuDshifcemHYTlqkbD9UxLYcPUVwO2b6fLQI2BBsoiwCUZdCHLiFvKqVtAuru-A7hop7xH8h6sUZw3M01FKWm49LaJTi1BkiCxkuM5PfmPMoDcYBDM34aMwbNqQ"/>
+</div>
+<div class="flex flex-1 flex-col justify-between py-0.5">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Vitamins</span>
+<h4 class="text-[15px] font-bold leading-tight mt-0.5 text-slate-800">Multivitamin Daily Support</h4>
+<p class="text-[11px] font-medium text-slate-400 mt-1">Pack of 60 Capsules</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="text-sm font-bold text-slate-900">₹890.00</span>
+<button class="h-8 px-4 rounded-lg bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
+                                    Add
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[60] px-5 pb-8 pt-4 bg-white/90 ios-blur border-t border-slate-100">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex flex-col">
+<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">2 Items in Cart</span>
+<span class="text-lg font-extrabold text-slate-800">₹1,035.00</span>
+</div>
+<div class="flex items-center gap-1 text-emerald-500 text-[12px] font-bold">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                    FREE DELIVERY
+                </div>
+</div>
+<button class="w-full h-14 bg-primary text-white rounded-2xl font-bold tracking-wide flex items-center justify-center gap-3 shadow-lg shadow-primary/20">
+                Proceed to Checkout
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<nav class="hidden sticky bottom-0 z-50 flex h-20 items-center justify-around bg-white/90 ios-blur border-t border-slate-100 px-6 pb-4">
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="text-[10px] font-black uppercase tracking-tighter">Shop</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Bookings</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Profile</span>
+</div>
+</nav>
+</div>
+
+</body></html>
