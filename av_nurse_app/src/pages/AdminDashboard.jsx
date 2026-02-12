@@ -168,9 +168,9 @@ export default function AdminDashboard() {
 
                 {/* Admin Info */}
                 <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl mb-4">
-                    <div className="size-12 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-lg">
+                    <button onClick={() => navigate('/admin/profile')} className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm text-indigo-700 font-bold overflow-hidden cursor-pointer">
                         AD
-                    </div>
+                    </button>
                     <div>
                         <p className="text-sm font-bold text-slate-900">Admin User</p>
                         <p className="text-xs font-medium text-slate-600">System Administrator</p>

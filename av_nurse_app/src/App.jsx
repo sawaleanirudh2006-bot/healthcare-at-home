@@ -30,6 +30,10 @@ import HealthInsurance from './pages/HealthInsurance';
 import TreatmentPackages from './pages/TreatmentPackages';
 import HealthCheckupPackages from './pages/HealthCheckupPackages';
 import EditProfile from './pages/EditProfile';
+import NurseProfile from './pages/NurseProfile';
+import DoctorProfile from './pages/DoctorProfile';
+import AdminProfile from './pages/AdminProfile';
+import Help from './pages/Help';
 import Settings from './pages/Settings';
 import Vitals from './pages/Vitals';
 import HealthRecords from './pages/HealthRecords';
@@ -86,6 +90,10 @@ function App() {
 
         {/* Nurse Portal Routes */}
         <Route path="/nurse/dashboard" element={<NurseDashboard />} />
+        <Route path="/nurse/profile" element={<NurseProfile />} />
+        <Route path="/doctor/profile" element={<DoctorProfile />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
+        <Route path="/help" element={<Help />} />
 
         {/* Admin Portal Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

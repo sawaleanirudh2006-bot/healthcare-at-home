@@ -89,9 +89,12 @@ export default function NurseDashboard() {
 
                 {/* Nurse Info */}
                 <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-xl mb-4">
-                    <div className="size-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-lg">
-                        NS
-                    </div>
+                    <button onClick={() => navigate('/nurse/profile')} className="flex-shrink-0 relative">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+                            <span className="font-bold text-indigo-600">NS</span>
+                        </div>
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                    </button>
                     <div>
                         <p className="text-sm font-bold text-slate-900">Nurse Sarah</p>
                         <p className="text-xs font-medium text-slate-600">Registered Nurse • On Duty</p>

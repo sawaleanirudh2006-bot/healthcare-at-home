@@ -78,9 +78,9 @@ export default function DoctorDashboard() {
 
                 {/* Doctor Info */}
                 <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl mb-4">
-                    <div className="size-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">
+                    <button onClick={() => navigate('/doctor/profile')} className="size-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg hover:opacity-90 transition-opacity">
                         DK
-                    </div>
+                    </button>
                     <div>
                         <p className="text-sm font-bold text-slate-900">Dr. Rajesh Kumar</p>
                         <p className="text-xs font-medium text-slate-600">General Physician</p>
