@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 
-const REWARD_THRESHOLD = 500; // pts for a free Short Visit
+const REWARD_THRESHOLD = 500;
 
 const Profile = () => {
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
+
     const loyaltyPoints = parseInt(localStorage.getItem('loyaltyPoints') || '0', 10);
     const loyaltyReward = localStorage.getItem('loyaltyReward');
     const progressPct = Math.min((loyaltyPoints / REWARD_THRESHOLD) * 100, 100);
 
+    // Load saved photo from localStorage (fallback to default)
+    const [photoUrl, setPhotoUrl] = useState(
+        localStorage.getItem('profilePhoto') ||
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA'
+    );
+    const [uploading, setUploading] = useState(false);
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
@@ -16,6 +25,46 @@ const Profile = () => {
             localStorage.removeItem('userRole');
             localStorage.removeItem('userData');
             navigate('/role-selection');
+        }
+    };
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Show local preview immediately
+        const localUrl = URL.createObjectURL(file);
+        setPhotoUrl(localUrl);
+        setUploading(true);
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id || 'guest';
+
+            const ext = file.name.split('.').pop();
+            const path = `profiles/${userId}/avatar.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('prescriptions') // reuse existing bucket
+                .upload(path, file, { upsert: true });
+
+            if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                    .from('prescriptions')
+                    .getPublicUrl(path);
+                const publicUrl = urlData?.publicUrl;
+                if (publicUrl) {
+                    setPhotoUrl(publicUrl);
+                    localStorage.setItem('profilePhoto', publicUrl);
+                }
+            } else {
+                // Fallback: just keep the local blob URL saved to localStorage
+                localStorage.setItem('profilePhoto', localUrl);
+            }
+        } catch (_) {
+            localStorage.setItem('profilePhoto', localUrl);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -33,19 +82,53 @@ const Profile = () => {
         <div className="bg-background min-h-screen pb-24">
             <header className="pt-14 pb-8 px-6 bg-white border-b border-slate-100 relative">
                 <div className="flex flex-col items-center">
+                    {/* Avatar with upload button */}
                     <div className="relative">
-                        <div className="size-24 rounded-full border-4 border-white shadow-premium overflow-hidden">
-                            <img alt="Profile" className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA" />
+                        <div className="size-24 rounded-full border-4 border-white shadow-premium overflow-hidden bg-slate-100">
+                            <img
+                                alt="Profile"
+                                className="h-full w-full object-cover"
+                                src={photoUrl}
+                            />
+                            {/* uploading overlay */}
+                            {uploading && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            )}
                         </div>
+
+                        {/* Camera / upload button */}
                         <button
-                            onClick={() => navigate('/edit-profile')}
-                            className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-full text-white border-2 border-white cursor-pointer hover:bg-primary/90 transition-colors"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                            className="absolute bottom-0 right-0 p-1.5 bg-primary rounded-full text-white border-2 border-white cursor-pointer hover:bg-primary/90 transition-colors disabled:opacity-50"
+                            title="Change profile photo"
                         >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                            <span className="material-symbols-outlined text-[16px]">photo_camera</span>
                         </button>
+
+                        {/* Hidden file input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handlePhotoChange}
+                        />
                     </div>
+
                     <h1 className="text-xl font-extrabold text-slate-900 mt-4">Arjun Sharma</h1>
                     <p className="text-slate-500 text-sm font-medium">+91 98765 43210</p>
+
+                    {/* Tap to change label */}
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="mt-1 text-xs font-semibold text-primary/70 hover:text-primary transition-colors disabled:opacity-40"
+                    >
+                        {uploading ? 'Uploading…' : 'Tap to change photo'}
+                    </button>
                 </div>
             </header>
 
@@ -57,9 +140,7 @@ const Profile = () => {
                             <p className="text-xs font-bold uppercase tracking-wider opacity-80">CarePoints Balance</p>
                             <p className="text-3xl font-extrabold">{loyaltyPoints.toLocaleString()} <span className="text-base font-semibold opacity-80">pts</span></p>
                         </div>
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">
-                            ⭐
-                        </div>
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">⭐</div>
                     </div>
                     {loyaltyReward ? (
                         <div className="bg-white/20 rounded-xl p-2.5 text-sm font-bold flex items-center gap-2">
@@ -74,6 +155,7 @@ const Profile = () => {
                         </>
                     )}
                 </div>
+
                 <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
                     {menuItems.map((item, index) => (
                         <button
