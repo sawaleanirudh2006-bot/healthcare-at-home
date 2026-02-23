@@ -42,6 +42,8 @@ import RoleSelection from './pages/RoleSelection';
 import { LoginDoctor, LoginPatient, LoginNurse, LoginAdmin } from './pages/Logins';
 import IVFluidServices from './pages/IVFluidServices';
 import DoctorDashboard from './pages/DoctorDashboard';
+import DoctorConsult from './pages/DoctorConsult';
+import IssuePrescription from './pages/IssuePrescription';
 import PrescriptionDetail from './pages/PrescriptionDetail';
 import NurseDashboard from './pages/NurseDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -88,6 +90,8 @@ function App() {
 
           {/* Doctor Portal Routes */}
           <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+          <Route path="/doctor-consult" element={<DoctorConsult />} />
+          <Route path="/doctor/issue-prescription/:consultId" element={<IssuePrescription />} />
           <Route path="/doctor/prescription/:id" element={<PrescriptionDetail />} />
 
           {/* Nurse Portal Routes */}
@@ -101,6 +105,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/nurse/add-notes/:assignmentId" element={<NurseAddNotes />} />
           <Route path="/doctor/add-notes/:prescriptionId" element={<DoctorAddNotes />} />
+          <Route path="/doctor/prescription/:id" element={<PrescriptionDetail />} />
           <Route path="/rate-service" element={<RateService />} />
           <Route path="/emergency" element={<EmergencyBooking />} />
           <Route path="/manage-addresses" element={<ManageAddresses />} />

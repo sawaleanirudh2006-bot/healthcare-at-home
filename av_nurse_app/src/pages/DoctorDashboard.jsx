@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Clock, CheckCircle, XCircle, User, Calendar, Search } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, CheckCircle, XCircle, User, Calendar, Search, Activity, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabaseClient';
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
     const [prescriptions, setPrescriptions] = useState([]);
-    const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
+    const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all, consultations
     const [searchQuery, setSearchQuery] = useState('');
+    const [consultRequests, setConsultRequests] = useState([]);
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
             localStorage.removeItem('userRole');
             localStorage.removeItem('userData');
+            localStorage.removeItem('token');
             navigate('/role-selection');
         }
     };
@@ -41,6 +43,9 @@ export default function DoctorDashboard() {
             }));
 
             setPrescriptions(formattedData);
+
+            // Load consultations from localStorage for demo
+            setConsultRequests(JSON.parse(localStorage.getItem('doctorConsults') || '[]'));
         } catch (error) {
             console.error('Failed to load prescriptions:', error.message);
         }
@@ -81,6 +86,7 @@ export default function DoctorDashboard() {
     const pendingCount = prescriptions.filter(rx => rx.status === 'pending').length;
     const approvedCount = prescriptions.filter(rx => rx.status === 'approved').length;
     const rejectedCount = prescriptions.filter(rx => rx.status === 'rejected').length;
+    const waitingConsults = consultRequests.filter(c => c.status === 'pending').length;
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
@@ -89,9 +95,10 @@ export default function DoctorDashboard() {
                 <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={handleLogout}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all"
+                        className="flex size-10 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all shadow-sm border border-red-100"
+                        title="Logout"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <LogOut className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg font-bold text-slate-900">Doctor Dashboard</h1>
                     <div className="w-10" />
@@ -123,9 +130,9 @@ export default function DoctorDashboard() {
                 {/* Filter Tabs */}
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar">
                     {[
-                        { id: 'pending', label: 'Pending', count: pendingCount },
+                        { id: 'consultations', label: 'Consultations', count: waitingConsults },
+                        { id: 'pending', label: 'Pending Rx', count: pendingCount },
                         { id: 'approved', label: 'Approved', count: approvedCount },
-                        { id: 'rejected', label: 'Rejected', count: rejectedCount },
                         { id: 'all', label: 'All', count: prescriptions.length }
                     ].map(tab => (
                         <button
@@ -138,7 +145,7 @@ export default function DoctorDashboard() {
                                     : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300'
                             )}
                         >
-                            {tab.label} ({tab.count})
+                            {tab.label} {tab.count > 0 && `(${tab.count})`}
                         </button>
                     ))}
                 </div>
@@ -146,7 +153,49 @@ export default function DoctorDashboard() {
 
             {/* Content */}
             <main className="flex-1 px-5 py-6 space-y-4 pb-24">
-                {filteredPrescriptions.length === 0 ? (
+                {filter === 'consultations' ? (
+                    consultRequests.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                            <Activity className="w-12 h-12 mb-3 opacity-50" />
+                            <p className="text-sm font-semibold">No consultation requests</p>
+                        </div>
+                    ) : (
+                        consultRequests.map(consult => (
+                            <div key={consult.id} className="bg-white rounded-2xl p-4 shadow-soft border border-slate-100 group animate-in fade-in">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex size-12 items-center justify-center rounded-xl bg-orange-50 text-orange-500 shrink-0">
+                                        <Activity className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                            <div>
+                                                <h3 className="text-base font-bold text-slate-900 truncate">{consult.userName}</h3>
+                                                <p className="text-xs font-bold text-primary mb-1 uppercase tracking-wider">{consult.mode} CONSULT</p>
+                                            </div>
+                                            <span className={cn(
+                                                "px-2 py-1 rounded-lg text-[10px] font-bold border",
+                                                consult.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                            )}>
+                                                {consult.status.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 font-medium line-clamp-1 mb-3">
+                                            Requested for: {consult.specialty}
+                                        </p>
+                                        {consult.status === 'pending' && (
+                                            <button
+                                                onClick={() => navigate(`/doctor/issue-prescription/${consult.id}`)}
+                                                className="w-full py-2.5 bg-blue-500 text-white rounded-xl text-xs font-bold hover:bg-blue-600 active:scale-95 transition-all shadow-md shadow-blue-200 flex items-center justify-center gap-2"
+                                            >
+                                                Start Consult &amp; Issue Rx
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )
+                ) : filteredPrescriptions.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                         <FileText className="w-12 h-12 mb-3 opacity-50" />
                         <p className="text-sm font-semibold">No {filter !== 'all' ? filter : ''} prescriptions found</p>

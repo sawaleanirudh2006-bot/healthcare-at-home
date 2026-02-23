@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, FileText, User, Calendar, Clock, CheckCircle, XCircle, ZoomIn } from 'lucide-react';
+import { ArrowLeft, FileText, User, Calendar, Clock, CheckCircle, XCircle, ZoomIn, X, ExternalLink } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabaseClient';
 
@@ -14,6 +14,7 @@ export default function PrescriptionDetail() {
     const [editServiceType, setEditServiceType] = useState('');
     const [editPrice, setEditPrice] = useState('');
     const [loading, setLoading] = useState(true);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
 
     useEffect(() => {
         const fetchPrescription = async () => {
@@ -242,29 +243,93 @@ export default function PrescriptionDetail() {
 
                 {/* Prescription File */}
                 <div className="bg-white rounded-2xl p-4 shadow-soft border border-slate-100">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <FileText className="w-5 h-5" />
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-900">Prescription Document</h3>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">Prescription Document</h3>
+                        {prescription.prescription?.url && (
+                            <a
+                                href={prescription.prescription.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Open
+                            </a>
+                        )}
                     </div>
 
-                    {/* Prescription Preview */}
-                    <div className="bg-slate-50 rounded-xl p-8 border border-slate-200 mb-3">
-                        <div className="flex flex-col items-center justify-center text-center">
-                            <FileText className="w-16 h-16 text-slate-400 mb-3" />
-                            <p className="text-sm font-bold text-slate-900 mb-1">
-                                {prescription.prescription?.name || 'prescription.pdf'}
-                            </p>
-                            <p className="text-xs font-medium text-slate-500">
-                                {prescription.prescription?.size || 'N/A'}
-                            </p>
-                            <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition-colors flex items-center gap-2">
-                                <ZoomIn className="w-4 h-4" />
-                                View Full Size
-                            </button>
+                    {prescription.prescription?.url ? (
+                        (() => {
+                            const url = prescription.prescription.url;
+                            const isPdf = url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('pdf');
+                            return isPdf ? (
+                                /* PDF — show open button */
+                                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col items-center gap-3">
+                                    <FileText className="w-14 h-14 text-red-400" />
+                                    <p className="text-sm font-bold text-slate-700">{prescription.prescription.name || 'prescription.pdf'}</p>
+                                    <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-5 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        View PDF
+                                    </a>
+                                </div>
+                            ) : (
+                                /* Image — show inline + lightbox */
+                                <>
+                                    <div
+                                        className="relative cursor-zoom-in rounded-xl overflow-hidden border border-slate-200 bg-slate-50"
+                                        onClick={() => setLightboxOpen(true)}
+                                    >
+                                        <img
+                                            src={url}
+                                            alt="Prescription"
+                                            className="w-full object-contain max-h-72"
+                                        />
+                                        <div className="absolute bottom-2 right-2 bg-black/60 text-white rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs font-bold">
+                                            <ZoomIn className="w-3.5 h-3.5" />
+                                            Tap to enlarge
+                                        </div>
+                                    </div>
+
+                                    {/* Lightbox */}
+                                    {lightboxOpen && (
+                                        <div
+                                            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+                                            onClick={() => setLightboxOpen(false)}
+                                        >
+                                            <button
+                                                onClick={() => setLightboxOpen(false)}
+                                                className="absolute top-5 right-5 bg-white/20 text-white rounded-full p-2 hover:bg-white/30 transition-colors"
+                                            >
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                            <img
+                                                src={url}
+                                                alt="Prescription full size"
+                                                className="max-w-full max-h-full object-contain rounded-lg"
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()
+                    ) : (
+                        /* No file URL */
+                        <div className="bg-slate-50 rounded-xl p-8 border border-slate-200 text-center">
+                            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-slate-400">No file available</p>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Rejection Reason (if rejected) */}

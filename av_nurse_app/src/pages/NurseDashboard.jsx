@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone, Bell, Zap } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone, Bell, Zap, Search } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function NurseDashboard() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('requests'); // requests, myJobs, completed, cancelled
+    const [activeTab, setActiveTab] = useState('requests');
     const [allBookings, setAllBookings] = useState([]);
-    const [accepting, setAccepting] = useState(null); // bookingId being accepted
+    const [accepting, setAccepting] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Nurse identity from localStorage (set at login)
     const nurseData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -20,6 +21,7 @@ export default function NurseDashboard() {
         if (confirmed) {
             localStorage.removeItem('userRole');
             localStorage.removeItem('userData');
+            localStorage.removeItem('token');
             navigate('/role-selection');
         }
     };
@@ -199,7 +201,17 @@ export default function NurseDashboard() {
         red: 'bg-red-500 text-white shadow-md',
     };
 
-    const currentList = { requests: newRequests, myJobs, completed, cancelled }[activeTab];
+    const currentListRaw = { requests: newRequests, myJobs, completed, cancelled }[activeTab];
+
+    // Apply search filter across patient name, service name, and address
+    const q = searchQuery.trim().toLowerCase();
+    const currentList = q
+        ? currentListRaw.filter(b =>
+            (b.patientName || '').toLowerCase().includes(q) ||
+            (b.service || '').toLowerCase().includes(q) ||
+            (b.address || '').toLowerCase().includes(q)
+        )
+        : currentListRaw;
 
     const renderCard = (booking) => {
         const isRequest = activeTab === 'requests';
@@ -403,9 +415,10 @@ export default function NurseDashboard() {
                 <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={handleLogout}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all"
+                        className="flex size-10 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all shadow-sm border border-red-100"
+                        title="Logout"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <LogOut className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg font-bold text-slate-900">Nurse Dashboard</h1>
                     <button
@@ -440,7 +453,7 @@ export default function NurseDashboard() {
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
                             className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
                                 ? tabColors[tab.color]
                                 : 'bg-slate-100 text-slate-600'
@@ -449,6 +462,26 @@ export default function NurseDashboard() {
                             {tab.label} {tab.count > 0 && `(${tab.count})`}
                         </button>
                     ))}
+                </div>
+
+                {/* Search */}
+                <div className="relative mt-3">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by patient, service or address..."
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 text-sm"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
             </header>
 

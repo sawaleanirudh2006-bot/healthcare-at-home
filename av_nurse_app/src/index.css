@@ -7,21 +7,26 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-app: #F8FAFC;
+    --bg-surface: #FFFFFF;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --border-subtle: #F1F5F9;
+  }
+
+  .dark {
+    --bg-app: #000000;
+    --bg-surface: #111111;
+    --text-main: #FFFFFF;
+    --text-muted: #A1A1AA;
+    --border-subtle: #1F1F1F;
+  }
+
   body {
-    @apply font-sans antialiased bg-background text-slate-900;
-  }
-
-  html.dark {
-    @apply bg-slate-950;
-  }
-
-  html.dark body {
-    @apply bg-slate-950 text-slate-100;
-  }
-
-  /* Dark mode for main container */
-  html.dark .bg-background {
-    @apply bg-slate-950;
+    @apply font-sans antialiased transition-colors duration-300;
+    background-color: var(--bg-app);
+    color: var(--text-main);
   }
 }
 

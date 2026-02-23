@@ -82,17 +82,17 @@ const HealthCheckupPackages = () => {
 
     return (
         <div className="bg-background min-h-screen max-w-[430px] mx-auto relative flex flex-col">
-            <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md pt-12 pb-4 px-5 border-b border-slate-100">
+            <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md pt-12 pb-4 px-5 border-b border-border-subtle">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                        className="flex size-10 items-center justify-center rounded-full bg-background text-text-main hover:bg-slate-200 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                        <h1 className="text-lg font-bold text-slate-900 leading-tight">Health Checkups</h1>
-                        <p className="text-xs font-medium text-slate-500">Preventive care at home</p>
+                        <h1 className="text-lg font-bold text-text-main leading-tight">Health Checkups</h1>
+                        <p className="text-xs font-medium text-text-muted">Preventive care at home</p>
                     </div>
                 </div>
             </header>
@@ -117,7 +117,7 @@ const HealthCheckupPackages = () => {
 
                 <div className="space-y-4">
                     {packages.map((pkg) => (
-                        <div key={pkg.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all hover:shadow-md active:scale-[0.99] group">
+                        <div key={pkg.id} className="bg-surface rounded-2xl p-5 shadow-sm border border-border-subtle transition-all hover:shadow-md active:scale-[0.99] group">
                             <div className="flex justify-between items-start mb-3">
                                 <div className={cn("size-12 rounded-xl flex items-center justify-center", pkg.color)}>
                                     <span className="material-symbols-outlined text-[28px]">{pkg.icon}</span>
@@ -127,20 +127,20 @@ const HealthCheckupPackages = () => {
                                         <span className="text-xs font-medium text-slate-400 line-through">₹{pkg.originalPrice}</span>
                                         <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-100">{pkg.discount}</span>
                                     </div>
-                                    <p className="text-lg font-extrabold text-slate-900">₹{pkg.price}</p>
+                                    <p className="text-lg font-extrabold text-text-main">₹{pkg.price}</p>
                                 </div>
                             </div>
 
-                            <h3 className="text-lg font-bold text-slate-900 mb-1">{pkg.name}</h3>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">{pkg.description}</p>
+                            <h3 className="text-lg font-bold text-text-main mb-1">{pkg.name}</h3>
+                            <p className="text-xs text-text-muted font-medium leading-relaxed mb-4">{pkg.description}</p>
 
-                            <div className="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Include {pkg.includes.length} Tests</p>
+                            <div className="bg-background rounded-xl p-3 mb-4 border border-border-subtle">
+                                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Include {pkg.includes.length} Tests</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {pkg.includes.map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-1.5">
                                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                            <span className="text-[11px] font-medium text-slate-700 truncate">{item}</span>
+                                            <span className="text-[11px] font-medium text-text-main truncate">{item}</span>
                                         </div>
                                     ))}
                                 </div>

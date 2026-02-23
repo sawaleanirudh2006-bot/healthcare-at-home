@@ -5,6 +5,15 @@ import { Pill, User, Calendar, Clock, MapPin, ChevronRight, FileText, XCircle } 
 const Bookings = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('upcoming');
+
+    const [profileData] = useState(() => {
+        const stored = localStorage.getItem('userProfile');
+        return stored ? JSON.parse(stored) : {
+            name: 'Arjun Sharma',
+            phone: '+91 98765 43210',
+            avatar: null
+        };
+    });
     // Dummy data moved up to be accessible for initialization
     const demoBookings = [
         {
@@ -70,30 +79,42 @@ const Bookings = () => {
 
     return (
         <div className="bg-background min-h-screen max-w-[430px] mx-auto relative flex flex-col">
-            <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md pt-12 pb-4 px-5 border-b border-slate-100">
+            <header className="sticky top-0 z-40 bg-surface backdrop-blur-md pt-14 pb-4 px-5 border-b border-border-subtle">
                 <div className="flex items-center justify-between mb-6">
-                    <button
-                        onClick={() => navigate('/home')}
-                        className="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700 hover:bg-slate-50 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
-                    </button>
-                    <h1 className="text-lg font-bold tracking-tight text-slate-800">Booking History</h1>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate('/home')}
+                            className="flex size-10 items-center justify-center rounded-full bg-background shadow-soft text-text-main hover:bg-surface transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
+                        </button>
+                        <div
+                            onClick={() => navigate('/profile')}
+                            className="h-10 w-10 rounded-full border border-primary/20 p-0.5 cursor-pointer active:scale-95 transition-all shadow-sm"
+                        >
+                            <img
+                                alt="User"
+                                className="h-full w-full rounded-full object-cover bg-background"
+                                src={profileData.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA"}
+                            />
+                        </div>
+                    </div>
+                    <h1 className="text-lg font-bold tracking-tight text-text-main absolute left-1/2 -translate-x-1/2">Bookings</h1>
                     <button
                         onClick={() => navigate('/notifications')}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 border border-slate-100 relative hover:bg-slate-100 active:scale-95 transition-all"
+                        className="flex size-10 items-center justify-center rounded-full bg-background text-text-muted border border-border-subtle relative hover:bg-surface active:scale-95 transition-all"
                     >
                         <span className="material-symbols-outlined text-[20px]">notifications</span>
                         <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-accent-red animate-pulse"></span>
                     </button>
                 </div>
-                <div className="flex h-11 w-full items-center justify-center rounded-xl bg-slate-200/50 p-1">
+                <div className="flex h-11 w-full items-center justify-center rounded-xl bg-background/50 p-1">
                     {tabs.map((tab) => (
                         <label
                             key={tab.id}
                             className={`flex h-full flex-1 cursor-pointer items-center justify-center rounded-lg px-2 transition-all font-semibold text-[13px] ${activeTab === tab.id
-                                ? 'bg-white shadow-soft text-primary'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-surface shadow-soft text-primary'
+                                : 'text-text-muted hover:text-text-main'
                                 }`}
                         >
                             <span className="truncate">{tab.label}</span>
@@ -112,7 +133,7 @@ const Bookings = () => {
 
             <main className="px-5 py-6 space-y-6 flex-1 pb-24">
                 {filteredBookings.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                    <div className="flex flex-col items-center justify-center h-64 text-text-muted">
                         <FileText className="w-12 h-12 mb-3 opacity-50" />
                         <p className="text-sm font-semibold">No {activeTab} bookings found.</p>
                     </div>
@@ -120,7 +141,7 @@ const Bookings = () => {
                     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         {activeTab === 'upcoming' && (
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Active Services</h3>
+                                <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-muted">Active Services</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
                                     <span className="text-[10px] font-bold text-primary uppercase">Live Now</span>
@@ -129,11 +150,11 @@ const Bookings = () => {
                         )}
 
                         {filteredBookings.map((booking, index) => (
-                            <div key={index} className="group relative overflow-hidden rounded-2xl bg-white p-4 shadow-premium border border-slate-100/50">
+                            <div key={index} className="group relative overflow-hidden rounded-2xl bg-surface p-4 shadow-premium border border-border-subtle">
                                 <div className="flex gap-4">
-                                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 flex items-center justify-center">
+                                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-background flex items-center justify-center">
                                         {booking.isMedicineOrder ? (
-                                            <div className="bg-blue-50 w-full h-full flex items-center justify-center text-blue-500">
+                                            <div className="bg-blue-500/10 w-full h-full flex items-center justify-center text-blue-500">
                                                 <Pill className="w-8 h-8" />
                                             </div>
                                         ) : (
@@ -150,12 +171,12 @@ const Bookings = () => {
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${booking.isMedicineOrder ? 'text-blue-500' : 'text-secondary'}`}>
                                                     {booking.serviceType}
                                                 </span>
-                                                <span className="text-[10px] font-medium text-slate-400">#{booking.id.slice(-6)}</span>
+                                                <span className="text-[10px] font-medium text-text-muted">#{booking.id.slice(-6)}</span>
                                             </div>
-                                            <h4 className="text-[15px] font-bold leading-tight mt-1 text-slate-800 line-clamp-1">
+                                            <h4 className="text-[15px] font-bold leading-tight mt-1 text-text-main line-clamp-1">
                                                 {booking.serviceName}
                                             </h4>
-                                            <p className="text-sm font-medium text-slate-500 mt-0.5 flex items-center gap-1">
+                                            <p className="text-sm font-medium text-text-muted mt-0.5 flex items-center gap-1">
                                                 {booking.isMedicineOrder ? (
                                                     <>{booking.items?.length || 0} Items • {booking.provider}</>
                                                 ) : (
@@ -164,8 +185,8 @@ const Bookings = () => {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1.5 mt-2">
-                                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                            <span className="text-xs font-semibold text-slate-700">
+                                            <Calendar className="w-3.5 h-3.5 text-text-muted" />
+                                            <span className="text-xs font-semibold text-text-main">
                                                 {new Date(booking.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}, {booking.time}
                                             </span>
                                         </div>
@@ -191,7 +212,7 @@ const Bookings = () => {
                                     {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                                         <button
                                             onClick={() => handleCancelBooking(booking)}
-                                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all"
+                                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all"
                                             title="Cancel Booking"
                                         >
                                             <XCircle className="w-5 h-5" />
@@ -200,7 +221,7 @@ const Bookings = () => {
 
                                     {/* Keep the chevron for detail view if needed, or replace/augment */}
                                     {booking.status === 'cancelled' && (
-                                        <button className="flex-1 flex h-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400 text-[13px] font-bold cursor-not-allowed">
+                                        <button className="flex-1 flex h-11 items-center justify-center rounded-xl border border-border-subtle bg-background text-text-muted text-[13px] font-bold cursor-not-allowed">
                                             Cancelled
                                         </button>
                                     )}
@@ -218,7 +239,7 @@ const Bookings = () => {
 
                                     {/* Show Rating if Already Rated */}
                                     {booking.status === 'completed' && booking.rated && (
-                                        <div className="flex-1 flex h-11 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 text-[13px] font-bold gap-2">
+                                        <div className="flex-1 flex h-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 text-[13px] font-bold gap-2">
                                             <span className="material-symbols-outlined text-[18px] fill-current">star</span>
                                             Rated {booking.rating}/5
                                         </div>

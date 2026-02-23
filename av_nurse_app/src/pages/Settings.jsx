@@ -30,7 +30,6 @@ const Settings = () => {
         setDarkMode(newDarkMode);
         localStorage.setItem('darkMode', newDarkMode.toString());
 
-        // Apply to document
         if (newDarkMode) {
             document.documentElement.classList.add('dark');
         } else {
@@ -41,7 +40,6 @@ const Settings = () => {
     const handleLanguageChange = (newLang) => {
         setLanguage(newLang);
         localStorage.setItem('language', newLang);
-        alert(`Language changed to ${newLang === 'en' ? 'English' : newLang === 'hi' ? 'Hindi' : 'Spanish'}`);
     };
 
     const handlePasswordChange = () => {
@@ -60,7 +58,6 @@ const Settings = () => {
             return;
         }
 
-        // Save new password (in real app, this would be API call)
         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
         userData.password = passwordData.newPassword;
         localStorage.setItem('userData', JSON.stringify(userData));
@@ -71,9 +68,9 @@ const Settings = () => {
     };
 
     const languages = [
-        { code: 'en', name: 'English', flag: '🇬🇧' },
-        { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-        { code: 'es', name: 'Español', flag: '🇪🇸' }
+        { code: 'en', name: 'English', flag: 'GB' },
+        { code: 'hi', name: 'हिंदी', flag: 'IN' },
+        { code: 'es', name: 'Español', flag: 'ES' }
     ];
 
     const helpOptions = [
@@ -83,69 +80,62 @@ const Settings = () => {
     ];
 
     return (
-        <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
+        <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto transition-colors duration-300">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 pt-12 pb-4 px-5">
+            <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-white/10 pt-12 pb-6 px-6">
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate('/profile')}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                        className="flex size-11 items-center justify-center rounded-full bg-surface dark:bg-white/5 text-text-main shadow-soft active:scale-95 transition-all"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <h1 className="text-lg font-bold text-slate-900 dark:text-white">Settings</h1>
-                    <div className="w-10" />
+                    <h1 className="text-xl font-extrabold tracking-tight text-text-main">Settings</h1>
+                    <div className="w-11" />
                 </div>
             </header>
 
             {/* Content */}
-            <main className="flex-1 px-5 py-6 space-y-6">
+            <main className="flex-1 px-6 py-8 space-y-8">
                 {/* Appearance */}
-                <div className="space-y-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
-                        Appearance
-                    </h2>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {darkMode ? (
-                                    <Moon className="w-5 h-5 text-primary" />
-                                ) : (
-                                    <Sun className="w-5 h-5 text-amber-500" />
-                                )}
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Dark Mode</h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {darkMode ? 'Enabled' : 'Disabled'}
-                                    </p>
-                                </div>
+                <div className="bg-surface rounded-3xl p-6 shadow-premium border border-border-subtle">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-xl ${darkMode ? 'bg-primary/10 text-primary' : 'bg-amber-50 text-amber-500'}`}>
+                                {darkMode ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
                             </div>
-                            <button
-                                onClick={handleDarkModeToggle}
-                                className={`w-14 h-8 rounded-full transition-all ${darkMode ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'
-                                    }`}
-                            >
-                                <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${darkMode ? 'translate-x-7' : 'translate-x-1'
-                                    }`} />
-                            </button>
+                            <div>
+                                <h3 className="text-base font-bold text-text-main">Dark Mode</h3>
+                                <p className="text-xs font-medium text-text-muted mt-0.5">
+                                    {darkMode ? 'Enabled' : 'Disabled'}
+                                </p>
+                            </div>
                         </div>
+                        <button
+                            onClick={handleDarkModeToggle}
+                            className={`w-14 h-8 rounded-full transition-all relative ${darkMode ? 'bg-primary' : 'bg-slate-200'}`}
+                        >
+                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all ${darkMode ? 'left-7' : 'left-1'}`} />
+                        </button>
                     </div>
                 </div>
 
                 {/* Security */}
-                <div className="space-y-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
+                <div className="space-y-4">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-muted px-1">
                         Security
                     </h2>
                     <button
                         onClick={() => setShowPasswordModal(true)}
-                        className="w-full bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:border-primary dark:hover:border-primary transition-all text-left active:scale-[0.99]"
+                        className="w-full bg-surface rounded-3xl p-6 shadow-premium border border-border-subtle hover:border-primary/30 transition-all text-left active:scale-[0.99]"
                     >
-                        <div className="flex items-center gap-3">
-                            <Lock className="w-5 h-5 text-primary" />
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                                <Lock className="w-6 h-6" />
+                            </div>
                             <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Change Password</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <h3 className="text-base font-bold text-text-main">Change Password</h3>
+                                <p className="text-xs font-medium text-text-muted mt-0.5">
                                     Update your account password
                                 </p>
                             </div>
@@ -154,30 +144,29 @@ const Settings = () => {
                 </div>
 
                 {/* Language */}
-                <div className="space-y-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
+                <div className="space-y-4">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-muted px-1">
                         Language
                     </h2>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 space-y-2">
+                    <div className="bg-surface dark:bg-[#10192d] rounded-3xl p-4 shadow-premium border border-white/5 space-y-3">
                         {languages.map(lang => (
                             <button
                                 key={lang.code}
                                 onClick={() => handleLanguageChange(lang.code)}
-                                className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${language === lang.code
-                                    ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${language === lang.code
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-transparent bg-background/50 hover:bg-background'
                                     }`}
                             >
-                                <span className="text-2xl">{lang.flag}</span>
-                                <div className="flex-1 text-left">
-                                    <p className={`text-sm font-bold ${language === lang.code ? 'text-primary' : 'text-slate-900 dark:text-white'
-                                        }`}>
-                                        {lang.name}
-                                    </p>
-                                </div>
+                                <span className={`text-sm font-bold w-8 ${language === lang.code ? 'text-primary' : 'text-text-muted'}`}>
+                                    {lang.flag}
+                                </span>
+                                <span className={`flex-1 text-left text-sm font-bold ${language === lang.code ? 'text-text-main' : 'text-text-muted'}`}>
+                                    {lang.name}
+                                </span>
                                 {language === lang.code && (
-                                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                                        <span className="text-white text-xs">✓</span>
+                                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                        <span className="text-white text-[10px] font-black">✓</span>
                                     </div>
                                 )}
                             </button>
@@ -186,135 +175,80 @@ const Settings = () => {
                 </div>
 
                 {/* Help & Support */}
-                <div className="space-y-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
+                <div className="space-y-4">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-muted px-1">
                         Help & Support
                     </h2>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 space-y-3">
+                    <div className="bg-surface rounded-3xl p-4 shadow-premium border border-border-subtle space-y-3">
                         {helpOptions.map((option, idx) => {
                             const Icon = option.icon;
                             return (
                                 <button
                                     key={idx}
-                                    onClick={() => {
-                                        if (option.action) {
-                                            if (option.action.startsWith('tel:') || option.action.startsWith('mailto:')) {
-                                                window.location.href = option.action;
-                                            }
-                                        } else {
-                                            alert('Live chat feature coming soon!');
-                                        }
-                                    }}
-                                    className="w-full p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary dark:hover:border-primary transition-all text-left active:scale-[0.99] flex items-center gap-3"
+                                    onClick={() => option.action ? window.location.href = option.action : alert('Coming soon!')}
+                                    className="w-full p-4 rounded-2xl bg-background/50 hover:bg-background transition-all text-left active:scale-[0.99] flex items-center gap-4"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
-                                        <Icon className="w-5 h-5 text-primary" />
+                                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                                        <Icon className="w-5 h-5 font-bold" />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">{option.label}</h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{option.value}</p>
+                                        <h3 className="text-sm font-bold text-text-main">{option.label}</h3>
+                                        <p className="text-xs font-medium text-text-muted mt-0.5">{option.value}</p>
                                     </div>
                                 </button>
                             );
                         })}
                     </div>
                 </div>
-
-                {/* FAQ */}
-                <div className="space-y-3">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
-                        Resources
-                    </h2>
-                    <button
-                        onClick={() => alert('FAQ page coming soon!')}
-                        className="w-full bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:border-primary dark:hover:border-primary transition-all text-left active:scale-[0.99]"
-                    >
-                        <div className="flex items-center gap-3">
-                            <HelpCircle className="w-5 h-5 text-primary" />
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white">FAQ</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Frequently asked questions
-                                </p>
-                            </div>
-                        </div>
-                    </button>
-                </div>
             </main>
 
             {/* Password Change Modal */}
             {showPasswordModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
-                    <div className="bg-white dark:bg-slate-900 rounded-t-3xl w-full max-w-[430px] p-6 space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Change Password</h2>
+                <div className="fixed inset-0 bg-black/60 z-[100] flex items-end justify-center backdrop-blur-sm">
+                    <div className="bg-surface rounded-t-[40px] w-full max-w-[430px] p-8 space-y-6 pb-12 shadow-2xl border-t border-white/10 animate-in slide-in-from-bottom duration-300">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-2xl font-black text-text-main tracking-tight">Change Password</h2>
                             <button
-                                onClick={() => {
-                                    setShowPasswordModal(false);
-                                    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                                }}
-                                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                onClick={() => setShowPasswordModal(false)}
+                                className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-text-muted hover:text-text-main transition-colors"
                             >
-                                ✕
+                                <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
 
                         <div className="space-y-4">
-                            <div>
-                                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 block">
-                                    Current Password
-                                </label>
-                                <input
-                                    type="password"
-                                    value={passwordData.currentPassword}
-                                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                    placeholder="Enter current password"
-                                    className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 block">
-                                    New Password
-                                </label>
-                                <input
-                                    type="password"
-                                    value={passwordData.newPassword}
-                                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                    placeholder="Enter new password"
-                                    className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 block">
-                                    Confirm New Password
-                                </label>
-                                <input
-                                    type="password"
-                                    value={passwordData.confirmPassword}
-                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                    placeholder="Confirm new password"
-                                    className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                />
-                            </div>
+                            {[
+                                { id: 'current', label: 'Current Password', value: 'currentPassword' },
+                                { id: 'new', label: 'New Password', value: 'newPassword' },
+                                { id: 'confirm', label: 'Confirm New Password', value: 'confirmPassword' }
+                            ].map((field) => (
+                                <div key={field.id} className="space-y-2">
+                                    <label className="text-[11px] font-black uppercase tracking-wider text-text-muted ml-1">
+                                        {field.label}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={passwordData[field.value]}
+                                        onChange={(e) => setPasswordData({ ...passwordData, [field.value]: e.target.value })}
+                                        placeholder="••••••••"
+                                        className="w-full h-14 px-5 rounded-2xl bg-background border border-border-subtle text-text-main placeholder:text-text-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                    />
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="flex gap-3 pt-4">
+                        <div className="flex gap-4 pt-4">
                             <button
-                                onClick={() => {
-                                    setShowPasswordModal(false);
-                                    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                                }}
-                                className="flex-1 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                onClick={() => setShowPasswordModal(false)}
+                                className="flex-1 h-14 rounded-2xl bg-background text-text-main font-bold hover:bg-slate-200 transition-all active:scale-95"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handlePasswordChange}
-                                className="flex-1 h-12 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors"
+                                className="flex-1 h-14 rounded-2xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
                             >
-                                Change Password
+                                Update
                             </button>
                         </div>
                     </div>

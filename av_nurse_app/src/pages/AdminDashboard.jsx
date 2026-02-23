@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, FileText, Calendar, Activity, TrendingUp, ShoppingBag, Package, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Users, FileText, Calendar, Activity, TrendingUp, ShoppingBag, Package, Clock, CheckCircle, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { cn } from '../lib/utils';
 
@@ -40,6 +40,7 @@ export default function AdminDashboard() {
         if (confirmed) {
             localStorage.removeItem('userRole');
             localStorage.removeItem('userData');
+            localStorage.removeItem('token');
             navigate('/role-selection');
         }
     };
@@ -118,9 +119,10 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between mb-4">
                     <button
                         onClick={handleLogout}
-                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all"
+                        className="flex size-10 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all shadow-sm border border-red-100"
+                        title="Logout"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <LogOut className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg font-bold text-slate-900">Admin Dashboard</h1>
                     <div className="w-10" />

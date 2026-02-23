@@ -34,9 +34,9 @@ const services = [
         color: 'bg-emerald-50',
         textColor: 'text-emerald-600',
         items: [
-            { name: 'Video Consultation', description: 'Talk to doctors online', path: '/ai-health-assistant' },
-            { name: 'AI Health Assistant', description: 'Get instant health advice', path: '/ai-health-assistant' },
-            { name: 'Second Opinion', description: 'Expert medical opinions', path: '/ai-health-assistant' },
+            { name: 'Book Doctor Consultation', description: 'Video, Chat or In-person visits', path: '/doctor-consult' },
+            { name: 'Video Consultation', description: 'Talk to doctors online', path: '/doctor-consult' },
+            { name: 'Direct Chat', description: 'Consult via instant messaging', path: '/doctor-consult' },
         ]
     },
 

@@ -9,19 +9,19 @@ const BottomNav = () => {
     const isActive = (path) => currentPath === path;
 
     const navItems = [
-        { path: '/', label: 'Home', icon: 'home' },
+        { path: '/home', label: 'Home', icon: 'home' },
         { path: '/bookings', label: 'Bookings', icon: 'calendar_month' },
         { path: '/profile', label: 'Profile', icon: 'person' },
     ];
 
     return (
-        <nav className="fixed bottom-0 z-50 w-full max-w-[430px] bg-white/90 backdrop-blur-md border-t border-slate-100 pb-safe">
+        <nav className="fixed bottom-0 z-50 w-full max-w-[430px] bg-surface/90 backdrop-blur-md border-t border-border-subtle pb-safe transition-colors duration-300">
             <div className="flex h-16 items-center justify-around px-2">
                 {navItems.map((item) => (
                     <button
                         key={item.path}
                         onClick={() => navigate(item.path)}
-                        className={`flex flex-1 flex-col items-center gap-1 py-1 transition-colors ${isActive(item.path) ? 'text-primary' : 'text-slate-400'
+                        className={`flex flex-1 flex-col items-center gap-1 py-1 transition-colors ${isActive(item.path) ? 'text-primary' : 'text-text-muted'
                             }`}
                     >
                         <span
