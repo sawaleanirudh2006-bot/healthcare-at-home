@@ -1,8 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const REWARD_THRESHOLD = 500; // pts for a free Short Visit
+
 const Profile = () => {
     const navigate = useNavigate();
+    const loyaltyPoints = parseInt(localStorage.getItem('loyaltyPoints') || '0', 10);
+    const loyaltyReward = localStorage.getItem('loyaltyReward');
+    const progressPct = Math.min((loyaltyPoints / REWARD_THRESHOLD) * 100, 100);
+
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
@@ -26,13 +32,6 @@ const Profile = () => {
     return (
         <div className="bg-background min-h-screen pb-24">
             <header className="pt-14 pb-8 px-6 bg-white border-b border-slate-100 relative">
-                <button
-                    onClick={() => navigate('/notifications')}
-                    className="absolute top-14 right-6 flex size-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 border border-slate-100 relative hover:bg-slate-100 active:scale-95 transition-all"
-                >
-                    <span className="material-symbols-outlined text-[20px]">notifications</span>
-                    <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-accent-red animate-pulse"></span>
-                </button>
                 <div className="flex flex-col items-center">
                     <div className="relative">
                         <div className="size-24 rounded-full border-4 border-white shadow-premium overflow-hidden">
@@ -51,6 +50,30 @@ const Profile = () => {
             </header>
 
             <main className="px-5 py-6 space-y-4">
+                {/* Loyalty Points Card */}
+                <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 text-white shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-80">CarePoints Balance</p>
+                            <p className="text-3xl font-extrabold">{loyaltyPoints.toLocaleString()} <span className="text-base font-semibold opacity-80">pts</span></p>
+                        </div>
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">
+                            ⭐
+                        </div>
+                    </div>
+                    {loyaltyReward ? (
+                        <div className="bg-white/20 rounded-xl p-2.5 text-sm font-bold flex items-center gap-2">
+                            🎁 Reward Unlocked: Free Short Visit!
+                        </div>
+                    ) : (
+                        <>
+                            <div className="w-full bg-white/30 rounded-full h-2 mb-1">
+                                <div className="bg-white h-2 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                            </div>
+                            <p className="text-xs opacity-80 font-medium">{REWARD_THRESHOLD - loyaltyPoints} more pts for a Free Short Visit 🎁</p>
+                        </>
+                    )}
+                </div>
                 <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
                     {menuItems.map((item, index) => (
                         <button

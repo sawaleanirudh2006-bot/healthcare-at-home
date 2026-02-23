@@ -2,103 +2,103 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, FileText, User, Calendar, Clock, CheckCircle, XCircle, ZoomIn } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 export default function PrescriptionDetail() {
     const navigate = useNavigate();
     const { id } = useParams();
-    const [prescription, setPrescription] = useState(() => {
-        const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        return queue.find(rx => rx.id === id) || null;
-    });
+    const [prescription, setPrescription] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
     const [showRejectModal, setShowRejectModal] = useState(false);
-
-    // Edit State
     const [isEditing, setIsEditing] = useState(false);
-    const [editServiceType, setEditServiceType] = useState(() => {
-        const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        const found = queue.find(rx => rx.id === id);
-        return found ? found.serviceType : '';
-    });
-    const [editPrice, setEditPrice] = useState(() => {
-        const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        const found = queue.find(rx => rx.id === id);
-        return found ? (found.price || '') : '';
-    });
+    const [editServiceType, setEditServiceType] = useState('');
+    const [editPrice, setEditPrice] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadPrescription = () => {
-            const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-            const found = queue.find(rx => rx.id === id);
-            setPrescription(found);
-            if (found) {
-                setEditServiceType(found.serviceType);
-                setEditPrice(found.price || '');
+        const fetchPrescription = async () => {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('prescriptions')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !data) {
+                console.error('Failed to load prescription:', error?.message);
+                setLoading(false);
+                return;
             }
+
+            const formatted = {
+                id: data.id,
+                patientName: data.patient_name,
+                serviceType: data.service_type,
+                uploadTime: data.created_at,
+                status: data.status,
+                rejectionReason: data.rejection_reason,
+                reviewTime: data.review_time,
+                prescription: { name: data.file_name, url: data.file_url },
+                bookingDetails: data.booking_details,
+                price: data.booking_details?.price || '',
+            };
+            setPrescription(formatted);
+            setEditServiceType(formatted.serviceType || '');
+            setEditPrice(formatted.price || '');
+            setLoading(false);
         };
+        fetchPrescription();
+    }, [id]);
 
-        if (!prescription || prescription.id !== id) {
-            loadPrescription();
+    const handleApprove = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const doctorId = session?.user?.id || null;
+
+        const { error } = await supabase
+            .from('prescriptions')
+            .update({
+                status: 'approved',
+                reviewed_by: doctorId,
+                review_time: new Date().toISOString(),
+                service_type: editServiceType || prescription.serviceType,
+            })
+            .eq('id', id);
+
+        if (error) {
+            alert('Failed to approve: ' + error.message);
+            return;
         }
-    }, [id, prescription]);
-
-    const handleApprove = () => {
-        const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        const updated = queue.map(rx => {
-            if (rx.id === id) {
-                return {
-                    ...rx,
-                    status: 'approved',
-                    reviewedBy: 'Dr. Rajesh Kumar',
-                    reviewTime: new Date().toISOString(),
-                    // Save edited details
-                    serviceType: editServiceType,
-                    price: editPrice,
-                    // Auto-assign nurse on approval
-                    assignedNurse: {
-                        name: 'Nurse Sarah',
-                        id: 'NURSE-001',
-                        phone: '+91 98765 43210',
-                        image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop',
-                        rating: 4.8,
-                        experience: '5 years'
-                    }
-                };
-            }
-            return rx;
-        });
-        localStorage.setItem('prescriptionQueue', JSON.stringify(updated));
-
-        // If this is a nursing service, create a nurse assignment logic removed - handled in PaymentSuccess
-
         navigate('/doctor/dashboard');
     };
 
-    const handleReject = () => {
+    const handleReject = async () => {
         if (!rejectionReason.trim()) {
             alert('Please provide a reason for rejection');
             return;
         }
 
-        const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        const updated = queue.map(rx => {
-            if (rx.id === id) {
-                return {
-                    ...rx,
-                    status: 'rejected',
-                    reviewedBy: 'Dr. Rajesh Kumar',
-                    reviewTime: new Date().toISOString(),
-                    rejectionReason: rejectionReason
-                };
-            }
-            return rx;
-        });
-        localStorage.setItem('prescriptionQueue', JSON.stringify(updated));
+        const { data: { session } } = await supabase.auth.getSession();
+        const doctorId = session?.user?.id || null;
+
+        const { error } = await supabase
+            .from('prescriptions')
+            .update({
+                status: 'rejected',
+                reviewed_by: doctorId,
+                review_time: new Date().toISOString(),
+                rejection_reason: rejectionReason,
+            })
+            .eq('id', id);
+
+        if (error) {
+            alert('Failed to reject: ' + error.message);
+            return;
+        }
         setShowRejectModal(false);
         navigate('/doctor/dashboard');
     };
 
-    if (!prescription) {
+    if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <p className="text-slate-500">Loading...</p>

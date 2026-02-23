@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Upload, FileText, Camera, Image, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, Camera, Image, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 export default function UploadPrescription() {
     const navigate = useNavigate();
@@ -22,9 +23,7 @@ export default function UploadPrescription() {
             setCameraStream(stream);
             setShowCamera(true);
         } catch (err) {
-            console.error("Error accessing camera:", err);
             setCameraError("Unable to access camera. Please check permissions.");
-            // Fallback to file input if camera fails
             document.getElementById('camera-input').click();
         }
     };
@@ -51,6 +50,7 @@ export default function UploadPrescription() {
                 name: file.name,
                 size: (file.size / 1024).toFixed(2) + ' KB',
                 type: file.type,
+                file: file // Store the actual file object
             });
             stopCamera();
         }, 'image/jpeg');
@@ -59,77 +59,105 @@ export default function UploadPrescription() {
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
-            setUploading(true);
-            // Simulate upload
-            setTimeout(() => {
-                setUploadedFile({
-                    name: file.name,
-                    size: (file.size / 1024).toFixed(2) + ' KB',
-                    type: file.type,
-                });
-                setUploading(false);
-            }, 1500);
+            // Store file immediately
+            setUploadedFile({
+                name: file.name,
+                size: (file.size / 1024).toFixed(2) + ' KB',
+                type: file.type,
+                file: file // Store the actual file object
+            });
         }
     };
 
-    const handleSubmit = () => {
-        if (uploadedFile || isIVService || isPackage) {
-            // Generate unique prescription ID
-            const prescriptionId = 'RX-' + Date.now();
+    const handleSubmit = async () => {
+        if (!(uploadedFile || isIVService || isPackage)) return;
 
-            // Get patient name from localStorage (or use default)
-            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-            const patientName = userData.name || 'Patient User';
+        try {
+            setUploading(true);
 
-            // Create prescription object for queue
-            const prescriptionData = {
-                id: prescriptionId,
-                patientName: patientName,
-                serviceType: serviceType || 'Medicine Order',
-                uploadTime: new Date().toISOString(),
-                prescription: uploadedFile,
-                status: 'pending',
-                reviewedBy: null,
-                reviewTime: null,
-                rejectionReason: null,
-                // Additional data for patient flow
-                date: date,
-                time: time,
-                price: price,
-                nurse: location.state?.nurse,
-                isRebooking: location.state?.isRebooking,
-                isMedicineOrder: location.state?.isMedicineOrder,
-                cartItems: location.state?.cartItems,
-                total: location.state?.total,
-                isIVService: isIVService,
-                isPackage: isPackage, // Add isPackage flag
-                packageDetails: packageDetails, // Add package details
-            };
+            // Get current logged-in user from Supabase
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                alert('Please login to continue');
+                navigate('/login/patient');
+                return;
+            }
+            const userId = session.user.id;
+            const userName = session.user.user_metadata?.name || 'Patient';
 
-            // Save to prescription queue
-            const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-            queue.push(prescriptionData);
-            localStorage.setItem('prescriptionQueue', JSON.stringify(queue));
+            let fileUrl = null;
 
-            // Navigate to prescription review with prescription ID
+            // Upload file to Supabase Storage if a file was selected
+            if (uploadedFile && uploadedFile.file) {
+                const fileExt = uploadedFile.file.name.split('.').pop();
+                const filePath = `prescriptions/${userId}/${Date.now()}.${fileExt}`;
+
+                const { error: storageError } = await supabase.storage
+                    .from('prescriptions')
+                    .upload(filePath, uploadedFile.file, { upsert: true });
+
+                if (storageError) throw new Error(storageError.message);
+
+                const { data: urlData } = supabase.storage
+                    .from('prescriptions')
+                    .getPublicUrl(filePath);
+
+                fileUrl = urlData?.publicUrl || null;
+            }
+
+            // Save record to the prescriptions table in Supabase
+            // Schema: user_id, patient_name, service_type, file_url, file_name, status, booking_details (JSONB)
+            const { data: record, error: dbError } = await supabase
+                .from('prescriptions')
+                .insert([
+                    {
+                        user_id: userId,
+                        patient_name: userName,
+                        service_type: serviceType || 'Medicine Order',
+                        file_url: fileUrl,
+                        file_name: uploadedFile?.name || null,
+                        status: 'pending',
+                        booking_details: {
+                            date: date || null,
+                            time: time || null,
+                            price: price || 0,
+                            is_iv_service: isIVService || false,
+                            is_package: isPackage || false,
+                            package_details: packageDetails || null,
+                        },
+                    },
+                ])
+                .select()
+                .single();
+
+            if (dbError) throw new Error(dbError.message);
+
+            setUploading(false);
+
+            // Navigate to review page
             navigate('/prescription-review', {
                 state: {
-                    prescriptionId: prescriptionId,
+                    prescriptionId: record.id,
                     serviceType,
                     price,
                     date,
                     time,
-                    prescription: uploadedFile,
+                    prescription: { name: uploadedFile?.name, url: fileUrl },
                     nurse: location.state?.nurse,
                     isRebooking: location.state?.isRebooking,
-                    isMedicineOrder: location.state?.isMedicineOrder,
+                    isMedicineOrder: location.state?.isMedicineOrder || location.state?.fromStore || false,
                     cartItems: location.state?.cartItems,
                     total: location.state?.total,
-                    isIVService: isIVService,
-                    isPackage: isPackage,
-                    packageDetails: packageDetails,
+                    isIVService,
+                    isPackage,
+                    packageDetails,
+                    status: 'pending'
                 },
             });
+
+        } catch (error) {
+            setUploading(false);
+            alert('Failed to upload prescription: ' + error.message);
         }
     };
 

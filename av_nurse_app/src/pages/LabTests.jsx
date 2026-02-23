@@ -141,13 +141,7 @@ export default function LabTests() {
                                                     state: {
                                                         serviceType: test.name,
                                                         price: test.price,
-                                                        nurse: {
-                                                            name: 'Apollo Diagnostics',
-                                                            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA1MtFgDy8y1BMS6HtAWzUMBXRlRSSfFTLQY_W_6kcUGvwmSaN2xzTt_stiqg6HuhVVRj9HD7ZILJRc_LuAq1RyF_yw3wXWCko4fUx9jguLRsjKK3bxNrivRsogBmHorWbO-MEvIIuKNixLU_LPU24pRBY9O5fLALfn0A6orx51T5CT0JN4Bi-g0KrW_O1HfGiwP05-Ngmd62EI4Y4BI6OUpbTGTqEJUtgF8A-wG7mmzv37vjg1yzExdhFWDMAwWuj0xvOrl_i0ew',
-                                                            rating: 4.9,
-                                                            specialization: 'Diagnostic Center'
-                                                        },
-                                                        isRebooking: true // Skip nurse assignment for lab tests
+                                                        planType: 'lab-test', // No nurse needed for lab tests
                                                     }
                                                 })}
                                                 className="px-4 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 active:scale-95 transition-all"

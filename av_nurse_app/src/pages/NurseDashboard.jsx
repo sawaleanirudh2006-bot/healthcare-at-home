@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone, Bell, Zap } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function NurseDashboard() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('assigned'); // assigned, completed
-    const [assignments, setAssignments] = useState([]);
+    const [activeTab, setActiveTab] = useState('requests'); // requests, myJobs, completed, cancelled
+    const [allBookings, setAllBookings] = useState([]);
+    const [accepting, setAccepting] = useState(null); // bookingId being accepted
+
+    // Nurse identity from localStorage (set at login)
+    const nurseData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const nurseId = nurseData?.id || nurseData?.user_id || 'nurse-1';
+    const nurseName = nurseData?.name || nurseData?.full_name || 'Nurse Sarah';
+    const nurseInitials = nurseName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
@@ -16,61 +24,377 @@ export default function NurseDashboard() {
         }
     };
 
-    const loadAssignments = () => {
-        // Load nurse assignments from localStorage (bookings with assigned nurses)
-        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        const nurseAssignments = bookings.filter(booking =>
-            booking.nurse // Include all nurse assignments, even cancelled ones
-        );
-        setAssignments(nurseAssignments);
+    const loadBookings = async () => {
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Failed to load bookings:', error.message);
+            return;
+        }
+
+        const mapped = (data || []).map(b => {
+            let notesObj = {};
+            try { notesObj = JSON.parse(b.notes || '{}'); } catch (_) { }
+            return {
+                id: b.id,
+                service: b.service_name || 'Service',
+                patientName: notesObj.patient_name || 'Patient',
+                date: b.date || '',
+                time: b.time || '',
+                address: b.address_street || 'Address not provided',
+                status: b.status || 'pending',
+                nurseId: notesObj.nurse_id || null,
+                nurseName: notesObj.assigned_nurse_name || null,
+                doctorNotes: notesObj.doctor_notes || '',
+                trackingStatus: b.tracking_status || null,
+                nurseNotes: b.nurse_notes || '',
+                totalPrice: b.total_price || 0,
+                rawNotes: b.notes || '{}',
+                createdAt: b.created_at,
+                isMedicineOrder: notesObj.is_medicine_order || false,
+            };
+        });
+
+        // Medicine orders go to Admin — nurses only see nursing service bookings
+        setAllBookings(mapped.filter(b => !b.isMedicineOrder));
     };
 
     useEffect(() => {
-        loadAssignments();
-        // Poll for new assignments
-        const interval = setInterval(loadAssignments, 5000);
+        loadBookings();
+        const interval = setInterval(loadBookings, 8000); // poll every 8s
         return () => clearInterval(interval);
     }, []);
 
-    const handleCallPatient = (assignment) => {
-        // Open phone dialer with patient phone number
-        const phoneNumber = assignment.patientPhone || '+91 98765 43210';
-        window.location.assign(`tel:${phoneNumber}`);
-    };
+    // --- ACCEPT BOOKING (Ola/Uber style atomic claim) ---
+    const handleAccept = async (booking) => {
+        setAccepting(booking.id);
+        try {
+            // First, re-fetch the booking to check it's still unclaimed
+            const { data: fresh, error: fetchErr } = await supabase
+                .from('bookings')
+                .select('notes, status')
+                .eq('id', booking.id)
+                .single();
 
-    const handleMarkComplete = (assignmentId) => {
-        // Update booking status to completed
-        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        const updated = bookings.map(booking => {
-            if (booking.id === assignmentId) {
-                return {
-                    ...booking,
-                    status: 'completed',
-                    completedAt: new Date().toISOString(),
-                    completedBy: 'Nurse Sarah'
-                };
+            if (fetchErr) throw fetchErr;
+
+            let currentNotes = {};
+            try { currentNotes = JSON.parse(fresh.notes || '{}'); } catch (_) { }
+
+            if (currentNotes.nurse_id) {
+                alert('This booking was already accepted by another nurse!');
+                await loadBookings();
+                return;
             }
-            return booking;
-        });
-        localStorage.setItem('userBookings', JSON.stringify(updated));
 
-        // Reload assignments to reflect changes
-        loadAssignments();
+            // Claim it — merge nurse info into notes JSON
+            const updatedNotes = JSON.stringify({
+                ...currentNotes,
+                nurse_id: nurseId,
+                assigned_nurse_name: nurseName,
+                accepted_at: new Date().toISOString(),
+            });
+
+            const { error } = await supabase
+                .from('bookings')
+                .update({ notes: updatedNotes, status: 'confirmed' })
+                .eq('id', booking.id);
+
+            if (error) throw error;
+
+            await loadBookings();
+            setActiveTab('myJobs');
+        } catch (err) {
+            alert('Failed to accept: ' + err.message);
+        } finally {
+            setAccepting(null);
+        }
     };
 
-    const filteredAssignments = assignments.filter(assignment => {
-        if (activeTab === 'assigned') {
-            return assignment.status === 'upcoming' || assignment.status === 'confirmed';
-        }
-        if (activeTab === 'cancelled') {
-            return assignment.status === 'cancelled';
-        }
-        return assignment.status === 'completed';
-    });
+    const handleCallPatient = (assignment) => {
+        window.location.assign(`tel:+919876543210`);
+    };
 
-    const assignedCount = assignments.filter(a => a.status === 'upcoming' || a.status === 'confirmed').length;
-    const completedCount = assignments.filter(a => a.status === 'completed').length;
-    const cancelledCount = assignments.filter(a => a.status === 'cancelled').length;
+    const handleGoToGodown = async (assignment) => {
+        await supabase.from('bookings').update({ tracking_status: 'to_godown' }).eq('id', assignment.id);
+        // Open Maps to nearest godown (hardcoded demo location — in production, fetch from godowns table)
+        const godownAddress = encodeURIComponent('Medical Supply Store, Mumbai');
+        const openMaps = (origin) => {
+            const url = origin
+                ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${godownAddress}&travelmode=driving`
+                : `https://www.google.com/maps/dir/?api=1&destination=${godownAddress}&travelmode=driving`;
+            window.open(url, '_blank');
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => openMaps(`${pos.coords.latitude},${pos.coords.longitude}`),
+                () => openMaps(null)
+            );
+        } else { openMaps(null); }
+        loadBookings();
+    };
+
+    const handleItemsPicked = async (assignment) => {
+        await supabase.from('bookings').update({ tracking_status: 'items_picked' }).eq('id', assignment.id);
+        loadBookings();
+    };
+
+    const handleGoToPatient = async (assignment) => {
+        await supabase.from('bookings').update({ tracking_status: 'on_the_way' }).eq('id', assignment.id);
+        const destination = encodeURIComponent(
+            assignment.address && assignment.address !== 'Address not provided'
+                ? assignment.address : 'Mumbai, Maharashtra'
+        );
+        const openMaps = (origin) => {
+            const url = origin
+                ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`
+                : `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+            window.open(url, '_blank');
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => openMaps(`${pos.coords.latitude},${pos.coords.longitude}`),
+                () => openMaps(null)
+            );
+        } else { openMaps(null); }
+        loadBookings();
+    };
+
+    const handleArrived = async (assignmentId) => {
+        await supabase
+            .from('bookings')
+            .update({ tracking_status: 'arrived', status: 'confirmed' })
+            .eq('id', assignmentId);
+        loadBookings();
+    };
+
+    const handleMarkComplete = async (assignmentId) => {
+        await supabase
+            .from('bookings')
+            .update({ status: 'completed' })
+            .eq('id', assignmentId);
+        loadBookings();
+    };
+
+    // Filtered lists
+    const newRequests = allBookings.filter(b => b.status === 'pending' && !b.nurseId);
+    const myJobs = allBookings.filter(b => b.nurseId === nurseId && (b.status === 'confirmed' || b.status === 'upcoming'));
+    const completed = allBookings.filter(b => b.nurseId === nurseId && b.status === 'completed');
+    const cancelled = allBookings.filter(b => b.nurseId === nurseId && b.status === 'cancelled');
+
+    const tabs = [
+        { id: 'requests', label: 'New Requests', count: newRequests.length, color: 'amber' },
+        { id: 'myJobs', label: 'My Jobs', count: myJobs.length, color: 'emerald' },
+        { id: 'completed', label: 'Done', count: completed.length, color: 'blue' },
+        { id: 'cancelled', label: 'Cancelled', count: cancelled.length, color: 'red' },
+    ];
+
+    const tabColors = {
+        amber: 'bg-amber-500 text-white shadow-md',
+        emerald: 'bg-emerald-500 text-white shadow-md',
+        blue: 'bg-blue-500 text-white shadow-md',
+        red: 'bg-red-500 text-white shadow-md',
+    };
+
+    const currentList = { requests: newRequests, myJobs, completed, cancelled }[activeTab];
+
+    const renderCard = (booking) => {
+        const isRequest = activeTab === 'requests';
+        const isMyJob = activeTab === 'myJobs';
+        const ts = booking.trackingStatus; // to_godown | items_picked | on_the_way | arrived | null
+
+        return (
+            <div
+                key={booking.id}
+                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all ${isRequest
+                    ? 'border-amber-200 bg-amber-50/30'
+                    : booking.status === 'cancelled'
+                        ? 'border-red-100'
+                        : 'border-slate-100'
+                    }`}
+            >
+                {/* Top row */}
+                <div className="flex items-start gap-3 mb-3">
+                    <div className={`flex size-12 items-center justify-center rounded-xl shrink-0 ${isRequest ? 'bg-amber-100 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                        <User className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 className="text-base font-bold text-slate-900 leading-tight">{booking.service}</h3>
+                                <p className="text-sm font-medium text-slate-500 mt-0.5">👤 {booking.patientName}</p>
+                            </div>
+                            {isRequest && (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-lg animate-pulse">
+                                    <Zap className="w-3 h-3" /> NEW
+                                </span>
+                            )}
+                            {!isRequest && (
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${booking.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                    : booking.status === 'cancelled' ? 'bg-red-50 text-red-600 border border-red-200'
+                                        : 'bg-blue-50 text-blue-600 border border-blue-200'
+                                    }`}>
+                                    {booking.status === 'completed' ? 'Completed'
+                                        : booking.status === 'cancelled' ? 'Cancelled'
+                                            : 'Confirmed'}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-1.5 text-xs font-medium text-slate-500 mb-3">
+                    <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{booking.date || '—'}</div>
+                    <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{booking.time || '—'}</div>
+                    <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{booking.address}</div>
+                    {booking.totalPrice > 0 && (
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-600">
+                            💰 ₹{booking.totalPrice.toLocaleString()}
+                        </div>
+                    )}
+                </div>
+
+                {/* Doctor notes */}
+                {booking.doctorNotes && (
+                    <div className="mb-3 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
+                        <p className="text-[11px] font-bold text-amber-800 mb-0.5">Doctor's Notes</p>
+                        <p className="text-[11px] text-amber-700">{booking.doctorNotes}</p>
+                    </div>
+                )}
+
+                {/* ACTION BUTTONS */}
+                {isRequest && (
+                    <button
+                        onClick={() => handleAccept(booking)}
+                        disabled={accepting === booking.id}
+                        className="w-full h-11 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-200 disabled:opacity-60"
+                    >
+                        {accepting === booking.id ? (
+                            <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        ) : (
+                            <CheckCircle className="w-4 h-4" />
+                        )}
+                        {accepting === booking.id ? 'Accepting...' : '✅ Accept Job'}
+                    </button>
+                )}
+
+                {isMyJob && (() => {
+                    // Step tracker bar
+                    const steps = [
+                        { key: null, label: 'Accepted' },
+                        { key: 'to_godown', label: 'To Godown' },
+                        { key: 'items_picked', label: 'Items Ready' },
+                        { key: 'on_the_way', label: 'Travelling' },
+                        { key: 'arrived', label: 'Arrived' },
+                    ];
+                    const stepIdx = steps.findIndex(s => s.key === ts);
+                    return (
+                        <div className="flex flex-col gap-2">
+                            {/* Step progress */}
+                            <div className="flex items-center gap-1 mb-1">
+                                {steps.map((s, i) => (
+                                    <div key={i} className="flex-1 flex flex-col items-center">
+                                        <div className={`h-1.5 w-full rounded-full transition-all ${i <= stepIdx ? 'bg-emerald-500' : 'bg-slate-200'
+                                            }`} />
+                                        <span className={`text-[9px] mt-0.5 font-semibold ${i <= stepIdx ? 'text-emerald-600' : 'text-slate-400'
+                                            }`}>{s.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* STEP 1: Accepted — go to godown */}
+                            {!ts && (
+                                <button
+                                    onClick={() => handleGoToGodown(booking)}
+                                    className="w-full h-11 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MapPin className="w-4 h-4" /> 🏪 Go to Godown (Pick Supplies)
+                                </button>
+                            )}
+
+                            {/* STEP 2: At godown — mark items picked */}
+                            {ts === 'to_godown' && (
+                                <div className="flex flex-col gap-2">
+                                    <div className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 flex items-center gap-2">
+                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75"></span><span className="relative inline-flex rounded-full size-2 bg-indigo-500"></span></span>
+                                        🏪 Heading to Godown…
+                                    </div>
+                                    <button
+                                        onClick={() => handleItemsPicked(booking)}
+                                        className="w-full h-11 bg-amber-500 text-white rounded-xl font-bold text-sm hover:bg-amber-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle className="w-4 h-4" /> ✅ Items Collected — Ready!
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 3: Items picked — navigate to patient */}
+                            {ts === 'items_picked' && (
+                                <button
+                                    onClick={() => handleGoToPatient(booking)}
+                                    className="w-full h-11 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MapPin className="w-4 h-4" /> 🚗 Head to Patient
+                                </button>
+                            )}
+
+                            {/* STEP 4: On the way — mark arrived */}
+                            {ts === 'on_the_way' && (
+                                <div className="flex flex-col gap-2">
+                                    <div className="w-full px-3 py-2.5 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2">
+                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span className="relative inline-flex rounded-full size-2 bg-white"></span></span>
+                                        🚗 On the Way to Patient
+                                    </div>
+                                    <button
+                                        onClick={() => handleArrived(booking.id)}
+                                        className="w-full h-11 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle className="w-4 h-4" /> ✅ Arrived at Patient's Home
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 5: Arrived — mark complete */}
+                            {ts === 'arrived' && (
+                                <button
+                                    onClick={() => handleMarkComplete(booking.id)}
+                                    className="w-full h-11 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <CheckCircle className="w-4 h-4" /> ✅ Mark Service as Complete
+                                </button>
+                            )}
+
+                            {/* Always show call button */}
+                            <button
+                                onClick={() => handleCallPatient(booking)}
+                                className="w-full px-3 py-2 border border-emerald-300 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Phone className="w-3.5 h-3.5" /> Call Patient
+                            </button>
+                        </div>
+                    );
+                })()}
+
+                {booking.status === 'cancelled' && (
+                    <div className="mt-2 p-2.5 bg-red-50 rounded-lg border border-red-100">
+                        <p className="text-xs font-bold text-red-700">Cancelled by Patient</p>
+                    </div>
+                )}
+
+                {booking.nurseNotes && booking.status === 'completed' && (
+                    <div className="mt-2 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+                        <p className="text-xs font-bold text-blue-800 mb-0.5">Care Notes</p>
+                        <p className="text-xs text-blue-700">{booking.nurseNotes}</p>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
@@ -84,185 +408,74 @@ export default function NurseDashboard() {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg font-bold text-slate-900">Nurse Dashboard</h1>
-                    <div className="w-10" />
+                    <button
+                        onClick={loadBookings}
+                        className="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 transition-all relative"
+                    >
+                        <Bell className="w-5 h-5" />
+                        {newRequests.length > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                                {newRequests.length}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
                 {/* Nurse Info */}
                 <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-xl mb-4">
                     <button onClick={() => navigate('/nurse/profile')} className="flex-shrink-0 relative">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
-                            <span className="font-bold text-indigo-600">NS</span>
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
+                            <span className="font-bold text-indigo-600 text-sm">{nurseInitials}</span>
                         </div>
                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                     </button>
                     <div>
-                        <p className="text-sm font-bold text-slate-900">Nurse Sarah</p>
+                        <p className="text-sm font-bold text-slate-900">{nurseName}</p>
                         <p className="text-xs font-medium text-slate-600">Registered Nurse • On Duty</p>
                     </div>
                 </div>
 
-                {/* Filter Tabs */}
+                {/* Tabs */}
                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    <button
-                        onClick={() => setActiveTab('assigned')}
-                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'assigned'
-                            ? 'bg-emerald-500 text-white shadow-md'
-                            : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                    >
-                        Assigned ({assignedCount})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('completed')}
-                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'completed'
-                            ? 'bg-emerald-500 text-white shadow-md'
-                            : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                    >
-                        Completed ({completedCount})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('cancelled')}
-                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'cancelled'
-                            ? 'bg-red-500 text-white shadow-md'
-                            : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                    >
-                        Cancelled ({cancelledCount})
-                    </button>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
+                                ? tabColors[tab.color]
+                                : 'bg-slate-100 text-slate-600'
+                                }`}
+                        >
+                            {tab.label} {tab.count > 0 && `(${tab.count})`}
+                        </button>
+                    ))}
                 </div>
             </header>
 
+            {/* New Requests Alert Banner */}
+            {activeTab === 'requests' && newRequests.length > 0 && (
+                <div className="mx-5 mt-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
+                    <p className="text-sm font-bold text-amber-800">
+                        {newRequests.length} new booking{newRequests.length > 1 ? 's' : ''} waiting — first to accept gets the job!
+                    </p>
+                </div>
+            )}
+
             {/* Content */}
-            <main className="flex-1 px-5 py-6 space-y-4 pb-24">
-                {filteredAssignments.length === 0 ? (
+            <main className="flex-1 px-5 py-4 space-y-4 pb-24">
+                {currentList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                        <Calendar className="w-12 h-12 mb-3 opacity-50" />
-                        <p className="text-sm font-semibold">No {activeTab} assignments</p>
+                        <Calendar className="w-12 h-12 mb-3 opacity-40" />
+                        <p className="text-sm font-semibold">
+                            {activeTab === 'requests' ? 'No new requests right now' : `No ${activeTab === 'myJobs' ? 'active' : activeTab} jobs`}
+                        </p>
+                        {activeTab === 'requests' && (
+                            <p className="text-xs mt-1 text-slate-400">New bookings will appear here automatically</p>
+                        )}
                     </div>
                 ) : (
-                    filteredAssignments.map((assignment) => (
-                        <div
-                            key={assignment.id}
-                            className={`bg-white rounded-2xl p-4 shadow-soft border ${assignment.status === 'cancelled' ? 'border-red-100 bg-red-50/10' : 'border-slate-100'
-                                }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <div className={`flex size-12 items-center justify-center rounded-xl shrink-0 ${assignment.status === 'cancelled' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
-                                    }`}>
-                                    <User className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <div>
-                                            <h3 className={`text-base font-bold ${assignment.status === 'cancelled' ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
-                                                {assignment.service}
-                                            </h3>
-                                            <p className="text-sm font-medium text-slate-500">
-                                                Patient: {assignment.patientName || 'Patient'}
-                                            </p>
-                                        </div>
-                                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${assignment.status === 'completed'
-                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                            : assignment.status === 'cancelled'
-                                                ? 'bg-red-50 text-red-600 border border-red-200'
-                                                : 'bg-blue-50 text-blue-600 border border-blue-200'
-                                            }`}>
-                                            {assignment.status === 'completed' ? 'Completed'
-                                                : assignment.status === 'cancelled' ? 'Cancelled'
-                                                    : 'Assigned'}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-1.5 text-xs font-medium text-slate-500">
-                                        <div className="flex items-center gap-1.5">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            {assignment.date}
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock className="w-3.5 h-3.5" />
-                                            {assignment.time}
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <MapPin className="w-3.5 h-3.5" />
-                                            {assignment.address || 'Address not provided'}
-                                        </div>
-                                    </div>
-
-                                    {/* Doctor Instructions Section */}
-                                    {(assignment.diagnosis || assignment.doctorNotes) && (
-                                        <div className={`mt-3 p-3 rounded-lg border ${assignment.status === 'cancelled' ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-amber-50 border-amber-100'
-                                            }`}>
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <User className={`w-3.5 h-3.5 ${assignment.status === 'cancelled' ? 'text-slate-500' : 'text-amber-600'}`} />
-                                                <p className={`text-xs font-bold ${assignment.status === 'cancelled' ? 'text-slate-600' : 'text-amber-900'}`}>Doctor's Instructions</p>
-                                            </div>
-                                            {assignment.diagnosis && (
-                                                <p className={`text-xs font-semibold mb-1 ${assignment.status === 'cancelled' ? 'text-slate-500' : 'text-amber-800'}`}>Diagnosis: {assignment.diagnosis}</p>
-                                            )}
-                                            {assignment.doctorNotes && (
-                                                <p className={`text-xs whitespace-pre-wrap ${assignment.status === 'cancelled' ? 'text-slate-500' : 'text-amber-700'}`}>{assignment.doctorNotes}</p>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {assignment.status !== 'completed' && assignment.status !== 'cancelled' && (
-                                        <div className="mt-3 flex flex-col gap-2">
-                                            {assignment.trackingStatus !== 'on_the_way' ? (
-                                                <button
-                                                    onClick={() => {
-                                                        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-                                                        const updated = bookings.map(b =>
-                                                            b.id === assignment.id ? { ...b, trackingStatus: 'on_the_way' } : b
-                                                        );
-                                                        localStorage.setItem('userBookings', JSON.stringify(updated));
-                                                        loadAssignments();
-                                                    }}
-                                                    className="w-full px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-1"
-                                                >
-                                                    <MapPin className="w-3.5 h-3.5" />
-                                                    Start Journey
-                                                </button>
-                                            ) : (
-                                                <div className="w-full px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100 flex items-center justify-center gap-1 animate-pulse">
-                                                    <MapPin className="w-3.5 h-3.5" />
-                                                    On the way
-                                                </div>
-                                            )}
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleCallPatient(assignment)}
-                                                    className="flex-1 px-3 py-2 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-1"
-                                                >
-                                                    <Phone className="w-3.5 h-3.5" />
-                                                    Call Patient
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/nurse/add-notes/${assignment.id}`, { state: { assignment } })}
-                                                    className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-xs font-bold hover:bg-blue-600 active:scale-95 transition-all flex items-center justify-center gap-1"
-                                                >
-                                                    <CheckCircle className="w-3.5 h-3.5" />
-                                                    Add Notes
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {assignment.status === 'completed' && assignment.nurseNotes && (
-                                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                            <p className="text-xs font-bold text-blue-900 mb-1">Care Notes:</p>
-                                            <p className="text-xs font-medium text-blue-700">{assignment.nurseNotes}</p>
-                                        </div>
-                                    )}
-                                    {assignment.status === 'cancelled' && (
-                                        <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
-                                            <p className="text-xs font-bold text-red-900 mb-1">Cancelled by Patient</p>
-                                            <p className="text-xs font-medium text-red-700">This service has been cancelled.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))
+                    currentList.map(renderCard)
                 )}
             </main>
         </div>

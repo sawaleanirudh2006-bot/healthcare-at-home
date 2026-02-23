@@ -2,33 +2,54 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, CheckCircle, XCircle, User, Calendar, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
-    const [prescriptions, setPrescriptions] = useState(() => {
-        return JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-    });
+    const [prescriptions, setPrescriptions] = useState([]);
     const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
-            // Clear user session data
             localStorage.removeItem('userRole');
             localStorage.removeItem('userData');
             navigate('/role-selection');
         }
     };
 
-    const loadPrescriptions = () => {
-        const stored = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-        setPrescriptions(stored);
+    const loadPrescriptions = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('prescriptions')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw new Error(error.message);
+
+            const formattedData = (data || []).map(rx => ({
+                id: rx.id,
+                patientName: rx.patient_name,
+                serviceType: rx.service_type,
+                uploadTime: rx.created_at,
+                status: rx.status,
+                rejectionReason: rx.rejection_reason,
+                reviewTime: rx.review_time,
+                prescription: { name: rx.file_name, url: rx.file_url },
+                bookingDetails: rx.booking_details,
+            }));
+
+            setPrescriptions(formattedData);
+        } catch (error) {
+            console.error('Failed to load prescriptions:', error.message);
+        }
     };
 
     useEffect(() => {
-        // Poll for updates every 3 seconds
-        const interval = setInterval(loadPrescriptions, 3000);
+        loadPrescriptions();
+        // Poll for updates every 10 seconds (less frequent than before)
+        const interval = setInterval(loadPrescriptions, 10000);
         return () => clearInterval(interval);
     }, []);
 

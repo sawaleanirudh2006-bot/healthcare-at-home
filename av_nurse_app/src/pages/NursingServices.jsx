@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Info, Timer, Sun, Home as HomeIcon, Check, CalendarClock } from 'lucide-react';
+import { ArrowLeft, Timer, Sun, Home as HomeIcon, CalendarClock, Syringe, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const serviceOptions = [
+const ALL_SERVICES = [
     {
         id: 'short-visit',
-        icon: Timer,
+        icon: Syringe,
         title: 'Short Visit',
-        description: 'Injection, dressing, or vitals check up.',
+        description: 'Injection, dressing, wound care, or vitals check.',
         price: 499,
         priceUnit: 'PER VISIT',
-        duration: 'Approx. 30-45 mins',
+        duration: 'Approx. 30–45 mins',
         popular: false,
     },
     {
         id: '12hr-shift',
         icon: Sun,
         title: '12hr Shift',
-        description: 'Day or Night specialized nursing care.',
+        description: 'Day or night dedicated nursing care for recovery.',
         price: 1800,
         priceUnit: 'PER SHIFT',
         duration: 'Dedicated Caretaker',
@@ -27,8 +27,8 @@ const serviceOptions = [
     {
         id: '24hr-livein',
         icon: HomeIcon,
-        title: '24hr Live-in',
-        description: 'Round-the-clock support for critical recovery.',
+        title: '24hr Live-in Care',
+        description: 'Round-the-clock support for critical or post-surgery recovery.',
         price: 3200,
         priceUnit: 'PER DAY',
         duration: 'Residential Support',
@@ -37,8 +37,8 @@ const serviceOptions = [
     {
         id: 'custom-care',
         icon: CalendarClock,
-        title: 'Custom Care',
-        description: 'Flexible duration as per your specific needs.',
+        title: 'Custom Care Plan',
+        description: 'Flexible care schedule tailored to your specific medical needs.',
         price: 'Flexible',
         priceUnit: 'PER REQUEST',
         duration: 'Tailored Schedule',
@@ -49,8 +49,7 @@ const serviceOptions = [
 export default function NursingServices() {
     const navigate = useNavigate();
     const [selectedService, setSelectedService] = useState(null);
-
-
+    const services = ALL_SERVICES;
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
@@ -66,15 +65,12 @@ export default function NursingServices() {
                     <h1 className="text-lg font-bold tracking-tight text-slate-800">
                         Nursing Services
                     </h1>
-                    <button className="flex size-10 items-center justify-center rounded-full bg-white shadow-soft text-slate-700 hover:bg-slate-50 transition-colors">
-                        <Info className="w-5 h-5" />
-                    </button>
+                    <div className="w-10" />
                 </div>
             </header>
-
-            {/* Main Content */}
             <main className="flex-1 px-5 py-2 space-y-6 pb-24">
-                <div className="space-y-1">
+                {/* Section Title and Description */}
+                <div className="space-y-1 mt-4">
                     <h2 className="text-xl font-extrabold text-slate-900">
                         Choose Care Duration
                     </h2>
@@ -85,11 +81,12 @@ export default function NursingServices() {
 
                 {/* Service Cards */}
                 <div className="space-y-4">
-                    {serviceOptions.map((service) => {
+                    {services.map((service) => {
                         const Icon = service.icon;
                         const isSelected = selectedService === service.id;
 
                         return (
+
                             <div
                                 key={service.id}
                                 className={cn(
@@ -141,7 +138,7 @@ export default function NursingServices() {
                                     </div>
                                     <button
                                         onClick={() => navigate('/schedule-datetime', {
-                                            state: { serviceType: service.title, price: service.price }
+                                            state: { serviceType: service.title, price: service.price, serviceId: service.id }
                                         })}
                                         className="w-full h-14 bg-primary text-white rounded-2xl font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
                                     >
@@ -167,5 +164,9 @@ export default function NursingServices() {
                 </div>
             </main>
         </div>
+
+
+
+
     );
 }

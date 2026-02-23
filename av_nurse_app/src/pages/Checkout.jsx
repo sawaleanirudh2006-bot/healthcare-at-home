@@ -2,22 +2,28 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, CreditCard, Smartphone, QrCode, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 const serviceDetails = {
     'short-visit': {
-        title: '30min Nurse Visit',
-        subtitle: 'Professional In-Home Care',
+        title: 'Short Visit',
+        subtitle: 'Injection, dressing, wound care or vitals check',
         price: 499,
     },
     '12hr-shift': {
         title: '12hr Nurse Shift',
-        subtitle: 'Professional In-Home Care',
+        subtitle: 'Day or night dedicated nursing care',
         price: 1800,
     },
     '24hr-livein': {
         title: '24hr Live-in Care',
-        subtitle: 'Professional In-Home Care',
+        subtitle: 'Round-the-clock residential support',
         price: 3200,
+    },
+    'custom-care': {
+        title: 'Custom Care Plan',
+        subtitle: 'Flexible care tailored to your needs',
+        price: null, // flexible pricing
     },
 };
 
@@ -61,9 +67,56 @@ export default function Checkout() {
 
     const [selectedPayment, setSelectedPayment] = useState('gpay');
 
-    const handlePayment = () => {
-        // Simulate payment processing
-        setTimeout(() => {
+    const handlePayment = async () => {
+        try {
+            // Get the current Supabase session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                alert('Please login to continue');
+                navigate('/login/patient');
+                return;
+            }
+
+            const userId = session.user.id;
+            const userName = session.user.user_metadata?.name || session.user.email;
+
+            // Try to save booking to Supabase (non-blocking — proceeds even if DB insert fails)
+            try {
+                await supabase
+                    .from('bookings')
+                    .insert([{
+                        user_id: userId,
+                        service_name: serviceType || service?.title,
+                        date: date ? new Date(date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                        time: time || '09:00 AM',
+                        total_price: total,
+                        status: 'pending',
+                        notes: JSON.stringify({
+                            patient_name: userName,
+                            subtotal: subtotal,
+                            nurse: nurse?.name || null,
+                            payment_method: selectedPayment,
+                            is_medicine_order: location.state?.isMedicineOrder || false,
+                            is_package: isPackage || false,
+                            doctor_notes: location.state?.doctorNotes || null,
+                        }),
+                    }]);
+            } catch (dbErr) {
+                console.warn('Booking DB save failed (non-blocking):', dbErr.message);
+            }
+
+            const bookingId = `BK-${Date.now()}`;
+
+            // Award loyalty points (1 point per ₹10 spent)
+            const pointsEarned = Math.floor(total / 10);
+            const existingPoints = parseInt(localStorage.getItem('loyaltyPoints') || '0', 10);
+            const newTotal = existingPoints + pointsEarned;
+            localStorage.setItem('loyaltyPoints', String(newTotal));
+            // Reward at 500 pts — flag for profile to show
+            if (newTotal >= 500) {
+                localStorage.setItem('loyaltyReward', '1-free-short-visit');
+            }
+
             navigate('/payment-success', {
                 state: {
                     serviceType: serviceType || service?.title,
@@ -72,20 +125,22 @@ export default function Checkout() {
                     coverage: coverage,
                     planDetails: planDetails,
                     amount: total,
-                    bookingId: `MD-${Math.floor(Math.random() * 100000)}`,
+                    bookingId: bookingId,
                     date: date,
                     time: time,
                     nurse: nurse,
                     isMedicineOrder: location.state?.isMedicineOrder,
                     cartItems: location.state?.cartItems,
-                    // Pass doctor notes
                     doctorNotes: location.state?.doctorNotes,
                     diagnosis: location.state?.diagnosis,
                     recommendations: location.state?.recommendations,
-                    doctorPrescription: location.state?.prescription?.doctorPrescription // Also pass rx text
+                    doctorPrescription: location.state?.doctorPrescription
                 },
             });
-        }, 500);
+
+        } catch (error) {
+            alert('Failed to complete booking: ' + error.message);
+        }
     };
 
     return (
@@ -162,8 +217,8 @@ export default function Checkout() {
                     )}
                 </div>
 
-                {/* Auto-Assigned Nurse Notification */}
-                {nurse && location.state?.autoAssigned && (
+                {/* Auto-Assigned Nurse Notification — hidden for medicine orders */}
+                {nurse && location.state?.autoAssigned && !location.state?.isMedicineOrder && (
                     <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
                         <div className="flex gap-3">
                             <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500 text-white shrink-0">

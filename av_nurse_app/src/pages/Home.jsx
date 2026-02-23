@@ -86,16 +86,16 @@ const Home = () => {
                 <section>
                     <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400 mb-4">Our Services</h3>
                     <div className="grid grid-cols-2 gap-4">
-                        {/* IV Fluid Services */}
+                        {/* Health Insurance */}
                         <button
-                            onClick={() => navigate('/iv-fluid-services')}
-                            className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-primary hover:shadow-md transition-all text-left active:scale-[0.98]"
+                            onClick={() => navigate('/health-insurance')}
+                            className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-blue-400 hover:shadow-md transition-all text-left active:scale-[0.98]"
                         >
-                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                                <span className="material-symbols-outlined text-[28px] text-primary">water_drop</span>
+                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
+                                <span className="material-symbols-outlined text-[28px] text-blue-600">shield</span>
                             </div>
-                            <h4 className="text-sm font-bold text-slate-900 mb-1">IV Fluid Services</h4>
-                            <p className="text-xs text-slate-500">Hydration therapy at home</p>
+                            <h4 className="text-sm font-bold text-slate-900 mb-1">Health Insurance</h4>
+                            <p className="text-xs text-slate-500">Cashless claims & coverage</p>
                         </button>
 
                         {/* Treatment Packages */}

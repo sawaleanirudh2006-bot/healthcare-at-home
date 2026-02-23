@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, FileText } from 'lucide-react';
+
 
 const Cart = () => {
     const navigate = useNavigate();
@@ -30,6 +31,26 @@ const Cart = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const deliveryFee = subtotal > 500 ? 0 : 50;
     const total = subtotal + deliveryFee;
+    const cartHasRx = cart.some(i => i.rx);
+
+    const handleCheckout = () => {
+        if (cartHasRx) {
+            navigate('/upload-prescription', {
+                state: { fromStore: true, cartItems: cart, total }
+            });
+        } else {
+            navigate('/checkout', {
+                state: {
+                    serviceType: 'Medicine Order',
+                    price: total,
+                    planType: 'medicine-order',
+                    cartItems: cart,
+                    isMedicineOrder: true,
+                }
+            });
+        }
+    };
+
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
@@ -69,12 +90,19 @@ const Cart = () => {
                             <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                                 <div className="flex gap-4">
                                     <div className="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center text-4xl">
-                                        {item.image}
+                                        {item.emoji || item.image || '💊'}
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-sm font-bold text-slate-900 mb-1">{item.name}</h3>
-                                        <p className="text-xs text-slate-500 mb-2">{item.description}</p>
-                                        <p className="text-base font-bold text-primary">₹{item.price}</p>
+                                        <div className="flex items-center gap-1.5 mb-0.5">
+                                            <h3 className="text-sm font-bold text-slate-900">{item.name}</h3>
+                                            {item.rx && (
+                                                <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded">
+                                                    <FileText className="w-2.5 h-2.5" /> Rx
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-slate-500 mb-1">{item.unit || item.description}</p>
+                                        <p className="text-base font-bold text-blue-600">₹{item.price}</p>
                                     </div>
                                 </div>
 
@@ -139,11 +167,17 @@ const Cart = () => {
             {/* Checkout Button */}
             {cart.length > 0 && (
                 <div className="sticky bottom-0 bg-white border-t border-slate-100 p-5">
+                    {cartHasRx && (
+                        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">
+                            <FileText className="w-4 h-4 text-amber-600 shrink-0" />
+                            <p className="text-xs font-bold text-amber-800">Prescription required — you'll upload it next</p>
+                        </div>
+                    )}
                     <button
-                        onClick={() => navigate('/store-checkout')}
-                        className="w-full h-14 bg-primary text-white rounded-2xl font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
+                        onClick={handleCheckout}
+                        className="w-full h-14 bg-blue-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] transition-all"
                     >
-                        Proceed to Checkout • ₹{total}
+                        {cartHasRx ? '📋 Upload Prescription →' : '✅ Proceed to Checkout'} • ₹{total}
                     </button>
                 </div>
             )}

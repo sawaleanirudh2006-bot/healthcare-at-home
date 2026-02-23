@@ -20,7 +20,10 @@ export default function PaymentSuccess() {
     const isInsurance = planType === 'insurance';
     const isMembership = planType === 'membership';
     const isTreatmentPackage = planType === 'treatment-package';
-    const isService = !isInsurance && !isMembership && !isTreatmentPackage;
+    const isMedicineOrderType = isMedicineOrder || planType === 'medicine-order';
+    // isNursingService = actual nursing service booking (not medicine, not insurance, not package)
+    const isNursingService = !isInsurance && !isMembership && !isTreatmentPackage && !isMedicineOrderType;
+    const isService = !isInsurance && !isMembership && !isTreatmentPackage; // generic (medicine + nursing)
 
     // Generate policy/membership number
     const policyNumber = isInsurance
@@ -125,10 +128,10 @@ export default function PaymentSuccess() {
                             : isMembership
                                 ? 'Your membership has been activated. Enjoy exclusive benefits!'
                                 : isTreatmentPackage
-                                    ? 'Your treatment package has been booked. A nurse has been assigned.'
-                                    : isMedicineOrder
-                                        ? 'Your order has been placed successfully. You can track its status below.'
-                                        : 'Your booking has been confirmed. A professional is being assigned to your request.'}
+                                    ? 'Your treatment package has been booked. Our team will contact you shortly.'
+                                    : isMedicineOrderType
+                                        ? 'Your order has been placed successfully. You can track its delivery below.'
+                                        : 'Your booking has been confirmed. A nurse will be assigned to your request shortly.'}
                     </p>
                 </motion.div>
 
@@ -378,14 +381,16 @@ export default function PaymentSuccess() {
 
                         <div className="flex items-start gap-4">
                             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center overflow-hidden">
-                                {isMedicineOrder ? (
+                                {isMedicineOrderType ? (
                                     <span className="text-3xl">💊</span>
-                                ) : (
+                                ) : isNursingService ? (
                                     <img
                                         src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop"
                                         alt="Nurse"
                                         className="w-full h-full object-cover"
                                     />
+                                ) : (
+                                    <span className="text-3xl">🏥</span>
                                 )}
                             </div>
                             <div className="flex-1">
@@ -393,9 +398,11 @@ export default function PaymentSuccess() {
                                     {serviceType}
                                 </h3>
                                 <p className="text-sm font-medium text-primary mt-0.5">
-                                    {isMedicineOrder
+                                    {isMedicineOrderType
                                         ? `${cartItems?.length || 0} Items Ordered`
-                                        : 'Premium Medical Care'}
+                                        : isNursingService
+                                            ? 'Professional Nursing Care'
+                                            : 'Healthcare Service'}
                                 </p>
                             </div>
                         </div>
@@ -471,13 +478,23 @@ export default function PaymentSuccess() {
                         Download Invoice
                     </button>
                 )}
-                {isService && (
+                {/* Track button — only for nursing services and medicine orders, NOT for lab/packages/insurance */}
+                {isNursingService && (
                     <button
                         onClick={handleTrackService}
                         className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                         <Navigation className="w-5 h-5" />
-                        Track {isMedicineOrder ? 'Order' : 'Service'}
+                        Track My Nurse
+                    </button>
+                )}
+                {isMedicineOrderType && (
+                    <button
+                        onClick={handleTrackService}
+                        className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Navigation className="w-5 h-5" />
+                        Track My Order
                     </button>
                 )}
                 <button

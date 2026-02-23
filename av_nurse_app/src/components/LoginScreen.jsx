@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => {
     const navigate = useNavigate();
+    const { login } = useAuth(); // Use useAuth hook
     const [loginMethod, setLoginMethod] = useState('mobile'); // 'mobile' or 'email'
     const [mobileNumber, setMobileNumber] = useState('');
     const [email, setEmail] = useState('');
@@ -11,6 +13,8 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [step, setStep] = useState('mobile'); // 'mobile' or 'otp'
     const [timer, setTimer] = useState(45);
+    const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         let interval;
@@ -39,29 +43,39 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
         }
     };
 
-    const handleVerifyLike = () => {
-        // Store user role in localStorage
-        localStorage.setItem('userRole', role);
+    const handleVerifyLike = async () => {
+        setError('');
+        if (loginMethod === 'email') {
+            if (!email || !password) {
+                setError('Please enter your email and password.');
+                return;
+            }
+            // Direct Supabase login via AuthContext
+            const result = await login(email, password);
+            if (result.success) {
+                // Always navigate based on the login page's role (Nurse/Doctor/Admin/Patient)
+                navigateBasedOnRole(role);
+            } else {
+                setError(result.message || 'Login failed. Check your credentials.');
+            }
+        } else {
+            // Mock Mobile Login (Keep existing logic if backend doesn't support OTP)
+            // Store user role in localStorage (legacy support)
+            localStorage.setItem('userRole', role);
 
-        // Store basic user data
-        const userData = {
-            role: role,
-            phone: mobileNumber,
-            email: loginMethod === 'email' ? email : (
-                role === 'Doctor' ? 'dr.rajesh@hospital.com' :
-                    role === 'Admin' ? 'admin@carehome.com' :
-                        role === 'Nurse' ? 'sarah.nurse@carehome.com' :
-                            'patient@example.com'
-            ),
-            name: role === 'Doctor' ? 'Dr. Rajesh Kumar' :
-                role === 'Admin' ? 'Admin User' :
-                    role === 'Nurse' ? 'Nurse Sarah' :
-                        'Patient User',
-            loginTime: new Date().toISOString()
-        };
-        localStorage.setItem('userData', JSON.stringify(userData));
+            // Create mock user data for mobile login context
+            const userData = {
+                role: role,
+                phone: mobileNumber,
+                name: role === 'Doctor' ? 'Dr. User' : 'User',
+                loginTime: new Date().toISOString()
+            };
+            localStorage.setItem('userData', JSON.stringify(userData)); // Legacy
+            navigateBasedOnRole(role);
+        }
+    };
 
-        // Navigate based on role
+    const navigateBasedOnRole = (role) => {
         if (role === 'Doctor') {
             navigate('/doctor/dashboard');
         } else if (role === 'Nurse') {
@@ -69,10 +83,8 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
         } else if (role === 'Admin') {
             navigate('/admin/dashboard');
         } else if (role === 'Patient') {
-            // Patient role - navigate to home
             navigate('/home');
         } else {
-            // Fallback to home for any other case
             navigate('/home');
         }
     };
@@ -87,6 +99,8 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
             }
         }
     };
+
+    // ... (rest of the component structure remains similar, adding Error display)
 
     const themeColors = {
         primary: 'text-primary bg-primary border-primary focus:border-primary focus:ring-primary',
@@ -121,6 +135,7 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
                     <span className={`inline-block mt-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${bgOpacity} ${activeTheme.split(' ')[0]}`}>
                         {role} Login
                     </span>
+                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
                 </div>
 
                 <div className="space-y-8">
@@ -229,13 +244,25 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Password</label>
-                                    <input
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className={`w-full h-14 px-4 rounded-2xl border border-slate-200 bg-slate-50 outline-none text-base font-semibold tracking-wide placeholder:text-slate-400 placeholder:font-normal transition-all shadow-input ${activeTheme.split(' ')[3]} ${activeTheme.split(' ')[4]}`}
-                                        placeholder="••••••••"
-                                        type="password"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyLike(); }}
+                                            className={`w-full h-14 px-4 pr-12 rounded-2xl border border-slate-200 bg-slate-50 outline-none text-base font-semibold tracking-wide placeholder:text-slate-400 placeholder:font-normal transition-all shadow-input ${activeTheme.split(' ')[3]} ${activeTheme.split(' ')[4]}`}
+                                            placeholder="••••••••"
+                                            type={showPassword ? 'text' : 'password'}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">
+                                                {showPassword ? 'visibility_off' : 'visibility'}
+                                            </span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <button

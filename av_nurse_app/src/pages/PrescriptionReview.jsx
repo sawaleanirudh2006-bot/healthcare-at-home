@@ -2,11 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, CheckCircle, User } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 export default function PrescriptionReview() {
     const navigate = useNavigate();
     const location = useLocation();
     const { serviceType, price, date, time, prescription } = location.state || {};
+    const isMedicineOrder = location.state?.isMedicineOrder || location.state?.planType === 'medicine-order';
+    const isPackage = location.state?.isPackage;
+    const isIVService = location.state?.isIVService;
+    // Only nursing services need nurse assignment — not lab tests, packages, medicine orders
+    const isNursingService = !isMedicineOrder && !isPackage && !isIVService &&
+        location.state?.planType !== 'lab-test' && location.state?.planType !== 'treatment-package';
 
     const [status, setStatus] = useState('pending'); // pending, approved, rejected
     const [rejectionReason, setRejectionReason] = useState('');
@@ -21,22 +28,36 @@ export default function PrescriptionReview() {
         const rxId = prescriptionId;
         if (!rxId) return;
 
-        // Poll for status updates from doctor
-        const pollInterval = setInterval(() => {
-            const queue = JSON.parse(localStorage.getItem('prescriptionQueue') || '[]');
-            const prescription = queue.find(rx => rx.id === rxId);
+        // Poll Supabase for status updates from doctor every 5 seconds
+        const pollInterval = setInterval(async () => {
+            const { data, error } = await supabase
+                .from('prescriptions')
+                .select('status, rejection_reason, service_type, booking_details')
+                .eq('id', rxId)
+                .single();
 
-            if (prescription) {
-                setStatus(prescription.status);
-                if (prescription.rejectionReason) {
-                    setRejectionReason(prescription.rejectionReason);
-                }
-                // Update details if changed by doctor
-                if (prescription.serviceType) setFinalServiceType(prescription.serviceType);
-                if (prescription.price) setFinalPrice(prescription.price);
-                if (prescription.assignedNurse) setAssignedNurse(prescription.assignedNurse);
+            if (error || !data) return;
+
+            setStatus(data.status);
+            if (data.rejection_reason) setRejectionReason(data.rejection_reason);
+            if (data.service_type) setFinalServiceType(data.service_type);
+            if (data.booking_details?.price) setFinalPrice(data.booking_details.price);
+        }, 5000); // Poll every 5 seconds
+
+        // Also fetch immediately on mount
+        (async () => {
+            const { data } = await supabase
+                .from('prescriptions')
+                .select('status, rejection_reason, service_type, booking_details')
+                .eq('id', rxId)
+                .single();
+            if (data) {
+                setStatus(data.status);
+                if (data.rejection_reason) setRejectionReason(data.rejection_reason);
+                if (data.service_type) setFinalServiceType(data.service_type);
+                if (data.booking_details?.price) setFinalPrice(data.booking_details.price);
             }
-        }, 2000); // Poll every 2 seconds
+        })();
 
         return () => clearInterval(pollInterval);
     }, [prescriptionId]);
@@ -61,28 +82,27 @@ export default function PrescriptionReview() {
                 // ... (keep other dummy nurses if needed, or just rely on the first one)
             ];
 
-            // Prioritize: 
-            // 1. Nurse assigned by doctor (assignedNurse state)
-            // 2. Nurse passed from previous step (nurse from location)
-            // 3. Fallback to default nurse
-            const finalNurse = assignedNurse || nurse || availableNurses[0];
+            // Only assign a nurse for actual nursing service bookings
+            const finalNurse = isNursingService
+                ? (assignedNurse || nurse || availableNurses[0])
+                : undefined; // no nurse for lab tests, packages, medicine orders
 
             // Directly go to checkout
             navigate('/checkout', {
                 state: {
                     serviceType: isMedicineOrder ? 'Medicine Order' : finalServiceType,
+                    planType: isMedicineOrder ? 'medicine-order' : isPackage ? 'treatment-package' : 'service',
                     price: finalPrice,
                     date,
                     time,
                     prescription,
-                    nurse: finalNurse, // Pass the correct nurse
+                    nurse: finalNurse, // Only set for nursing services
                     isMedicineOrder,
                     cartItems: location.state?.cartItems,
                     total: location.state?.total,
-                    autoAssigned: !nurse && !assignedNurse, // Flag if it was auto-assigned
+                    autoAssigned: isNursingService && !nurse && !assignedNurse,
                     isPackage: location.state?.isPackage,
                     packageDetails: location.state?.packageDetails,
-                    // Pass doctor notes
                     doctorNotes: prescription?.doctorNotes,
                     diagnosis: prescription?.diagnosis,
                     recommendations: prescription?.recommendations,
@@ -254,20 +274,21 @@ export default function PrescriptionReview() {
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                            <div className={cn(
-                                'flex size-6 items-center justify-center rounded-full shrink-0 mt-0.5',
-                                status === 'approved' ? 'bg-blue-500 text-white animate-pulse' : 'bg-slate-300 text-slate-600'
-                            )}>
-                                <span className="text-xs">3</span>
+                        {/* Step 3 — only show Nurse Assignment for actual nursing services */}
+                        {isNursingService && (
+                            <div className="flex items-start gap-3">
+                                <div className={cn(
+                                    'flex size-6 items-center justify-center rounded-full shrink-0 mt-0.5',
+                                    status === 'approved' ? 'bg-blue-500 text-white animate-pulse' : 'bg-slate-300 text-slate-600'
+                                )}>
+                                    <span className="text-xs">3</span>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-slate-900">Nurse Assignment</p>
+                                    <p className="text-xs font-medium text-slate-500 mt-0.5">Pending</p>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-bold text-slate-900">
-                                    {(location.state?.isMedicineOrder) ? 'Pharmacist Review' : 'Nurse Assignment'}
-                                </p>
-                                <p className="text-xs font-medium text-slate-500 mt-0.5">Pending</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </main>
@@ -279,7 +300,7 @@ export default function PrescriptionReview() {
                         onClick={handleContinue}
                         className="w-full h-14 rounded-2xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
                     >
-                        {location.state?.isMedicineOrder ? 'Continue to Checkout' : 'Continue to Nurse Assignment'}
+                        Proceed to Checkout →
                     </button>
                 </div>
             )}
