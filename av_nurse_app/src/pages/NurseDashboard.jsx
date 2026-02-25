@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone, Bell, Zap, Search } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, User, Clock, CheckCircle, Phone, Bell, Zap, Search, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function NurseDashboard() {
