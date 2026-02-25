@@ -51,7 +51,8 @@ export default function NurseDashboard() {
                 nurseId: notesObj.nurse_id || null,
                 nurseName: notesObj.assigned_nurse_name || null,
                 doctorNotes: notesObj.doctor_notes || '',
-                trackingStatus: b.tracking_status || null,
+                // Read tracking status from notes JSON (reliable) OR column (fallback)
+                trackingStatus: notesObj.tracking_status || b.tracking_status || null,
                 nurseNotes: b.nurse_notes || '',
                 totalPrice: b.total_price || 0,
                 rawNotes: b.notes || '{}',
@@ -120,65 +121,51 @@ export default function NurseDashboard() {
         window.location.assign(`tel:+919876543210`);
     };
 
+    // Helper — merges a new tracking_status into the booking's notes JSON and updates DB
+    const updateTrackingStatus = async (booking, newStatus) => {
+        let currentNotes = {};
+        try { currentNotes = JSON.parse(booking.rawNotes || '{}'); } catch (_) { }
+        const updatedNotes = JSON.stringify({ ...currentNotes, tracking_status: newStatus });
+
+        // Update notes JSON (always works) + tracking_status column (if it exists)
+        const { error } = await supabase
+            .from('bookings')
+            .update({ notes: updatedNotes })
+            .eq('id', booking.id);
+
+        if (error) {
+            alert('Failed to update status: ' + error.message);
+            return false;
+        }
+        // Best-effort update of column (ignore error if column doesn't exist)
+        await supabase.from('bookings').update({ tracking_status: newStatus }).eq('id', booking.id);
+        await loadBookings();
+        return true;
+    };
+
     const handleGoToGodown = async (assignment) => {
-        await supabase.from('bookings').update({ tracking_status: 'to_godown' }).eq('id', assignment.id);
-        // Open Maps to nearest godown (hardcoded demo location — in production, fetch from godowns table)
-        const godownAddress = encodeURIComponent('Medical Supply Store, Mumbai');
-        const openMaps = (origin) => {
-            const url = origin
-                ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${godownAddress}&travelmode=driving`
-                : `https://www.google.com/maps/dir/?api=1&destination=${godownAddress}&travelmode=driving`;
-            window.open(url, '_blank');
-        };
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => openMaps(`${pos.coords.latitude},${pos.coords.longitude}`),
-                () => openMaps(null)
-            );
-        } else { openMaps(null); }
-        loadBookings();
+        await updateTrackingStatus(assignment, 'to_godown');
     };
 
     const handleItemsPicked = async (assignment) => {
-        await supabase.from('bookings').update({ tracking_status: 'items_picked' }).eq('id', assignment.id);
-        loadBookings();
+        await updateTrackingStatus(assignment, 'items_picked');
     };
 
     const handleGoToPatient = async (assignment) => {
-        await supabase.from('bookings').update({ tracking_status: 'on_the_way' }).eq('id', assignment.id);
-        const destination = encodeURIComponent(
-            assignment.address && assignment.address !== 'Address not provided'
-                ? assignment.address : 'Mumbai, Maharashtra'
-        );
-        const openMaps = (origin) => {
-            const url = origin
-                ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`
-                : `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
-            window.open(url, '_blank');
-        };
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => openMaps(`${pos.coords.latitude},${pos.coords.longitude}`),
-                () => openMaps(null)
-            );
-        } else { openMaps(null); }
-        loadBookings();
+        await updateTrackingStatus(assignment, 'on_the_way');
     };
 
-    const handleArrived = async (assignmentId) => {
-        await supabase
-            .from('bookings')
-            .update({ tracking_status: 'arrived', status: 'confirmed' })
-            .eq('id', assignmentId);
-        loadBookings();
+    const handleArrived = async (assignment) => {
+        await updateTrackingStatus(assignment, 'arrived');
     };
 
     const handleMarkComplete = async (assignmentId) => {
-        await supabase
+        const { error } = await supabase
             .from('bookings')
             .update({ status: 'completed' })
             .eq('id', assignmentId);
-        loadBookings();
+        if (error) { alert('Failed to mark complete: ' + error.message); return; }
+        await loadBookings();
     };
 
     // Filtered lists
@@ -296,7 +283,6 @@ export default function NurseDashboard() {
                 )}
 
                 {isMyJob && (() => {
-                    // Step tracker bar
                     const steps = [
                         { key: null, label: 'Accepted' },
                         { key: 'to_godown', label: 'To Godown' },
@@ -304,22 +290,21 @@ export default function NurseDashboard() {
                         { key: 'on_the_way', label: 'Travelling' },
                         { key: 'arrived', label: 'Arrived' },
                     ];
-                    const stepIdx = steps.findIndex(s => s.key === ts);
+                    // When ts is null, findIndex returns 0 (first step = Accepted)
+                    const stepIdx = ts === null ? 0 : steps.findIndex(s => s.key === ts);
                     return (
                         <div className="flex flex-col gap-2">
-                            {/* Step progress */}
+                            {/* Step progress bar */}
                             <div className="flex items-center gap-1 mb-1">
                                 {steps.map((s, i) => (
                                     <div key={i} className="flex-1 flex flex-col items-center">
-                                        <div className={`h-1.5 w-full rounded-full transition-all ${i <= stepIdx ? 'bg-emerald-500' : 'bg-slate-200'
-                                            }`} />
-                                        <span className={`text-[9px] mt-0.5 font-semibold ${i <= stepIdx ? 'text-emerald-600' : 'text-slate-400'
-                                            }`}>{s.label}</span>
+                                        <div className={`h-1.5 w-full rounded-full transition-all ${i <= stepIdx ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                                        <span className={`text-[9px] mt-0.5 font-semibold ${i <= stepIdx ? 'text-emerald-600' : 'text-slate-400'}`}>{s.label}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* STEP 1: Accepted — go to godown */}
+                            {/* STEP 1: Just accepted — go pick supplies from godown */}
                             {!ts && (
                                 <button
                                     onClick={() => handleGoToGodown(booking)}
@@ -329,11 +314,11 @@ export default function NurseDashboard() {
                                 </button>
                             )}
 
-                            {/* STEP 2: At godown — mark items picked */}
+                            {/* STEP 2: Heading to godown — mark items collected */}
                             {ts === 'to_godown' && (
                                 <div className="flex flex-col gap-2">
                                     <div className="w-full px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 flex items-center gap-2">
-                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75"></span><span className="relative inline-flex rounded-full size-2 bg-indigo-500"></span></span>
+                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-500 opacity-75" /><span className="relative inline-flex rounded-full size-2 bg-indigo-500" /></span>
                                         🏪 Heading to Godown…
                                     </div>
                                     <button
@@ -345,7 +330,7 @@ export default function NurseDashboard() {
                                 </div>
                             )}
 
-                            {/* STEP 3: Items picked — navigate to patient */}
+                            {/* STEP 3: Items ready — navigate to patient */}
                             {ts === 'items_picked' && (
                                 <button
                                     onClick={() => handleGoToPatient(booking)}
@@ -355,15 +340,15 @@ export default function NurseDashboard() {
                                 </button>
                             )}
 
-                            {/* STEP 4: On the way — mark arrived */}
+                            {/* STEP 4: On the way — arrive button */}
                             {ts === 'on_the_way' && (
                                 <div className="flex flex-col gap-2">
                                     <div className="w-full px-3 py-2.5 bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2">
-                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span className="relative inline-flex rounded-full size-2 bg-white"></span></span>
+                                        <span className="relative flex size-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" /><span className="relative inline-flex rounded-full size-2 bg-white" /></span>
                                         🚗 On the Way to Patient
                                     </div>
                                     <button
-                                        onClick={() => handleArrived(booking.id)}
+                                        onClick={() => handleArrived(booking)}
                                         className="w-full h-11 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     >
                                         <CheckCircle className="w-4 h-4" /> ✅ Arrived at Patient's Home
@@ -371,7 +356,7 @@ export default function NurseDashboard() {
                                 </div>
                             )}
 
-                            {/* STEP 5: Arrived — mark complete */}
+                            {/* STEP 5: Arrived — mark service complete */}
                             {ts === 'arrived' && (
                                 <button
                                     onClick={() => handleMarkComplete(booking.id)}
