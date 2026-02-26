@@ -105,27 +105,18 @@ export default function MedicalStore() {
     };
 
     const handleCheckout = () => {
-        if (cartHasRx) {
-            // Has prescription-required items — go to prescription upload first
-            navigate('/upload-prescription', {
-                state: {
-                    fromStore: true,
-                    cartItems: cart,
-                    total: cartTotal,
-                }
-            });
-        } else {
-            // No prescription needed — go directly to checkout
-            navigate('/checkout', {
-                state: {
-                    serviceType: 'Medicine Order',
-                    price: cartTotal,
-                    planType: 'medicine-order',
-                    cartItems: cart,
-                    isMedicineOrder: true,
-                }
-            });
-        }
+        // All medicine orders now go to checkout first for payment,
+        // then upload prescription if needed (matching the nursing flow).
+        navigate('/checkout', {
+            state: {
+                serviceType: 'Medicine Order',
+                price: cartTotal,
+                planType: 'medicine-order',
+                cartItems: cart,
+                isMedicineOrder: true,
+                cartHasRx: cartHasRx, // Tell checkout we need a prescription review
+            }
+        });
     };
 
     return (

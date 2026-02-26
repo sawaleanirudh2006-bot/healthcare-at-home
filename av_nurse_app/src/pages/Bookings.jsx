@@ -1,65 +1,120 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Pill, User, Calendar, Clock, MapPin, ChevronRight, FileText, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Pill, Calendar, MapPin, FileText, XCircle, CheckCircle } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const Bookings = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('upcoming');
+    const location = useLocation();
+
+    // If navigated from ServiceTracking completion screen, open 'completed' tab
+    const [activeTab, setActiveTab] = useState(location.state?.tab || 'upcoming');
 
     const [profileData] = useState(() => {
         const stored = localStorage.getItem('userProfile');
-        return stored ? JSON.parse(stored) : {
-            name: 'Arjun Sharma',
-            phone: '+91 98765 43210',
-            avatar: null
-        };
+        return stored ? JSON.parse(stored) : { name: 'User', phone: '', avatar: null };
     });
-    // Dummy data moved up to be accessible for initialization
-    const demoBookings = [
-        {
-            id: 'BK-9021',
-            type: 'service',
-            serviceType: 'Nursing Care',
-            serviceName: '12hr Post-Op Nurse Shift',
-            provider: 'Sister Priya Sharma',
-            date: new Date().toISOString(),
-            time: '08:00 PM',
-            status: 'confirmed', // 'confirmed', 'completed', 'cancelled'
-            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA52I6yeap-Pk-Pte-pz970v2uJSNPJIDxA3H-240nfnhU7VQgEyUU2K6IBbugutGT5oC9aDzBcjdtS0cZVKHQp9xunDFSZh3MRkKdkXX-L2fAlIS5_qDt51QHDcHy1Ct_gBCUcI9ztHmkVh8PDpPItmK-xx2V-LQt_dJWzUUwFJrv1RiQzXqJmOWaJ7zuv-deoB-hVjAFzqYBk4gvz5TDGLp0rvlVxe_KiXvRfGVyeBw8yM7oKdsW3Xk9230Oc6LJiVU_EX8ReIQ',
-            isMedicineOrder: false
-        }
-    ];
 
-    const [bookings, setBookings] = useState(() => {
-        // Load bookings from localStorage
-        const storedBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-        if (storedBookings.length === 0) {
-            // Initialize with demo data if empty so users can see/test functionality
-            localStorage.setItem('userBookings', JSON.stringify(demoBookings));
-            return demoBookings;
-        } else {
-            return storedBookings;
+    // ── Load bookings from Supabase for the logged-in patient ──────────────────
+    const loadBookings = async () => {
+        try {
+            // Prefer Supabase session uid; fall back to uid stored at login
+            const { data: { session } } = await supabase.auth.getSession();
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const uid = session?.user?.id || localUser?.user_id || localUser?.id;
+
+            if (!uid) {
+                // No user at all — show empty list (no stale demo data)
+                setBookings([]);
+                setLoading(false);
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .select('*')
+                .eq('user_id', uid)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const mapped = (data || []).map(b => {
+                let notesObj = {};
+                try { notesObj = JSON.parse(b.notes || '{}'); } catch (_) { }
+                return {
+                    id: b.id,
+                    type: notesObj.is_medicine_order ? 'medicine' : 'service',
+                    serviceType: b.service_name || 'Nursing Care',
+                    serviceName: b.service_name || 'Home Nursing Service',
+                    provider: notesObj.assigned_nurse_name || 'Assigned Nurse',
+                    date: b.date || b.created_at,
+                    time: b.time || '',
+                    status: b.status || 'pending',
+                    isMedicineOrder: notesObj.is_medicine_order || false,
+                    image: null,
+                    rated: b.rated || false,
+                    rating: b.rating || null,
+                    trackingStatus: notesObj.tracking_status || b.tracking_status || null,
+                    bookingId: b.id,
+                    rejectionReason: notesObj.refund_reason || null, // re-use refund_reason as rejection reason from doctor review
+                };
+            });
+
+            setBookings(mapped);
+        } catch (err) {
+            console.error('Failed to load bookings:', err.message);
+            // Fallback to localStorage on error
+            const stored = JSON.parse(localStorage.getItem('userBookings') || '[]');
+            setBookings(stored);
+        } finally {
+            setLoading(false);
         }
-    });
+    };
+
+    useEffect(() => {
+        loadBookings();
+        // Poll every 10 seconds so status updates from nurse reflect promptly
+        const interval = setInterval(loadBookings, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // ── Realtime subscription for instant updates ──────────────────────────────
+    useEffect(() => {
+        let channel;
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const uid = session?.user?.id || localUser?.user_id || localUser?.id;
+            if (!uid) return;
+
+            channel = supabase
+                .channel('patient-bookings')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'bookings',
+                    filter: `user_id=eq.${uid}`,
+                }, () => { loadBookings(); })
+                .subscribe();
+        })();
+        return () => { if (channel) supabase.removeChannel(channel); };
+    }, []);
 
     const handleCancelBooking = (booking) => {
         let confirmMessage = 'Are you sure you want to cancel this service?';
-
         if (booking.trackingStatus === 'on_the_way') {
             confirmMessage = 'Nurse is on the way. A cancellation fee of ₹50 will be applied. Do you want to proceed?';
         }
-
         if (window.confirm(confirmMessage)) {
-            const updatedBookings = bookings.map(b => {
-                if (b.id === booking.id) {
-                    return { ...b, status: 'cancelled' };
-                }
-                return b;
+            const updated = bookings.map(b => b.id === booking.id ? { ...b, status: 'cancelled' } : b);
+            setBookings(updated);
+            // Also update in Supabase
+            supabase.from('bookings').update({ status: 'cancelled' }).eq('id', booking.id).then(({ error }) => {
+                if (error) console.error('Cancel error:', error.message);
             });
-
-            setBookings(updatedBookings);
-            localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
         }
     };
 
@@ -71,7 +126,8 @@ const Bookings = () => {
 
     // Filter bookings based on active tab
     const filteredBookings = bookings.filter(booking => {
-        if (activeTab === 'upcoming') return booking.status === 'confirmed' || booking.status === 'active';
+        if (activeTab === 'upcoming') return ['confirmed', 'active', 'upcoming', 'pending', 'awaiting_doctor', 'doctor_approved', 'rejected'].includes(booking.status);
+
         if (activeTab === 'completed') return booking.status === 'completed';
         if (activeTab === 'cancelled') return booking.status === 'cancelled';
         return false;
@@ -132,7 +188,12 @@ const Bookings = () => {
             </header>
 
             <main className="px-5 py-6 space-y-6 flex-1 pb-24">
-                {filteredBookings.length === 0 ? (
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center h-64 text-text-muted gap-3">
+                        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                        <p className="text-sm font-semibold">Loading bookings…</p>
+                    </div>
+                ) : filteredBookings.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-text-muted">
                         <FileText className="w-12 h-12 mb-3 opacity-50" />
                         <p className="text-sm font-semibold">No {activeTab} bookings found.</p>
@@ -148,9 +209,39 @@ const Bookings = () => {
                                 </div>
                             </div>
                         )}
+                        {activeTab === 'completed' && (
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-muted">Completed Services</h3>
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase">✅ All Done</span>
+                            </div>
+                        )}
 
                         {filteredBookings.map((booking, index) => (
-                            <div key={index} className="group relative overflow-hidden rounded-2xl bg-surface p-4 shadow-premium border border-border-subtle">
+                            <div key={index} className={`group relative overflow-hidden rounded-2xl bg-surface p-4 shadow-premium border ${booking.status === 'completed' ? 'border-emerald-200 bg-emerald-50/20'
+                                : booking.status === 'awaiting_doctor' ? 'border-amber-200 bg-amber-50/20'
+                                    : booking.status === 'doctor_approved' ? 'border-blue-200 bg-blue-50/10'
+                                        : 'border-border-subtle'
+                                }`}>
+                                {(booking.status === 'awaiting_doctor' || booking.status === 'pending') && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold border border-amber-200 shadow-sm transition-all duration-300">
+                                        📋 Review Pending
+                                    </div>
+                                )}
+                                {booking.status === 'rejected' && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold border border-red-200 shadow-sm transition-all duration-300">
+                                        ❌ Rejected
+                                    </div>
+                                )}
+                                {(booking.status === 'confirmed' || booking.status === 'doctor_approved' || booking.status === 'upcoming' || booking.status === 'active') && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold border border-emerald-200 shadow-sm transition-all duration-300">
+                                        ✅ Approved
+                                    </div>
+                                )}
+                                {booking.status === 'completed' && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold border border-emerald-200">
+                                        <CheckCircle className="w-3 h-3" /> Completed
+                                    </div>
+                                )}
                                 <div className="flex gap-4">
                                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-background flex items-center justify-center">
                                         {booking.isMedicineOrder ? (
@@ -190,10 +281,69 @@ const Bookings = () => {
                                                 {new Date(booking.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}, {booking.time}
                                             </span>
                                         </div>
+                                        {/* Status Info Banners */}
+                                        {(booking.status === 'awaiting_doctor' || booking.status === 'pending') && (
+                                            <div className="mt-3 bg-amber-50 rounded-xl p-3 border border-amber-100 flex gap-2.5 items-start">
+                                                <span className="text-lg">📋</span>
+                                                <div>
+                                                    <p className="text-[11px] font-extrabold text-amber-900 leading-tight">Doctor Review Pending</p>
+                                                    <p className="text-[10px] font-medium text-amber-700 leading-relaxed mt-0.5 opacity-90 italic">
+                                                        Your booking has been sent for doctor review. A doctor will verify your requirements before the nurse is dispatched.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {(booking.status === 'confirmed' || booking.status === 'doctor_approved') && !booking.nurseId && (
+                                            <div className="mt-3 bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex gap-2.5 items-start">
+                                                <span className="text-lg">✅</span>
+                                                <div>
+                                                    <p className="text-[11px] font-extrabold text-emerald-900 leading-tight">Doctor Approved</p>
+                                                    <p className="text-[10px] font-medium text-emerald-700 leading-relaxed mt-0.5 opacity-90 italic">
+                                                        Your booking has been approved! We are now assigning the best available nurse for your service.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {booking.status === 'rejected' && (
+                                            <div className="mt-3 bg-red-50 rounded-xl p-3 border border-red-100 flex gap-2.5 items-start">
+                                                <span className="text-lg">❌</span>
+                                                <div>
+                                                    <p className="text-[11px] font-extrabold text-red-900 leading-tight">Prescription Rejected</p>
+                                                    <p className="text-[10px] font-medium text-red-700 leading-relaxed mt-0.5 opacity-90 italic">
+                                                        It has been rejected. Please re-upload a valid prescription to proceed with your booking.
+                                                    </p>
+                                                    {booking.rejectionReason && (
+                                                        <p className="text-[10px] font-bold text-red-600 mt-1.5 p-1.5 bg-white/50 rounded-lg border border-red-200/50">
+                                                            Reason: {booking.rejectionReason}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="mt-4 flex gap-3">
-                                    {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                                    {booking.status === 'rejected' && (
+                                        <button
+                                            onClick={() => navigate('/upload-prescription', {
+                                                state: {
+                                                    serviceType: booking.serviceName,
+                                                    bookingId: booking.id,
+                                                    paymentDone: true,
+                                                    date: booking.date,
+                                                    time: booking.time,
+                                                }
+                                            })}
+                                            className="flex-1 flex h-11 items-center justify-center rounded-xl bg-red-500 text-white text-[13px] font-bold tracking-wide shadow-md shadow-red-500/10 hover:bg-red-600 active:scale-95 transition-all gap-2"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            Re-upload Prescription
+                                        </button>
+                                    )}
+
+                                    {booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'rejected' && (
                                         <button
                                             onClick={() => navigate('/service-tracking', {
                                                 state: {

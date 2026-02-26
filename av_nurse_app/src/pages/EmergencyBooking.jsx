@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle, MapPin, Phone, User } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const EmergencyBooking = () => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         patientName: '',
         phone: '',
@@ -22,66 +24,67 @@ const EmergencyBooking = () => {
         'Other'
     ];
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         // Validation
         if (!formData.patientName || !formData.phone || !formData.address) {
             alert('Please fill all required fields');
             return;
         }
 
-        // Create emergency booking
-        const emergencyBooking = {
-            id: `EMG-${Date.now()}`,
-            ...formData,
-            status: 'emergency',
-            priority: 'high',
-            createdAt: new Date().toISOString(),
-            date: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            service: formData.emergencyType,
-            serviceName: `Emergency ${formData.emergencyType}`,
-            serviceType: 'Emergency Service',
-            provider: 'Assigning nearest nurse...',
-            isMedicineOrder: false,
-            // Auto-assign nearest nurse
-            nurse: {
-                id: 'nurse-1',
-                name: 'Nurse Sarah',
-                rating: 4.8,
-                experience: '8 years'
+        setLoading(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const userId = session?.user?.id || localUser?.user_id || localUser?.id;
+
+            if (!userId) {
+                alert('Please login to request emergency help');
+                navigate('/login/patient');
+                return;
             }
-        };
 
-        // Save to localStorage
-        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        bookings.unshift(emergencyBooking);
-        localStorage.setItem('userBookings', JSON.stringify(bookings));
+            const bookingNotes = JSON.stringify({
+                patient_name: formData.patientName,
+                patient_phone: formData.phone,
+                emergency_type: formData.emergencyType,
+                symptoms: formData.symptoms,
+                notes: formData.notes,
+                is_emergency: true,
+                priority: 'high',
+                prescription_review_pending: false, // Emergency skips review
+            });
 
-        // Create nurse assignment
-        const assignments = JSON.parse(localStorage.getItem('nurseAssignments') || '[]');
-        assignments.unshift({
-            id: emergencyBooking.id,
-            service: emergencyBooking.serviceName,
-            patientName: formData.patientName,
-            date: emergencyBooking.date,
-            time: emergencyBooking.time,
-            address: formData.address,
-            status: 'emergency',
-            priority: 'high',
-            phone: formData.phone,
-            notes: formData.notes,
-            symptoms: formData.symptoms
-        });
-        localStorage.setItem('nurseAssignments', JSON.stringify(assignments));
+            const { data: inserted, error } = await supabase
+                .from('bookings')
+                .insert([{
+                    user_id: userId,
+                    service_name: `EMERGENCY: ${formData.emergencyType}`,
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    total_price: 1999,
+                    status: 'confirmed', // confirmed means it's ready for any nurse to grab
+                    notes: bookingNotes,
+                    address_street: formData.address,
+                }])
+                .select()
+                .single();
 
-        alert('Emergency booking created! A nurse will be assigned immediately.');
-        navigate('/service-tracking', {
-            state: {
-                serviceType: emergencyBooking.serviceName,
-                providerName: emergencyBooking.nurse.name,
-                bookingId: emergencyBooking.id
-            }
-        });
+            if (error) throw error;
+
+            alert('Emergency request sent! A nurse will be assigned immediately.');
+            navigate('/service-tracking', {
+                state: {
+                    serviceType: `Emergency ${formData.emergencyType}`,
+                    providerName: 'Assigning nearest nurse...',
+                    bookingId: inserted.id,
+                    isEmergency: true,
+                }
+            });
+        } catch (error) {
+            alert('Failed to send emergency request: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

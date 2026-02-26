@@ -33,6 +33,7 @@ export default function PrescriptionDetail() {
 
             const formatted = {
                 id: data.id,
+                userId: data.user_id,           // needed for Strategy B booking lookup
                 patientName: data.patient_name,
                 serviceType: data.service_type,
                 uploadTime: data.created_at,
@@ -40,7 +41,7 @@ export default function PrescriptionDetail() {
                 rejectionReason: data.rejection_reason,
                 reviewTime: data.review_time,
                 prescription: { name: data.file_name, url: data.file_url },
-                bookingDetails: data.booking_details,
+                bookingDetails: data.booking_details,   // JSON object with booking_id inside
                 price: data.booking_details?.price || '',
             };
             setPrescription(formatted);
@@ -51,10 +52,34 @@ export default function PrescriptionDetail() {
         fetchPrescription();
     }, [id]);
 
+    // Helper: find the linked booking ID using two strategies
+    const findLinkedBookingId = async () => {
+        // Strategy A: booking_id stored inside booking_details JSON
+        const fromJson = prescription.bookingDetails?.booking_id;
+        if (fromJson) return fromJson;
+
+        // Strategy B: look up the most recent 'pending' booking for this patient by user_id
+        const userId = prescription.userId;
+        if (!userId) return null;
+
+        const { data } = await supabase
+            .from('bookings')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        return data?.id || null;
+    };
+
     const handleApprove = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        const doctorId = session?.user?.id || null;
+        const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const doctorId = session?.user?.id || localUser?.user_id || localUser?.id || null;
 
+        // 1. Mark prescription as approved
         const { error } = await supabase
             .from('prescriptions')
             .update({
@@ -69,6 +94,21 @@ export default function PrescriptionDetail() {
             alert('Failed to approve: ' + error.message);
             return;
         }
+
+        // 2. Set the linked booking to 'confirmed'
+        //    'confirmed' is the DB-allowed status that makes the booking visible to nurses
+        const bookingId = await findLinkedBookingId();
+        if (bookingId) {
+            const { error: bErr } = await supabase
+                .from('bookings')
+                .update({ status: 'confirmed' })
+                .eq('id', bookingId);
+            if (bErr) {
+                alert('Prescription approved but nurse assignment failed: ' + bErr.message);
+                return;
+            }
+        }
+
         navigate('/doctor/dashboard');
     };
 
@@ -79,8 +119,10 @@ export default function PrescriptionDetail() {
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        const doctorId = session?.user?.id || null;
+        const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const doctorId = session?.user?.id || localUser?.user_id || localUser?.id || null;
 
+        // 1. Mark prescription as rejected
         const { error } = await supabase
             .from('prescriptions')
             .update({
@@ -95,6 +137,33 @@ export default function PrescriptionDetail() {
             alert('Failed to reject: ' + error.message);
             return;
         }
+
+        // 2. Cancel the linked booking + mark refund as pending in notes
+        const bookingId = await findLinkedBookingId();
+        if (bookingId) {
+            // Fetch the current notes so we can merge refund info in
+            const { data: bData } = await supabase
+                .from('bookings')
+                .select('notes')
+                .eq('id', bookingId)
+                .single();
+
+            let currentNotes = {};
+            try { currentNotes = JSON.parse(bData?.notes || '{}'); } catch (_) { }
+
+            const updatedNotes = JSON.stringify({
+                ...currentNotes,
+                refund_status: 'pending',
+                refund_reason: rejectionReason,
+                refund_initiated_at: new Date().toISOString(),
+            });
+
+            await supabase
+                .from('bookings')
+                .update({ status: 'rejected', notes: updatedNotes })
+                .eq('id', bookingId);
+        }
+
         setShowRejectModal(false);
         navigate('/doctor/dashboard');
     };

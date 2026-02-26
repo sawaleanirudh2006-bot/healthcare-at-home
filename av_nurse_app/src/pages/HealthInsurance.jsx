@@ -162,12 +162,8 @@ export default function HealthInsurance() {
 
                         {/* CTA Button */}
                         <button
-                            onClick={() => navigate('/checkout', {
+                            onClick={() => navigate('/insurance-application', {
                                 state: {
-                                    serviceType: plan.name,
-                                    price: plan.price,
-                                    planType: 'insurance',
-                                    coverage: plan.coverage,
                                     planDetails: plan
                                 }
                             })}

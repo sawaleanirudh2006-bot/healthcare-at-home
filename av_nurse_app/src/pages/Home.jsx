@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 
 // All searchable items in the app
 const ALL_ITEMS = [
@@ -33,10 +34,81 @@ const Home = () => {
         };
     });
 
-    const [upcomingService] = useState(() => {
-        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        return bookings.find(b => b.status !== 'completed' && b.status !== 'cancelled') || null;
-    });
+    const [upcomingService, setUpcomingService] = useState(null);
+    const channelRef = useRef(null);
+
+    // ── Fetch active (non-completed, non-cancelled) booking from Supabase ─────
+    const fetchUpcoming = async () => {
+        try {
+            // Use Supabase session OR user_id from localStorage (JWT login)
+            const { data: { session } } = await supabase.auth.getSession();
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const uid = session?.user?.id || localUser?.user_id || localUser?.id;
+            if (!uid) return;
+
+            const { data, error } = await supabase
+                .from('bookings')
+                .select('id, status, service_name, date, time, notes, tracking_status')
+                .eq('user_id', uid)
+                .not('status', 'in', '("completed","cancelled")')
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+
+            if (error || !data || data.length === 0) {
+                setUpcomingService(null);
+                return;
+            }
+
+            const b = data[0];
+            let notesObj = {};
+            try { notesObj = JSON.parse(b.notes || '{}'); } catch (_) { }
+
+            // nurseId is only present after a nurse has accepted the job
+            const nurseId = notesObj.nurse_id || null;
+
+            const isMed = notesObj.is_medicine_order || false;
+            setUpcomingService({
+                id: b.id,
+                service: b.service_name || 'Home Nursing Service',
+                status: b.status,
+                date: b.date || '',
+                time: b.time || '',
+                trackingStatus: notesObj.tracking_status || b.tracking_status || null,
+                nurseId,
+                isMedicineOrder: isMed,
+                nurse: { name: isMed ? 'Pharmacy Team' : (notesObj.assigned_nurse_name || 'Nurse') },
+            });
+        } catch (_) { }
+    };
+
+    useEffect(() => {
+        fetchUpcoming();
+        const interval = setInterval(fetchUpcoming, 15000);
+
+        // Realtime: re-fetch immediately when any of the user's bookings change
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const uid = session?.user?.id || localUser?.user_id || localUser?.id;
+            if (!uid) return;
+
+            channelRef.current = supabase
+                .channel('home-upcoming-booking')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'bookings',
+                    filter: `user_id=eq.${uid}`,
+                }, fetchUpcoming)
+                .subscribe();
+        })();
+
+        return () => {
+            clearInterval(interval);
+            if (channelRef.current) supabase.removeChannel(channelRef.current);
+        };
+    }, []);
 
     const searchResults = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -272,8 +344,13 @@ const Home = () => {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-secondary">
                                                     {upcomingService.service || 'Nursing Care'}
                                                 </span>
-                                                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
-                                                    {upcomingService.status === 'upcoming' ? 'CONFIRMED' : upcomingService.status?.toUpperCase()}
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${upcomingService.status === 'awaiting_doctor' ? 'bg-amber-500/10 text-amber-600'
+                                                    : upcomingService.status === 'doctor_approved' ? 'bg-blue-500/10 text-blue-600'
+                                                        : 'bg-emerald-500/10 text-emerald-500'
+                                                    }`}>
+                                                    {upcomingService.status === 'awaiting_doctor' ? '📋 Doctor Review'
+                                                        : (upcomingService.status === 'doctor_approved' || upcomingService.status === 'confirmed') ? '✅ Approved'
+                                                            : 'UPCOMING'}
                                                 </span>
                                             </div>
                                             <h4 className="text-[16px] font-bold leading-tight mt-1 text-text-main">
@@ -282,6 +359,17 @@ const Home = () => {
                                             <p className="text-sm font-medium text-text-muted mt-0.5">
                                                 {upcomingService.nurse?.name || 'Nurse Assigned'}
                                             </p>
+                                            {upcomingService.status === 'awaiting_doctor' && (
+                                                <div className="mt-4 bg-amber-50/50 rounded-2xl p-3 border border-amber-100 flex gap-2.0 items-start">
+                                                    <span className="text-lg">📋</span>
+                                                    <div>
+                                                        <p className="text-[10px] font-extrabold text-amber-900 leading-tight underline decoration-amber-200 decoration-2 underline-offset-2">Doctor Review Pending</p>
+                                                        <p className="text-[9px] font-medium text-amber-700 leading-relaxed mt-1 opacity-90 italic">
+                                                            Your booking has been sent for doctor review. A doctor will verify your requirements before the nurse is dispatched. You will be notified once approved.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -297,18 +385,37 @@ const Home = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => navigate('/service-tracking', {
-                                            state: {
-                                                serviceType: upcomingService.service,
-                                                providerName: upcomingService.nurse?.name || 'Nurse',
-                                                bookingId: upcomingService.id
-                                            }
-                                        })}
-                                        className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-bold shadow-md shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
-                                    >
-                                        Track
-                                    </button>
+                                    {((upcomingService.isMedicineOrder && (upcomingService.status === 'confirmed' || upcomingService.status === 'upcoming')) || upcomingService.nurseId) ? (
+                                        // Medicine order (approved) OR Nurse has accepted — show Track button
+                                        <button
+                                            onClick={() => navigate('/service-tracking', {
+                                                state: {
+                                                    serviceType: upcomingService.service,
+                                                    providerName: upcomingService.nurse?.name || 'Pharmacy Team',
+                                                    bookingId: upcomingService.id,
+                                                    isMedicineOrder: upcomingService.isMedicineOrder,
+                                                    initialBookingStatus: upcomingService.status,
+                                                    initialTrackingStatus: upcomingService.trackingStatus,
+                                                }
+                                            })}
+                                            className="h-9 px-4 rounded-xl bg-primary text-white text-[12px] font-bold shadow-md shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all"
+                                        >
+                                            Track {upcomingService.isMedicineOrder ? 'Order' : 'Service'}
+                                        </button>
+                                    ) : upcomingService.status === 'awaiting_doctor' ? (
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-200 text-violet-700 text-[11px] font-bold">
+                                            📋 Verification Pending
+                                        </span>
+                                    ) : (
+                                        // Waiting for a nurse to accept
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold">
+                                            <span className="relative flex size-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                                                <span className="relative inline-flex rounded-full size-2 bg-amber-500" />
+                                            </span>
+                                            Awaiting Nurse
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </section>

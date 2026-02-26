@@ -1,11 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, Calendar, Clock, CheckCircle2, Shield, Download, FileText, Navigation } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabaseClient';
 
 export default function PaymentSuccess() {
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Track booking status in realtime
+    const [currentStatus, setCurrentStatus] = useState(location.state?.prescriptionPending ? 'awaiting_doctor' : 'confirmed');
     const {
         serviceType = 'Service',
         price = 0,
@@ -76,18 +80,167 @@ export default function PaymentSuccess() {
         saveBooking();
     }, [bookingId, policyNumber, planType, serviceType, price, location.state, isInsurance, isMembership, isMedicineOrder, cartItems]);
 
+    // Track status in realtime if this is a nursing service that requires review
+    useEffect(() => {
+        const realBookingId = location.state?.bookingId || location.state?.supabaseBookingId;
+        if (!realBookingId) return;
+
+        const fetchStatus = async () => {
+            const { data } = await supabase.from('bookings').select('status').eq('id', realBookingId).single();
+            if (data?.status) setCurrentStatus(data.status);
+        };
+        fetchStatus();
+
+        const channel = supabase
+            .channel(`status-check-${realBookingId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bookings', filter: `id=eq.${realBookingId}` },
+                (payload) => {
+                    if (payload.new.status) setCurrentStatus(payload.new.status);
+                })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [location.state?.bookingId, location.state?.supabaseBookingId]);
+
     const handleTrackService = () => {
         navigate('/service-tracking', {
             state: {
                 serviceType: serviceType,
                 providerName: location.state?.nurse?.name || (isMedicineOrder ? 'Pharmacy Delivery' : 'Sister Priya Sharma'),
                 isMedicineOrder: isMedicineOrder,
-                status: 'confirmed'
+                // pass the Supabase UUID so ServiceTracking can poll the real booking
+                bookingId: location.state?.supabaseBookingId || null,
+                prescriptionPending: location.state?.prescriptionPending || false,
             }
         });
     };
 
-    return (
+    // ── Invoice Download ──────────────────────────────────────────────────
+    const generateInvoice = () => {
+        const invoiceDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        const invoiceTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        const subtotal = price || 0;
+        const gst = Math.round(subtotal * 0.18);
+        const grandTotal = subtotal + gst;
+        const paymentMethod = location.state?.paymentMethod || 'UPI';
+        const patientName = JSON.parse(localStorage.getItem('userData') || '{}')?.name || 'Patient';
+
+        const itemsHtml = cartItems ? cartItems.map(item => `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155">${item.name}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:center">${item.quantity}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;text-align:right;font-weight:600">₹${(item.price * item.quantity).toLocaleString()}</td>
+            </tr>
+        `).join('') : `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155">${serviceType}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;text-align:center">1</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#334155;text-align:right;font-weight:600">₹${subtotal.toLocaleString()}</td>
+            </tr>
+        `;
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice - ${bookingId}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#f8fafc; padding:40px 20px; }
+        .invoice { max-width:600px; margin:0 auto; background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.06); overflow:hidden; }
+        .header { background:linear-gradient(135deg,#0d9488,#14b8a6); padding:32px; color:#fff; }
+        .header h1 { font-size:28px; font-weight:800; margin-bottom:4px; }
+        .header p { font-size:13px; opacity:0.85; }
+        .badge { display:inline-block; background:rgba(255,255,255,0.2); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; margin-top:12px; }
+        .body { padding:32px; }
+        .meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:28px; padding-bottom:20px; border-bottom:2px solid #f1f5f9; }
+        .meta-item label { display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; margin-bottom:4px; }
+        .meta-item span { font-size:14px; font-weight:600; color:#1e293b; }
+        table { width:100%; border-collapse:collapse; margin-bottom:24px; }
+        thead th { padding:10px 12px; background:#f8fafc; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; text-align:left; }
+        thead th:last-child { text-align:right; }
+        thead th:nth-child(2) { text-align:center; }
+        .totals { background:#f8fafc; border-radius:12px; padding:20px; margin-bottom:24px; }
+        .totals .row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; color:#64748b; }
+        .totals .row span:last-child { font-weight:600; color:#334155; }
+        .totals .grand { border-top:2px solid #e2e8f0; margin-top:8px; padding-top:12px; font-size:18px; font-weight:800; color:#0f172a; }
+        .footer { text-align:center; padding:20px 32px 32px; color:#94a3b8; font-size:12px; }
+        .footer .thankyou { font-size:15px; font-weight:700; color:#0d9488; margin-bottom:8px; }
+        .print-btn { display:block; margin:20px auto; padding:12px 32px; background:#0d9488; color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+        .print-btn:hover { background:#0f766e; }
+        @media print { .print-btn { display:none !important; } body { background:#fff; padding:0; } .invoice { box-shadow:none; } }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="header">
+            <h1>NurseHome</h1>
+            <p>Healthcare at Your Doorstep</p>
+            <div class="badge">TAX INVOICE</div>
+        </div>
+        <div class="body">
+            <div class="meta">
+                <div class="meta-item">
+                    <label>Invoice ID</label>
+                    <span>${bookingId}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Date</label>
+                    <span>${invoiceDate}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Time</label>
+                    <span>${invoiceTime}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Patient</label>
+                    <span>${patientName}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Payment</label>
+                    <span>${paymentMethod.toUpperCase()}</span>
+                </div>
+                <div class="meta-item">
+                    <label>Status</label>
+                    <span style="color:#059669">✓ Paid</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service / Item</th>
+                        <th>Qty</th>
+                        <th style="text-align:right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+
+            <div class="totals">
+                <div class="row"><span>Subtotal</span><span>₹${subtotal.toLocaleString()}</span></div>
+                <div class="row"><span>GST (18%)</span><span>₹${gst.toLocaleString()}</span></div>
+                <div class="row"><span>Service Fee</span><span>₹0</span></div>
+                <div class="row grand"><span>Total Paid</span><span>₹${grandTotal.toLocaleString()}</span></div>
+            </div>
+        </div>
+        <div class="footer">
+            <p class="thankyou">Thank you for choosing NurseHome! 🙏</p>
+            <p>For support, contact us at support@nursehome.in</p>
+            <p style="margin-top:4px">This is a computer-generated invoice.</p>
+        </div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</body>
+</html>`;
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+    }; return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto p-5">
             {/* Close Button */}
             <button
@@ -451,6 +604,32 @@ export default function PaymentSuccess() {
                                 ₹{price.toLocaleString()}
                             </span>
                         </div>
+
+                        {/* Doctor Review / Approval banner */}
+                        {((location.state?.prescriptionPending && currentStatus === 'awaiting_doctor') || currentStatus === 'pending') && (
+                            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start animate-in fade-in zoom-in">
+                                <span className="text-2xl leading-none">📋</span>
+                                <div>
+                                    <p className="text-sm font-extrabold text-amber-900">Doctor Review Pending</p>
+                                    <p className="text-[11px] font-medium text-amber-700 mt-1 leading-relaxed opacity-90">
+                                        Your booking has been sent for doctor review. A doctor will verify your requirements before the nurse is dispatched. You will be notified once approved.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Approved Banner */}
+                        {(currentStatus === 'confirmed' || currentStatus === 'doctor_approved') && (
+                            <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex gap-3 items-start animate-in fade-in slide-in-from-top-2 duration-300">
+                                <span className="text-2xl leading-none">✅</span>
+                                <div>
+                                    <p className="text-sm font-extrabold text-emerald-900 leading-tight">Approved</p>
+                                    <p className="text-[11px] font-medium text-emerald-700 mt-0.5">
+                                        Your prescription has been verified! A nurse is now being assigned to your location.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </div>
@@ -464,6 +643,7 @@ export default function PaymentSuccess() {
             >
                 {isInsurance && (
                     <button
+                        onClick={generateInvoice}
                         className="w-full bg-blue-500 text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-blue-500/25 hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
                     >
                         <Download className="w-5 h-5" />
@@ -472,6 +652,7 @@ export default function PaymentSuccess() {
                 )}
                 {isMembership && (
                     <button
+                        onClick={generateInvoice}
                         className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                         <FileText className="w-5 h-5" />
@@ -495,6 +676,16 @@ export default function PaymentSuccess() {
                     >
                         <Navigation className="w-5 h-5" />
                         Track My Order
+                    </button>
+                )}
+                {/* Universal Download Invoice — optional for all users */}
+                {!isInsurance && !isMembership && (
+                    <button
+                        onClick={generateInvoice}
+                        className="w-full bg-white text-slate-700 px-6 py-4 rounded-2xl text-base font-bold border border-slate-200 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Download className="w-5 h-5 text-slate-500" />
+                        Download Invoice
                     </button>
                 )}
                 <button

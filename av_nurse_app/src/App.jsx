@@ -62,6 +62,7 @@ import StoreCheckout from './pages/StoreCheckout';
 import OrderTracking from './pages/OrderTracking';
 import Ambulance from './pages/Ambulance';
 import NearbyHospitals from './pages/NearbyHospitals';
+import InsuranceApplication from './pages/InsuranceApplication';
 
 function App() {
   // Initialize dark mode from localStorage
@@ -140,7 +141,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/service-tracking" element={<ServiceTracking />} />
-          <Route path="/emergency" element={<Emergency />} />
+          <Route path="/emergency-info" element={<Emergency />} />
           <Route path="/notifications" element={<Notifications />} />
 
           {/* Medication Management - No Layout */}
@@ -158,6 +159,7 @@ function App() {
           <Route path="/claims-tracker" element={<ClaimsTracker />} />
           <Route path="/membership-plans" element={<MembershipPlans />} />
           <Route path="/health-insurance" element={<HealthInsurance />} />
+          <Route path="/insurance-application" element={<InsuranceApplication />} />
           <Route path="/treatment-packages" element={<TreatmentPackages />} />
           <Route path="/health-checkup-packages" element={<HealthCheckupPackages />} />
 

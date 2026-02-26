@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 export default function ScheduleDateTime() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { serviceType = 'Short Visit', price = '₹499', nurse, isRebooking, isIVService, isPackage, packageDetails } = location.state || {};
+    const { serviceType = 'Short Visit', price = '₹499', nurse, isRebooking, isIVService, isPackage, packageDetails, planType } = location.state || {};
 
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
@@ -73,7 +73,7 @@ export default function ScheduleDateTime() {
 
     const handleContinue = () => {
         if (selectedDate && selectedTime) {
-            navigate('/upload-prescription', {
+            navigate('/checkout', {
                 state: {
                     serviceType,
                     price,
@@ -84,6 +84,7 @@ export default function ScheduleDateTime() {
                     isIVService,    // Pass isIVService flag
                     isPackage,      // Pass isPackage flag
                     packageDetails, // Pass package details
+                    planType,       // Pass planType (e.g. lab-test)
                 },
             });
         }
@@ -303,7 +304,7 @@ export default function ScheduleDateTime() {
                             : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                     )}
                 >
-                    Continue to Checkout
+                    Continue to Payment
                 </button>
             </div>
         </div>

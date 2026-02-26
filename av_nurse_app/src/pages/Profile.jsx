@@ -8,9 +8,14 @@ const Profile = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
-    const loyaltyPoints = parseInt(localStorage.getItem('loyaltyPoints') || '0', 10);
+    let storedPoints = localStorage.getItem('loyaltyPoints');
+    if (storedPoints === 'NaN' || !storedPoints) {
+        storedPoints = '0';
+        localStorage.setItem('loyaltyPoints', '0');
+    }
+    const loyaltyPoints = parseInt(storedPoints, 10) || 0;
     const loyaltyReward = localStorage.getItem('loyaltyReward');
-    const progressPct = Math.min((loyaltyPoints / REWARD_THRESHOLD) * 100, 100);
+    const progressPct = isNaN(loyaltyPoints) ? 0 : Math.min((loyaltyPoints / REWARD_THRESHOLD) * 100, 100);
 
     // Load saved photo from localStorage (fallback to default)
     const [photoUrl, setPhotoUrl] = useState(

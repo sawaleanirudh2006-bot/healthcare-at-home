@@ -64,7 +64,31 @@ export default function PrescriptionReview() {
 
     const handleContinue = () => {
         if (status === 'approved') {
-            const { nurse, isRebooking, isMedicineOrder } = location.state || {};
+            const { nurse, isRebooking, isMedicineOrder, paymentDone, supabaseBookingId, bookingId, cartItems } = location.state || {};
+
+            // If payment was already done (new flow), go straight to success
+            if (paymentDone) {
+                navigate('/payment-success', {
+                    state: {
+                        serviceType: isMedicineOrder ? 'Medicine Order' : finalServiceType,
+                        price: finalPrice,
+                        planType: isMedicineOrder ? 'medicine-order' : isPackage ? 'treatment-package' : 'service',
+                        date,
+                        time,
+                        prescription,
+                        isMedicineOrder,
+                        cartItems,
+                        bookingId: bookingId || supabaseBookingId,
+                        supabaseBookingId: supabaseBookingId,
+                        prescriptionPending: false, // It's approved now!
+                        doctorNotes: prescription?.doctorNotes,
+                        diagnosis: prescription?.diagnosis,
+                        recommendations: prescription?.recommendations,
+                        doctorPrescription: prescription?.doctorPrescription
+                    },
+                });
+                return;
+            }
 
             // Auto-assign nearest available nurse only if not already assigned
             const availableNurses = [
@@ -78,8 +102,7 @@ export default function PrescriptionReview() {
                     image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop',
                     available: true,
                     location: 'Nearby'
-                },
-                // ... (keep other dummy nurses if needed, or just rely on the first one)
+                }
             ];
 
             // Only assign a nurse for actual nursing service bookings
@@ -166,7 +189,11 @@ export default function PrescriptionReview() {
                         </h2>
                         <p className="text-sm font-medium text-slate-600 leading-relaxed">
                             {status === 'pending' && 'Your prescription has been submitted and is waiting for doctor approval. This may take a few minutes to a few hours.'}
-                            {status === 'approved' && 'Your prescription has been verified by Dr. Rajesh Kumar. We\'re now assigning a qualified nurse.'}
+                            {status === 'approved' && (
+                                isMedicineOrder
+                                    ? 'Your prescription has been verified by Dr. Rajesh Kumar. Your order has been placed and is being prepared.'
+                                    : 'Your prescription has been verified by Dr. Rajesh Kumar. We\'re now assigning a qualified nurse.'
+                            )}
                             {status === 'rejected' && rejectionReason}
                         </p>
                     </div>

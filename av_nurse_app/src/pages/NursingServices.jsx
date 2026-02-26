@@ -49,8 +49,30 @@ const ALL_SERVICES = [
 export default function NursingServices() {
     const navigate = useNavigate();
     const [selectedService, setSelectedService] = useState(null);
+    const loyaltyReward = localStorage.getItem('loyaltyReward');
     const services = ALL_SERVICES;
 
+    const handleContinue = (service) => {
+        let finalPrice = service.price;
+        let appliedReward = null;
+
+        if (service.id === 'short-visit' && loyaltyReward === '1-free-short-visit') {
+            const useReward = window.confirm('You have a Free Short Visit reward! Would you like to use it for this booking?');
+            if (useReward) {
+                finalPrice = 0;
+                appliedReward = '1-free-short-visit';
+            }
+        }
+
+        navigate('/schedule-datetime', {
+            state: {
+                serviceType: service.title,
+                price: finalPrice,
+                serviceId: service.id,
+                usedReward: appliedReward
+            }
+        });
+    };
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto">
             {/* Header */}
@@ -137,9 +159,7 @@ export default function NursingServices() {
                                         </span>
                                     </div>
                                     <button
-                                        onClick={() => navigate('/schedule-datetime', {
-                                            state: { serviceType: service.title, price: service.price, serviceId: service.id }
-                                        })}
+                                        onClick={() => handleContinue(service)}
                                         className="w-full h-14 bg-primary text-white rounded-2xl font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
                                     >
                                         Continue

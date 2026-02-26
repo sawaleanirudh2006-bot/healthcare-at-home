@@ -58,11 +58,23 @@ export default function NurseDashboard() {
                 rawNotes: b.notes || '{}',
                 createdAt: b.created_at,
                 isMedicineOrder: notesObj.is_medicine_order || false,
+                isEmergency: notesObj.is_emergency || false,
+                isInsurance: notesObj.planType === 'insurance' || false,
+                isLabTest: notesObj.planType === 'lab-test' || false,
+                isAmbulance: (b.service_name || '').toLowerCase().includes('ambulance'),
+                isHospital: (b.service_name || '').toLowerCase().includes('hospital'),
             };
         });
 
-        // Medicine orders go to Admin — nurses only see nursing service bookings
-        setAllBookings(mapped.filter(b => !b.isMedicineOrder));
+        // Filter out non-nursing jobs (Medicine, Insurance, Lab Tests, Ambulance, etc.)
+        // These are handled by other departments or Admin
+        setAllBookings(mapped.filter(b =>
+            !b.isMedicineOrder &&
+            !b.isInsurance &&
+            !b.isLabTest &&
+            !b.isAmbulance &&
+            !b.isHospital
+        ));
     };
 
     useEffect(() => {
@@ -103,7 +115,7 @@ export default function NurseDashboard() {
 
             const { error } = await supabase
                 .from('bookings')
-                .update({ notes: updatedNotes, status: 'confirmed' })
+                .update({ notes: updatedNotes, status: 'confirmed' })  // confirmed = nurse accepted
                 .eq('id', booking.id);
 
             if (error) throw error;
@@ -127,18 +139,25 @@ export default function NurseDashboard() {
         try { currentNotes = JSON.parse(booking.rawNotes || '{}'); } catch (_) { }
         const updatedNotes = JSON.stringify({ ...currentNotes, tracking_status: newStatus });
 
-        // Update notes JSON (always works) + tracking_status column (if it exists)
+        // Single atomic update — write both notes JSON AND the tracking_status column together
+        // This ensures ServiceTracking.jsx always finds the status regardless of which field it reads
         const { error } = await supabase
             .from('bookings')
-            .update({ notes: updatedNotes })
+            .update({
+                notes: updatedNotes,
+                tracking_status: newStatus,   // dedicated column (primary source)
+            })
             .eq('id', booking.id);
 
         if (error) {
-            alert('Failed to update status: ' + error.message);
-            return false;
+            // If tracking_status column doesn't exist, fall back to notes-only update
+            const { error: fallbackErr } = await supabase
+                .from('bookings')
+                .update({ notes: updatedNotes })
+                .eq('id', booking.id);
+            if (fallbackErr) { alert('Failed to update status: ' + fallbackErr.message); return false; }
         }
-        // Best-effort update of column (ignore error if column doesn't exist)
-        await supabase.from('bookings').update({ tracking_status: newStatus }).eq('id', booking.id);
+
         await loadBookings();
         return true;
     };
@@ -169,7 +188,10 @@ export default function NurseDashboard() {
     };
 
     // Filtered lists
-    const newRequests = allBookings.filter(b => b.status === 'pending' && !b.nurseId);
+    // 'pending'   = waiting for doctor review   → NOT shown to nurses
+    // 'confirmed' = doctor approved             → shown in New Requests (no nurse yet)
+    //                                           → shown in My Jobs (this nurse accepted)
+    const newRequests = allBookings.filter(b => b.status === 'confirmed' && !b.nurseId);
     const myJobs = allBookings.filter(b => b.nurseId === nurseId && (b.status === 'confirmed' || b.status === 'upcoming'));
     const completed = allBookings.filter(b => b.nurseId === nurseId && b.status === 'completed');
     const cancelled = allBookings.filter(b => b.nurseId === nurseId && b.status === 'cancelled');
@@ -208,13 +230,21 @@ export default function NurseDashboard() {
         return (
             <div
                 key={booking.id}
-                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all ${isRequest
-                    ? 'border-amber-200 bg-amber-50/30'
-                    : booking.status === 'cancelled'
-                        ? 'border-red-100'
-                        : 'border-slate-100'
+                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all ${booking.isEmergency
+                    ? 'border-red-500 bg-red-50/50 ring-2 ring-red-500/20'
+                    : isRequest
+                        ? 'border-amber-200 bg-amber-50/30'
+                        : booking.status === 'cancelled'
+                            ? 'border-red-100'
+                            : 'border-slate-100'
                     }`}
             >
+                {booking.isEmergency && (
+                    <div className="flex items-center gap-2 mb-3 py-1.5 px-3 bg-red-600 text-white rounded-xl animate-pulse">
+                        <Zap className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">EMERGENCY CASE — ACT NOW</span>
+                    </div>
+                )}
                 {/* Top row */}
                 <div className="flex items-start gap-3 mb-3">
                     <div className={`flex size-12 items-center justify-center rounded-xl shrink-0 ${isRequest ? 'bg-amber-100 text-amber-600' : 'bg-emerald-50 text-emerald-600'
