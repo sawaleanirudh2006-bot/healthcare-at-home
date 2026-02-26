@@ -1335,18 +1335,29 @@ export default function AdminDashboard() {
                                                     <p className="text-xs text-slate-500">View nurse jobs</p>
                                                 </div>
                                             </button>
-                                            <button onClick={() => navigate('/staff-management')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left">
-                                                <Users className="w-5 h-5 text-blue-500" />
+
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Staff Management</p>
+                                            <button onClick={() => navigate('/staff-management?tab=doctors')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left">
+                                                <Stethoscope className="w-5 h-5 text-blue-500" />
                                                 <div>
-                                                    <p className="text-sm font-bold text-slate-900">Staff Management</p>
-                                                    <p className="text-xs text-slate-500">Doctors & Nurses</p>
+                                                    <p className="text-sm font-bold text-slate-900">Doctors</p>
+                                                    <p className="text-xs text-slate-500">View doctor details & stats</p>
                                                 </div>
                                             </button>
+                                            <button onClick={() => navigate('/staff-management?tab=nurses')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50 transition-all text-left">
+                                                <UserCheck className="w-5 h-5 text-teal-500" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900">Nurses</p>
+                                                    <p className="text-xs text-slate-500">View nurse details & jobs</p>
+                                                </div>
+                                            </button>
+
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Analytics</p>
                                             <button onClick={() => navigate('/revenue-reports')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all text-left">
                                                 <TrendingUp className="w-5 h-5 text-amber-500" />
                                                 <div>
-                                                    <p className="text-sm font-bold text-slate-900">Revenue Reports</p>
-                                                    <p className="text-xs text-slate-500">Analytics & trends</p>
+                                                    <p className="text-sm font-bold text-slate-900">Revenue / Reports</p>
+                                                    <p className="text-xs text-slate-500">Analytics, trends & breakdowns</p>
                                                 </div>
                                             </button>
                                         </div>
