@@ -64,6 +64,7 @@ const StaffManagement = () => {
                     price: Number(b.total_price || 0),
                     createdAt: b.created_at,
                     isMedicine: notes.is_medicine_order || false,
+                    feedback: notes.feedback || null,
                 };
             });
             setAllBookings(mapped);
@@ -137,6 +138,7 @@ const StaffManagement = () => {
                         cancelledJobs: 0,
                         totalRevenue: 0,
                         bookings: [],
+                        feedbacks: [],
                         lastActive: null,
                     };
                 }
@@ -145,13 +147,23 @@ const StaffManagement = () => {
                 if (b.status === 'completed') nurseMap[b.nurseId].completedJobs++;
                 if (b.status === 'cancelled') nurseMap[b.nurseId].cancelledJobs++;
                 if (b.status !== 'cancelled') nurseMap[b.nurseId].totalRevenue += b.price;
+                if (b.feedback) nurseMap[b.nurseId].feedbacks.push({ ...b.feedback, patient: b.patient, service: b.service });
                 nurseMap[b.nurseId].bookings.push(b);
                 if (!nurseMap[b.nurseId].lastActive || b.createdAt > nurseMap[b.nurseId].lastActive) {
                     nurseMap[b.nurseId].lastActive = b.createdAt;
                 }
             });
 
-            const realNurses = Object.values(nurseMap);
+            // Calculate actual rating dynamically
+            const realNurses = Object.values(nurseMap).map(n => {
+                if (n.feedbacks.length > 0) {
+                    const totalR = n.feedbacks.reduce((s, f) => s + f.rating, 0);
+                    n.rating = (totalR / n.feedbacks.length).toFixed(1);
+                } else {
+                    n.rating = null;
+                }
+                return n;
+            });
             if (realNurses.length === 0) {
                 const defaultNurses = JSON.parse(localStorage.getItem('nurses') || '[]') || [];
                 if (defaultNurses.length > 0) {
@@ -409,6 +421,52 @@ const StaffManagement = () => {
                                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${statusColor[b.status] || statusColor.pending}`}>
                                             {b.status}
                                         </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Customer Feedbacks */}
+                    {nurse.feedbacks && nurse.feedbacks.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                <Star className="w-4 h-4 text-emerald-500" />
+                                Recent Feedbacks
+                            </h3>
+                            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                                {nurse.feedbacks.slice(0, 10).map((f, i) => (
+                                    <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-900">{f.patient || 'Unknown Patient'}</p>
+                                                <p className="text-[10px] font-semibold text-slate-500 mt-0.5 uppercase tracking-wider">{f.service || 'Service'}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                                <span className="text-xs font-bold text-slate-800">{f.rating.toFixed(1)}</span>
+                                            </div>
+                                        </div>
+
+                                        {f.feedback && (
+                                            <p className="text-sm text-slate-600 mt-3 p-3 bg-white rounded-xl border border-slate-100 italic shadow-sm relative">
+                                                <span className="absolute -top-3 left-2 text-3xl text-emerald-100 font-serif">"</span>
+                                                <span className="relative z-10">{f.feedback}</span>
+                                            </p>
+                                        )}
+
+                                        {f.serviceQuality && (
+                                            <div className="mt-4 pt-3 border-t border-slate-200/60 flex gap-2 flex-wrap">
+                                                {Object.entries(f.serviceQuality).map(([key, val]) => (
+                                                    <div key={key} className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-md border border-slate-200 shadow-sm group hover:border-emerald-300 transition-colors">
+                                                        <span className="text-[10px] font-bold text-slate-500 capitalize group-hover:text-emerald-700 transition-colors">{key}</span>
+                                                        <span className="flex items-center gap-0.5 text-[11px] font-extrabold text-slate-800">
+                                                            {val} <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

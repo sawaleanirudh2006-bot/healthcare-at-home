@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Star } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const RateService = () => {
     const navigate = useNavigate();
@@ -16,41 +17,63 @@ const RateService = () => {
         care: 0,
         communication: 0
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmitRating = () => {
+    const handleSubmitRating = async () => {
         if (rating === 0) {
             alert('Please select a star rating');
             return;
         }
 
-        // Create rating object
-        const ratingData = {
-            bookingId: booking.id,
-            nurseId: booking.nurse?.id,
-            nurseName: booking.nurse?.name,
-            rating: rating,
-            feedback: feedback,
-            serviceQuality: serviceQuality,
-            submittedAt: new Date().toISOString()
-        };
+        setIsSubmitting(true);
 
-        // Save rating to localStorage
-        const ratings = JSON.parse(localStorage.getItem('serviceRatings') || '[]');
-        ratings.push(ratingData);
-        localStorage.setItem('serviceRatings', JSON.stringify(ratings));
+        try {
+            // Create rating object
+            const ratingData = {
+                bookingId: booking.id,
+                nurseId: booking.nurse?.id || booking.provider, // Fallback if ID is missing
+                nurseName: booking.nurse?.name || booking.provider,
+                rating: rating,
+                feedback: feedback,
+                serviceQuality: serviceQuality,
+                submittedAt: new Date().toISOString()
+            };
 
-        // Update booking with rating
-        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        const updatedBookings = bookings.map(b => {
-            if (b.id === booking.id) {
-                return { ...b, rated: true, rating: rating };
+            if (booking.bookingId || booking.id) {
+                const targetId = booking.bookingId || booking.id;
+                // Fetch existing notes
+                const { data: bData } = await supabase
+                    .from('bookings')
+                    .select('notes')
+                    .eq('id', targetId)
+                    .single();
+
+                let currentNotes = {};
+                if (bData && bData.notes) {
+                    try { currentNotes = JSON.parse(bData.notes); } catch (e) { }
+                }
+
+                currentNotes.feedback = ratingData;
+
+                await supabase
+                    .from('bookings')
+                    .update({ notes: JSON.stringify(currentNotes) })
+                    .eq('id', targetId);
             }
-            return b;
-        });
-        localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
 
-        alert('Thank you for your feedback!');
-        navigate('/bookings');
+            // Also keep local storage sync for redundancy
+            const ratings = JSON.parse(localStorage.getItem('serviceRatings') || '[]');
+            ratings.push(ratingData);
+            localStorage.setItem('serviceRatings', JSON.stringify(ratings));
+
+            alert('Thank you for your feedback!');
+            navigate('/bookings');
+        } catch (err) {
+            console.error('Failed to submit rating:', err.message);
+            alert('Failed to submit rating. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const renderStars = (count, onHover, onClick, currentRating) => {
@@ -58,6 +81,7 @@ const RateService = () => {
             <button
                 key={index}
                 type="button"
+                disabled={isSubmitting}
                 onMouseEnter={() => onHover && onHover(index + 1)}
                 onMouseLeave={() => onHover && onHover(0)}
                 onClick={() => onClick(index + 1)}
@@ -65,8 +89,8 @@ const RateService = () => {
             >
                 <Star
                     className={`w-10 h-10 ${index < (currentRating || count)
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-slate-300'
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'text-slate-300'
                         }`}
                 />
             </button>

@@ -80,6 +80,7 @@ export default function AdminDashboard() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Data
     const [allBookings, setAllBookings] = useState([]);
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
                     isTreatmentPackage: notes.planType === 'treatment-package' || notes.is_package || (b.service_name || '').toLowerCase().includes('package') || false,
                     isAmbulance: (b.service_name || '').toLowerCase().includes('ambulance') || false,
                     isHospital: (b.service_name || '').toLowerCase().includes('hospital') || false,
-                    rxPending: notes.prescription_review_pending || false,
+                    rxPending: (notes.prescription_review_pending || false) && b.status === 'pending',
                     price: b.total_price || 0,
                     createdAt: b.created_at,
                     userId: b.user_id,
@@ -363,10 +364,17 @@ export default function AdminDashboard() {
 
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={loadData}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
+                            onClick={async () => {
+                                setIsRefreshing(true);
+                                await loadData();
+                                setTimeout(() => setIsRefreshing(false), 500);
+                            }}
+                            disabled={isRefreshing}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${isRefreshing ? 'bg-indigo-50 text-indigo-500' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
                         >
-                            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </button>
 
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -453,50 +461,322 @@ export default function AdminDashboard() {
                                     </div>
                                 )}
 
-                                {/* Stat Cards — Clickable */}
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                                    <StatCard
-                                        icon={Calendar} label="Total Bookings" value={periodBookings.length}
-                                        color="bg-blue-50 text-blue-600"
-                                        sub={`${medicineOrders.length} medicine · ${emergencyBookings.length} emergency`}
-                                        onClick={() => setOverviewDrill(overviewDrill === 'bookings' ? null : 'bookings')}
-                                        active={overviewDrill === 'bookings'}
-                                    />
-                                    <StatCard
-                                        icon={Activity} label="Active Nursing" value={activeJobs.length}
-                                        color="bg-emerald-50 text-emerald-600"
-                                        sub="Confirmed / Upcoming"
-                                        onClick={() => setOverviewDrill(overviewDrill === 'jobs' ? null : 'jobs')}
-                                        active={overviewDrill === 'jobs'}
-                                    />
-                                    <StatCard
-                                        icon={FileText} label="Prescriptions" value={prescriptions.length}
-                                        color="bg-violet-50 text-violet-600"
-                                        sub="Total uploaded"
-                                        onClick={() => setOverviewDrill(overviewDrill === 'prescriptions' ? null : 'prescriptions')}
-                                        active={overviewDrill === 'prescriptions'}
-                                    />
-                                    <StatCard
-                                        icon={TrendingUp} label="Total Revenue" value={`₹${revenue.toLocaleString()}`}
-                                        color="bg-amber-50 text-amber-600"
-                                        sub={`From ${revenueByPatient.length} patients`}
-                                        onClick={() => setOverviewDrill(overviewDrill === 'revenue' ? null : 'revenue')}
-                                        active={overviewDrill === 'revenue'}
-                                    />
-                                    <StatCard
-                                        icon={Zap} label="Emergency" value={emergencyBookings.length}
-                                        color="bg-red-50 text-red-600"
-                                        sub="Critical cases"
-                                        onClick={() => setOverviewDrill(overviewDrill === 'emergency' ? null : 'emergency')}
-                                        active={overviewDrill === 'emergency'}
-                                    />
-                                    <StatCard
-                                        icon={CheckCircle} label="Completed" value={completedBookings.length}
-                                        color="bg-teal-50 text-teal-600"
-                                        sub={`${cancelledBookings.length} cancelled`}
-                                        onClick={() => setOverviewDrill(overviewDrill === 'completed' ? null : 'completed')}
-                                        active={overviewDrill === 'completed'}
-                                    />
+                                {/* ── TOP SECTION: Analytics (left 50%) + Stat Cards (right 50%) ── */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
+                                    {/* ── LEFT: Analytics Line Graph ─────────────────────── */}
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                                <TrendingUp className="w-4 h-4 text-amber-500" />
+                                                Analytics
+                                            </h3>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {/* Metric toggle */}
+                                                <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                                                    {[{ id: 'both', label: 'Both' }, { id: 'revenue', label: 'Revenue' }, { id: 'bookings', label: 'Bookings' }].map(v => (
+                                                        <button
+                                                            key={v.id}
+                                                            onClick={() => setGraphMetric(v.id)}
+                                                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${graphMetric === v.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                                        >
+                                                            {v.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {/* Time toggle */}
+                                                <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                                                    {[{ id: 'day', label: 'Day' }, { id: 'month', label: 'Month' }, { id: 'year', label: 'Year' }].map(v => (
+                                                        <button
+                                                            key={v.id}
+                                                            onClick={() => setGraphView(v.id)}
+                                                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${graphView === v.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                                        >
+                                                            {v.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Legend */}
+                                        <div className="px-5 pt-3 flex items-center gap-5">
+                                            {(graphMetric === 'both' || graphMetric === 'revenue') && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-8 h-[3px] rounded-full bg-indigo-500" />
+                                                    <span className="text-[11px] font-semibold text-slate-500">Revenue (₹)</span>
+                                                </div>
+                                            )}
+                                            {(graphMetric === 'both' || graphMetric === 'bookings') && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="w-8 h-[3px] rounded-full bg-emerald-500" />
+                                                    <span className="text-[11px] font-semibold text-slate-500">Bookings</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="p-5 pt-2">
+                                            {(() => {
+                                                const dataPoints = graphView === 'day'
+                                                    ? dailyRevenue
+                                                    : graphView === 'year'
+                                                        ? yearlyRevenue
+                                                        : monthlyBreakdown.map(m => ({ label: m.label, revenue: m.revenue, bookings: m.total }));
+
+                                                const showRev = graphMetric === 'both' || graphMetric === 'revenue';
+                                                const showBk = graphMetric === 'both' || graphMetric === 'bookings';
+                                                const maxRev = Math.max(...dataPoints.map(d => d.revenue), 1);
+                                                const maxBk = Math.max(...dataPoints.map(d => d.bookings), 1);
+                                                const totalRev = dataPoints.reduce((s, d) => s + d.revenue, 0);
+                                                const totalBk = dataPoints.reduce((s, d) => s + d.bookings, 0);
+
+                                                // SVG dimensions
+                                                const W = 820;
+                                                const H = 260;
+                                                const padL = 58;
+                                                const padR = showBk && showRev ? 45 : 20;
+                                                const padT = 24;
+                                                const padB = 44;
+                                                const chartW = W - padL - padR;
+                                                const chartH = H - padT - padB;
+                                                const gridRows = 4;
+
+                                                // Build revenue points
+                                                const revPts = dataPoints.map((d, i) => ({
+                                                    x: padL + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * chartW : chartW / 2),
+                                                    y: padT + chartH - (maxRev > 0 ? (d.revenue / maxRev) * chartH : 0),
+                                                    ...d
+                                                }));
+                                                // Build bookings points
+                                                const bkPts = dataPoints.map((d, i) => ({
+                                                    x: padL + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * chartW : chartW / 2),
+                                                    y: padT + chartH - (maxBk > 0 ? (d.bookings / maxBk) * chartH : 0),
+                                                    ...d
+                                                }));
+
+                                                const revLine = revPts.map(p => `${p.x},${p.y}`).join(' ');
+                                                const revArea = `${padL},${padT + chartH} ${revLine} ${revPts[revPts.length - 1]?.x || padL},${padT + chartH}`;
+                                                const bkLine = bkPts.map(p => `${p.x},${p.y}`).join(' ');
+                                                const bkArea = `${padL},${padT + chartH} ${bkLine} ${bkPts[bkPts.length - 1]?.x || padL},${padT + chartH}`;
+
+                                                // Label spacing
+                                                const labelEvery = graphView === 'day' ? 5 : graphView === 'year' ? 1 : 1;
+                                                const periodName = graphView === 'day' ? 'day' : graphView === 'year' ? 'year' : 'month';
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: 300 }}>
+                                                            <defs>
+                                                                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
+                                                                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
+                                                                </linearGradient>
+                                                                <linearGradient id="bkGrad" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                                                                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+                                                                </linearGradient>
+                                                            </defs>
+
+                                                            {/* Grid lines + Y labels (left = revenue) */}
+                                                            {[...Array(gridRows + 1)].map((_, i) => {
+                                                                const yPos = padT + (i / gridRows) * chartH;
+                                                                const rVal = maxRev - (i / gridRows) * maxRev;
+                                                                const bVal = Math.round(maxBk - (i / gridRows) * maxBk);
+                                                                return (
+                                                                    <g key={i}>
+                                                                        <line x1={padL} y1={yPos} x2={W - padR} y2={yPos} stroke="#f1f5f9" strokeWidth="1" strokeDasharray={i === gridRows ? '0' : '4,4'} />
+                                                                        {showRev && (
+                                                                            <text x={padL - 8} y={yPos + 4} textAnchor="end" fontSize="9" fontWeight="600" fill="#818cf8">
+                                                                                {rVal >= 1000 ? `₹${(rVal / 1000).toFixed(0)}k` : `₹${Math.round(rVal)}`}
+                                                                            </text>
+                                                                        )}
+                                                                        {showBk && showRev && (
+                                                                            <text x={W - padR + 6} y={yPos + 4} textAnchor="start" fontSize="9" fontWeight="600" fill="#34d399">
+                                                                                {bVal}
+                                                                            </text>
+                                                                        )}
+                                                                        {showBk && !showRev && (
+                                                                            <text x={padL - 8} y={yPos + 4} textAnchor="end" fontSize="9" fontWeight="600" fill="#34d399">
+                                                                                {bVal}
+                                                                            </text>
+                                                                        )}
+                                                                    </g>
+                                                                );
+                                                            })}
+
+                                                            {/* Axes */}
+                                                            <line x1={padL} y1={padT + chartH} x2={W - padR} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="2" />
+                                                            <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="2" />
+
+                                                            {/* Revenue area + line */}
+                                                            {showRev && revPts.length > 1 && (
+                                                                <>
+                                                                    <polygon points={revArea} fill="url(#revGrad)" />
+                                                                    <polyline points={revLine} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                                </>
+                                                            )}
+
+                                                            {/* Bookings area + line */}
+                                                            {showBk && bkPts.length > 1 && (
+                                                                <>
+                                                                    <polygon points={bkArea} fill="url(#bkGrad)" />
+                                                                    <polyline points={bkLine} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                                </>
+                                                            )}
+
+                                                            {/* Data points (both metrics) */}
+                                                            {dataPoints.map((d, i) => {
+                                                                const showLbl = (i % labelEvery === 0) || i === dataPoints.length - 1;
+                                                                const rPt = revPts[i];
+                                                                const bPt = bkPts[i];
+                                                                const topY = Math.min(showRev ? rPt.y : 999, showBk ? bPt.y : 999);
+                                                                return (
+                                                                    <g key={i} className="group">
+                                                                        {/* Vertical hover line */}
+                                                                        <line x1={rPt.x} y1={padT} x2={rPt.x} y2={padT + chartH} stroke="#6366f1" strokeWidth="1" strokeDasharray="3,3" opacity="0" className="group-hover:opacity-30 transition-opacity" />
+                                                                        {/* Invisible hover target */}
+                                                                        <rect x={rPt.x - (chartW / dataPoints.length / 2)} y={padT} width={chartW / dataPoints.length} height={chartH} fill="transparent" className="cursor-pointer" />
+
+                                                                        {/* Revenue dot */}
+                                                                        {showRev && (
+                                                                            <>
+                                                                                <circle cx={rPt.x} cy={rPt.y} r="3.5" fill="#fff" stroke="#6366f1" strokeWidth="2" />
+                                                                                <circle cx={rPt.x} cy={rPt.y} r="5.5" fill="#6366f1" opacity="0" className="group-hover:opacity-100 transition-opacity" />
+                                                                            </>
+                                                                        )}
+                                                                        {/* Bookings dot */}
+                                                                        {showBk && (
+                                                                            <>
+                                                                                <circle cx={bPt.x} cy={bPt.y} r="3.5" fill="#fff" stroke="#10b981" strokeWidth="2" />
+                                                                                <circle cx={bPt.x} cy={bPt.y} r="5.5" fill="#10b981" opacity="0" className="group-hover:opacity-100 transition-opacity" />
+                                                                            </>
+                                                                        )}
+
+                                                                        {/* Tooltip */}
+                                                                        <g className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ pointerEvents: 'none' }}>
+                                                                            <rect x={rPt.x - 56} y={topY - 62} width="112" height={showRev && showBk ? 50 : 36} rx="8" fill="#1e293b" />
+                                                                            <polygon points={`${rPt.x - 5},${topY - 12} ${rPt.x + 5},${topY - 12} ${rPt.x},${topY - 6}`} fill="#1e293b" />
+                                                                            {showRev && (
+                                                                                <text x={rPt.x} y={topY - 44} textAnchor="middle" fontSize="11" fontWeight="700" fill="#a5b4fc">
+                                                                                    ₹{d.revenue.toLocaleString()}
+                                                                                </text>
+                                                                            )}
+                                                                            {showBk && (
+                                                                                <text x={rPt.x} y={topY - (showRev ? 30 : 44)} textAnchor="middle" fontSize="11" fontWeight="700" fill="#6ee7b7">
+                                                                                    {d.bookings} bookings
+                                                                                </text>
+                                                                            )}
+                                                                            <text x={rPt.x} y={topY - (showRev && showBk ? 16 : 30)} textAnchor="middle" fontSize="9" fontWeight="500" fill="#94a3b8">
+                                                                                {d.label}
+                                                                            </text>
+                                                                        </g>
+
+                                                                        {/* X-axis labels */}
+                                                                        {showLbl && (
+                                                                            <text
+                                                                                x={rPt.x} y={padT + chartH + 20}
+                                                                                textAnchor="middle" fontSize="9" fontWeight="600"
+                                                                                fill="#94a3b8"
+                                                                                transform={graphView === 'day' ? `rotate(-40, ${rPt.x}, ${padT + chartH + 20})` : ''}
+                                                                            >
+                                                                                {graphView === 'month' ? d.label.split(' ')[0] : d.label}
+                                                                            </text>
+                                                                        )}
+                                                                    </g>
+                                                                );
+                                                            })}
+                                                        </svg>
+
+                                                        {/* Summary footer */}
+                                                        <div className="flex items-center justify-between pt-3 border-t border-slate-100 flex-wrap gap-3">
+                                                            <div className="flex items-center gap-5">
+                                                                {showRev && (
+                                                                    <div>
+                                                                        <p className="text-[10px] font-bold text-indigo-400 uppercase">Total Revenue</p>
+                                                                        <p className="text-lg font-extrabold text-slate-900">₹{totalRev.toLocaleString()}</p>
+                                                                    </div>
+                                                                )}
+                                                                {showBk && (
+                                                                    <div>
+                                                                        <p className="text-[10px] font-bold text-emerald-400 uppercase">Total Bookings</p>
+                                                                        <p className="text-lg font-extrabold text-slate-900">{totalBk}</p>
+                                                                    </div>
+                                                                )}
+                                                                <div>
+                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Avg / {periodName}</p>
+                                                                    <p className="text-lg font-extrabold text-slate-900">
+                                                                        {showRev ? `₹${Math.round(totalRev / dataPoints.length).toLocaleString()}` : `${(totalBk / dataPoints.length).toFixed(1)}`}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            {(() => {
+                                                                if (dataPoints.length < 2) return null;
+                                                                const metric = showRev ? 'revenue' : 'bookings';
+                                                                const last = dataPoints[dataPoints.length - 1][metric];
+                                                                const prev = dataPoints[dataPoints.length - 2][metric];
+                                                                if (prev === 0) return null;
+                                                                const pct = ((last - prev) / prev * 100).toFixed(1);
+                                                                const isUp = Number(pct) >= 0;
+                                                                return (
+                                                                    <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${isUp ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                                                                        <TrendingUp className={`w-4 h-4 ${!isUp ? 'rotate-180' : ''}`} />
+                                                                        <span className="text-sm font-extrabold">{isUp ? '+' : ''}{pct}%</span>
+                                                                        <span className="text-[10px] font-semibold opacity-70">vs prev {periodName}</span>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* ── RIGHT: Stat Blocks (2×3 grid) ──────────────────── */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <StatCard
+                                            icon={Calendar} label="Total Bookings" value={periodBookings.length}
+                                            color="bg-blue-50 text-blue-600"
+                                            sub={`${medicineOrders.length} medicine · ${emergencyBookings.length} emergency`}
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('all'); setActiveTab('bookings'); }}
+                                            active={false}
+                                        />
+                                        <StatCard
+                                            icon={Activity} label="Active Bookings" value={activeJobs.length}
+                                            color="bg-emerald-50 text-emerald-600"
+                                            sub="Confirmed / Upcoming"
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('confirmed'); setActiveTab('nursing'); }}
+                                            active={false}
+                                        />
+                                        <StatCard
+                                            icon={FileText} label="Prescriptions" value={prescriptions.length}
+                                            color="bg-violet-50 text-violet-600"
+                                            sub="Total uploaded"
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('all'); setActiveTab('prescriptions'); }}
+                                            active={false}
+                                        />
+                                        <StatCard
+                                            icon={TrendingUp} label="Total Revenue" value={`₹${revenue.toLocaleString()}`}
+                                            color="bg-amber-50 text-amber-600"
+                                            sub={`From ${revenueByPatient.length} patients`}
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('all'); setActiveTab('bookings'); }}
+                                            active={false}
+                                        />
+                                        <StatCard
+                                            icon={Zap} label="Emergency" value={emergencyBookings.length}
+                                            color="bg-red-50 text-red-600"
+                                            sub="Critical cases"
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('all'); setActiveTab('emergency'); }}
+                                            active={false}
+                                        />
+                                        <StatCard
+                                            icon={CheckCircle} label="Completed" value={completedBookings.length}
+                                            color="bg-teal-50 text-teal-600"
+                                            sub={`${cancelledBookings.length} cancelled`}
+                                            onClick={() => { setOverviewDrill(null); setStatusFilter('completed'); setActiveTab('bookings'); }}
+                                            active={false}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* ── Drill-down Panel ───────────────────────────────────── */}
@@ -657,281 +937,13 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-
-                                {/* ── Revenue & Bookings Line Graph ═══════════════════════ */}
-                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                    <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
-                                        <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                                            <TrendingUp className="w-4 h-4 text-amber-500" />
-                                            Analytics
-                                        </h3>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            {/* Metric toggle */}
-                                            <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
-                                                {[{ id: 'both', label: 'Both' }, { id: 'revenue', label: 'Revenue' }, { id: 'bookings', label: 'Bookings' }].map(v => (
-                                                    <button
-                                                        key={v.id}
-                                                        onClick={() => setGraphMetric(v.id)}
-                                                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${graphMetric === v.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                                    >
-                                                        {v.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            {/* Time toggle */}
-                                            <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
-                                                {[{ id: 'day', label: 'Day' }, { id: 'month', label: 'Month' }, { id: 'year', label: 'Year' }].map(v => (
-                                                    <button
-                                                        key={v.id}
-                                                        onClick={() => setGraphView(v.id)}
-                                                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${graphView === v.id ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                                                    >
-                                                        {v.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Legend */}
-                                    <div className="px-5 pt-3 flex items-center gap-5">
-                                        {(graphMetric === 'both' || graphMetric === 'revenue') && (
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-8 h-[3px] rounded-full bg-indigo-500" />
-                                                <span className="text-[11px] font-semibold text-slate-500">Revenue (₹)</span>
-                                            </div>
-                                        )}
-                                        {(graphMetric === 'both' || graphMetric === 'bookings') && (
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-8 h-[3px] rounded-full bg-emerald-500" />
-                                                <span className="text-[11px] font-semibold text-slate-500">Bookings</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="p-5 pt-2">
-                                        {(() => {
-                                            const dataPoints = graphView === 'day'
-                                                ? dailyRevenue
-                                                : graphView === 'year'
-                                                    ? yearlyRevenue
-                                                    : monthlyBreakdown.map(m => ({ label: m.label, revenue: m.revenue, bookings: m.total }));
-
-                                            const showRev = graphMetric === 'both' || graphMetric === 'revenue';
-                                            const showBk = graphMetric === 'both' || graphMetric === 'bookings';
-                                            const maxRev = Math.max(...dataPoints.map(d => d.revenue), 1);
-                                            const maxBk = Math.max(...dataPoints.map(d => d.bookings), 1);
-                                            const totalRev = dataPoints.reduce((s, d) => s + d.revenue, 0);
-                                            const totalBk = dataPoints.reduce((s, d) => s + d.bookings, 0);
-
-                                            // SVG dimensions
-                                            const W = 820;
-                                            const H = 260;
-                                            const padL = 58;
-                                            const padR = showBk && showRev ? 45 : 20;
-                                            const padT = 24;
-                                            const padB = 44;
-                                            const chartW = W - padL - padR;
-                                            const chartH = H - padT - padB;
-                                            const gridRows = 4;
-
-                                            // Build revenue points
-                                            const revPts = dataPoints.map((d, i) => ({
-                                                x: padL + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * chartW : chartW / 2),
-                                                y: padT + chartH - (maxRev > 0 ? (d.revenue / maxRev) * chartH : 0),
-                                                ...d
-                                            }));
-                                            // Build bookings points
-                                            const bkPts = dataPoints.map((d, i) => ({
-                                                x: padL + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * chartW : chartW / 2),
-                                                y: padT + chartH - (maxBk > 0 ? (d.bookings / maxBk) * chartH : 0),
-                                                ...d
-                                            }));
-
-                                            const revLine = revPts.map(p => `${p.x},${p.y}`).join(' ');
-                                            const revArea = `${padL},${padT + chartH} ${revLine} ${revPts[revPts.length - 1]?.x || padL},${padT + chartH}`;
-                                            const bkLine = bkPts.map(p => `${p.x},${p.y}`).join(' ');
-                                            const bkArea = `${padL},${padT + chartH} ${bkLine} ${bkPts[bkPts.length - 1]?.x || padL},${padT + chartH}`;
-
-                                            // Label spacing
-                                            const labelEvery = graphView === 'day' ? 5 : graphView === 'year' ? 1 : 1;
-                                            const periodName = graphView === 'day' ? 'day' : graphView === 'year' ? 'year' : 'month';
-
-                                            return (
-                                                <div className="space-y-3">
-                                                    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: 300 }}>
-                                                        <defs>
-                                                            <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
-                                                                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
-                                                            </linearGradient>
-                                                            <linearGradient id="bkGrad" x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
-                                                                <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
-                                                            </linearGradient>
-                                                        </defs>
-
-                                                        {/* Grid lines + Y labels (left = revenue) */}
-                                                        {[...Array(gridRows + 1)].map((_, i) => {
-                                                            const yPos = padT + (i / gridRows) * chartH;
-                                                            const rVal = maxRev - (i / gridRows) * maxRev;
-                                                            const bVal = Math.round(maxBk - (i / gridRows) * maxBk);
-                                                            return (
-                                                                <g key={i}>
-                                                                    <line x1={padL} y1={yPos} x2={W - padR} y2={yPos} stroke="#f1f5f9" strokeWidth="1" strokeDasharray={i === gridRows ? '0' : '4,4'} />
-                                                                    {showRev && (
-                                                                        <text x={padL - 8} y={yPos + 4} textAnchor="end" fontSize="9" fontWeight="600" fill="#818cf8">
-                                                                            {rVal >= 1000 ? `₹${(rVal / 1000).toFixed(0)}k` : `₹${Math.round(rVal)}`}
-                                                                        </text>
-                                                                    )}
-                                                                    {showBk && showRev && (
-                                                                        <text x={W - padR + 6} y={yPos + 4} textAnchor="start" fontSize="9" fontWeight="600" fill="#34d399">
-                                                                            {bVal}
-                                                                        </text>
-                                                                    )}
-                                                                    {showBk && !showRev && (
-                                                                        <text x={padL - 8} y={yPos + 4} textAnchor="end" fontSize="9" fontWeight="600" fill="#34d399">
-                                                                            {bVal}
-                                                                        </text>
-                                                                    )}
-                                                                </g>
-                                                            );
-                                                        })}
-
-                                                        {/* Axes */}
-                                                        <line x1={padL} y1={padT + chartH} x2={W - padR} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="2" />
-                                                        <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#e2e8f0" strokeWidth="2" />
-
-                                                        {/* Revenue area + line */}
-                                                        {showRev && revPts.length > 1 && (
-                                                            <>
-                                                                <polygon points={revArea} fill="url(#revGrad)" />
-                                                                <polyline points={revLine} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                            </>
-                                                        )}
-
-                                                        {/* Bookings area + line */}
-                                                        {showBk && bkPts.length > 1 && (
-                                                            <>
-                                                                <polygon points={bkArea} fill="url(#bkGrad)" />
-                                                                <polyline points={bkLine} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                            </>
-                                                        )}
-
-                                                        {/* Data points (both metrics) */}
-                                                        {dataPoints.map((d, i) => {
-                                                            const showLbl = (i % labelEvery === 0) || i === dataPoints.length - 1;
-                                                            const rPt = revPts[i];
-                                                            const bPt = bkPts[i];
-                                                            const topY = Math.min(showRev ? rPt.y : 999, showBk ? bPt.y : 999);
-                                                            return (
-                                                                <g key={i} className="group">
-                                                                    {/* Vertical hover line */}
-                                                                    <line x1={rPt.x} y1={padT} x2={rPt.x} y2={padT + chartH} stroke="#6366f1" strokeWidth="1" strokeDasharray="3,3" opacity="0" className="group-hover:opacity-30 transition-opacity" />
-                                                                    {/* Invisible hover target */}
-                                                                    <rect x={rPt.x - (chartW / dataPoints.length / 2)} y={padT} width={chartW / dataPoints.length} height={chartH} fill="transparent" className="cursor-pointer" />
-
-                                                                    {/* Revenue dot */}
-                                                                    {showRev && (
-                                                                        <>
-                                                                            <circle cx={rPt.x} cy={rPt.y} r="3.5" fill="#fff" stroke="#6366f1" strokeWidth="2" />
-                                                                            <circle cx={rPt.x} cy={rPt.y} r="5.5" fill="#6366f1" opacity="0" className="group-hover:opacity-100 transition-opacity" />
-                                                                        </>
-                                                                    )}
-                                                                    {/* Bookings dot */}
-                                                                    {showBk && (
-                                                                        <>
-                                                                            <circle cx={bPt.x} cy={bPt.y} r="3.5" fill="#fff" stroke="#10b981" strokeWidth="2" />
-                                                                            <circle cx={bPt.x} cy={bPt.y} r="5.5" fill="#10b981" opacity="0" className="group-hover:opacity-100 transition-opacity" />
-                                                                        </>
-                                                                    )}
-
-                                                                    {/* Tooltip */}
-                                                                    <g className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ pointerEvents: 'none' }}>
-                                                                        <rect x={rPt.x - 56} y={topY - 62} width="112" height={showRev && showBk ? 50 : 36} rx="8" fill="#1e293b" />
-                                                                        <polygon points={`${rPt.x - 5},${topY - 12} ${rPt.x + 5},${topY - 12} ${rPt.x},${topY - 6}`} fill="#1e293b" />
-                                                                        {showRev && (
-                                                                            <text x={rPt.x} y={topY - 44} textAnchor="middle" fontSize="11" fontWeight="700" fill="#a5b4fc">
-                                                                                ₹{d.revenue.toLocaleString()}
-                                                                            </text>
-                                                                        )}
-                                                                        {showBk && (
-                                                                            <text x={rPt.x} y={topY - (showRev ? 30 : 44)} textAnchor="middle" fontSize="11" fontWeight="700" fill="#6ee7b7">
-                                                                                {d.bookings} bookings
-                                                                            </text>
-                                                                        )}
-                                                                        <text x={rPt.x} y={topY - (showRev && showBk ? 16 : 30)} textAnchor="middle" fontSize="9" fontWeight="500" fill="#94a3b8">
-                                                                            {d.label}
-                                                                        </text>
-                                                                    </g>
-
-                                                                    {/* X-axis labels */}
-                                                                    {showLbl && (
-                                                                        <text
-                                                                            x={rPt.x} y={padT + chartH + 20}
-                                                                            textAnchor="middle" fontSize="9" fontWeight="600"
-                                                                            fill="#94a3b8"
-                                                                            transform={graphView === 'day' ? `rotate(-40, ${rPt.x}, ${padT + chartH + 20})` : ''}
-                                                                        >
-                                                                            {graphView === 'month' ? d.label.split(' ')[0] : d.label}
-                                                                        </text>
-                                                                    )}
-                                                                </g>
-                                                            );
-                                                        })}
-                                                    </svg>
-
-                                                    {/* Summary footer */}
-                                                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 flex-wrap gap-3">
-                                                        <div className="flex items-center gap-5">
-                                                            {showRev && (
-                                                                <div>
-                                                                    <p className="text-[10px] font-bold text-indigo-400 uppercase">Total Revenue</p>
-                                                                    <p className="text-lg font-extrabold text-slate-900">₹{totalRev.toLocaleString()}</p>
-                                                                </div>
-                                                            )}
-                                                            {showBk && (
-                                                                <div>
-                                                                    <p className="text-[10px] font-bold text-emerald-400 uppercase">Total Bookings</p>
-                                                                    <p className="text-lg font-extrabold text-slate-900">{totalBk}</p>
-                                                                </div>
-                                                            )}
-                                                            <div>
-                                                                <p className="text-[10px] font-bold text-slate-400 uppercase">Avg / {periodName}</p>
-                                                                <p className="text-lg font-extrabold text-slate-900">
-                                                                    {showRev ? `₹${Math.round(totalRev / dataPoints.length).toLocaleString()}` : `${(totalBk / dataPoints.length).toFixed(1)}`}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        {(() => {
-                                                            if (dataPoints.length < 2) return null;
-                                                            const metric = showRev ? 'revenue' : 'bookings';
-                                                            const last = dataPoints[dataPoints.length - 1][metric];
-                                                            const prev = dataPoints[dataPoints.length - 2][metric];
-                                                            if (prev === 0) return null;
-                                                            const pct = ((last - prev) / prev * 100).toFixed(1);
-                                                            const isUp = Number(pct) >= 0;
-                                                            return (
-                                                                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${isUp ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-                                                                    <TrendingUp className={`w-4 h-4 ${!isUp ? 'rotate-180' : ''}`} />
-                                                                    <span className="text-sm font-extrabold">{isUp ? '+' : ''}{pct}%</span>
-                                                                    <span className="text-[10px] font-semibold opacity-70">vs prev {periodName}</span>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-
                                 {/* Recent bookings preview */}
                                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                                         <h3 className="font-bold text-slate-900">Recent Bookings</h3>
                                         <button onClick={() => setActiveTab('bookings')} className="text-xs font-bold text-indigo-600 hover:underline">View All →</button>
                                     </div>
+
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
@@ -977,397 +989,420 @@ export default function AdminDashboard() {
                                     </div>
                                 )}
                             </div>
-                        )}
+                        )
+                        }
 
                         {/* ══ ALL BOOKINGS / CATEGORIES ═════════════════════════════ */}
-                        {activeTab !== 'overview' && activeTab !== 'users' && activeTab !== 'prescriptions' && (
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-extrabold text-slate-900 capitalize">
-                                        {activeTab} Bookings
-                                        <span className="text-slate-400 font-normal text-base ml-2">({currentTabBookings.length})</span>
-                                    </h2>
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input
-                                                value={search}
-                                                onChange={e => setSearch(e.target.value)}
-                                                placeholder="Search patient, service…"
-                                                className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl w-56 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                                            />
-                                        </div>
-                                        <div className="relative">
-                                            <select
-                                                value={statusFilter}
-                                                onChange={e => setStatusFilter(e.target.value)}
-                                                className="appearance-none pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-semibold"
-                                            >
-                                                <option value="all">All Status</option>
-                                                <option value="pending">Pending</option>
-                                                <option value="confirmed">Confirmed</option>
-                                                <option value="completed">Completed</option>
-                                                <option value="cancelled">Cancelled</option>
-                                            </select>
-                                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
-                                                <tr>
-                                                    {['ID', 'Patient', 'Service', 'Date', 'Time', 'Nurse', 'Tracking', 'Doctor Notes', 'Payment', 'Price', 'Status', 'Actions'].map(h => (
-                                                        <th key={h} className="px-4 py-3 text-left whitespace-nowrap">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filterBookings(currentTabBookings).map(b => (
-                                                    <tr key={b.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
-                                                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(b.id).slice(0, 8)}</td>
-                                                        <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">{b.patient}</td>
-                                                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.service}</td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{b.date ? fmt(b.date) : fmt(b.createdAt)}</td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500">{b.time}</td>
-                                                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.nurseName}</td>
-                                                        <td className="px-4 py-3 text-xs whitespace-nowrap">{TRACKING_LABELS[b.trackingStatus] || '—'}</td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500 max-w-[150px] truncate" title={b.doctorNotes}>{b.doctorNotes}</td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500 uppercase">{b.paymentMethod}</td>
-                                                        <td className="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">₹{b.price}</td>
-                                                        <td className="px-4 py-3"><Badge status={b.status} /></td>
-                                                        <td className="px-4 py-3">
-                                                            {b.status === 'pending' && (
-                                                                <div className="flex gap-1">
-                                                                    <button onClick={() => updateStatus(b.id, 'confirmed')} className="px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1">
-                                                                        <CheckCircle className="w-3 h-3" /> Confirm
-                                                                    </button>
-                                                                    <button onClick={() => updateStatus(b.id, 'cancelled')} className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1">
-                                                                        <XCircle className="w-3 h-3" /> Cancel
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                            {b.status === 'confirmed' && !b.isMedicine && (
-                                                                <button onClick={() => updateStatus(b.id, 'completed')} className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1">
-                                                                    <Clock className="w-3 h-3" /> Complete
-                                                                </button>
-                                                            )}
-                                                            {b.isInsurance && b.rawNotes && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const n = JSON.parse(b.rawNotes).insurance_details;
-                                                                        alert(`Insurance Info:\nName: ${n.applicantName}\nAge: ${n.age}\nNominee: ${n.nomineeName}\nRelation: ${n.nomineeRelation}`);
-                                                                    }}
-                                                                    className="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold rounded hover:bg-blue-100 transition-colors"
-                                                                >
-                                                                    View Application
-                                                                </button>
-                                                            )}
-                                                            {b.isEmergency && b.rawNotes && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const n = JSON.parse(b.rawNotes);
-                                                                        alert(`Emergency Detail:\nType: ${n.emergency_type}\nSymptoms: ${n.symptoms}\nNotes: ${n.notes}`);
-                                                                    }}
-                                                                    className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded hover:bg-red-100 transition-colors"
-                                                                >
-                                                                    Case Info
-                                                                </button>
-                                                            )}
-                                                            {b.status === 'confirmed' && b.isMedicine && (
-                                                                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                                                    {!b.trackingStatus && (
-                                                                        <button onClick={() => updateTracking(b.id, 'to_godown')} className="px-2 py-1 bg-indigo-500 text-white text-[10px] font-bold rounded hover:bg-indigo-600 transition-colors">
-                                                                            Process
-                                                                        </button>
-                                                                    )}
-                                                                    {b.trackingStatus === 'to_godown' && (
-                                                                        <button onClick={() => updateTracking(b.id, 'items_picked')} className="px-2 py-1 bg-amber-500 text-white text-[10px] font-bold rounded hover:bg-amber-600 transition-colors">
-                                                                            Pack
-                                                                        </button>
-                                                                    )}
-                                                                    {b.trackingStatus === 'items_picked' && (
-                                                                        <button onClick={() => updateTracking(b.id, 'on_the_way')} className="px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded hover:bg-blue-600 transition-colors">
-                                                                            Ship
-                                                                        </button>
-                                                                    )}
-                                                                    {b.trackingStatus === 'on_the_way' && (
-                                                                        <button onClick={() => updateTracking(b.id, 'arrived')} className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded hover:bg-emerald-600 transition-colors">
-                                                                            Delivered
-                                                                        </button>
-                                                                    )}
-                                                                    {b.trackingStatus === 'arrived' && (
-                                                                        <button onClick={() => updateStatus(b.id, 'completed')} className="px-2 py-1 bg-slate-700 text-white text-[10px] font-bold rounded hover:bg-slate-800 transition-colors">
-                                                                            Mark Done
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {filterBookings(currentTabBookings).length === 0 && (
-                                                    <tr>
-                                                        <td colSpan={12} className="px-4 py-12 text-center text-slate-400 text-sm">No bookings found</td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ══ NURSING JOBS ══════════════════════════════════════ */}
-                        {activeTab === 'nursing' && (
-                            <div className="space-y-4">
-                                <h2 className="text-xl font-extrabold text-slate-900">Nursing Jobs <span className="text-slate-400 font-normal text-base">({nursingBookings.length})</span></h2>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                                    {nursingBookings.map(b => (
-                                        <div key={b.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 hover:shadow-md transition-shadow">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    <p className="font-bold text-slate-900">{b.service}</p>
-                                                    <p className="text-xs text-slate-500 mt-0.5">👤 {b.patient}</p>
-                                                </div>
-                                                <Badge status={b.status} />
+                        {
+                            activeTab !== 'overview' && activeTab !== 'users' && activeTab !== 'prescriptions' && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-xl font-extrabold text-slate-900 capitalize">
+                                            {activeTab} Bookings
+                                            <span className="text-slate-400 font-normal text-base ml-2">({currentTabBookings.length})</span>
+                                        </h2>
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    value={search}
+                                                    onChange={e => setSearch(e.target.value)}
+                                                    placeholder="Search patient, service…"
+                                                    className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl w-56 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                                />
                                             </div>
-
-                                            <div className="space-y-1.5 text-xs text-slate-500 mb-3">
-                                                <div className="flex justify-between">
-                                                    <span>📅 Date</span>
-                                                    <span className="font-semibold text-slate-700">{b.date || '—'} {b.time}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>👩‍⚕️ Nurse</span>
-                                                    <span className="font-semibold text-slate-700">{b.nurseName}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>🚦 Tracking</span>
-                                                    <span className="font-semibold text-slate-700">{TRACKING_LABELS[b.trackingStatus] || 'Awaiting nurse'}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>💰 Price</span>
-                                                    <span className="font-bold text-emerald-600">₹{b.price}</span>
-                                                </div>
+                                            <div className="relative">
+                                                <select
+                                                    value={statusFilter}
+                                                    onChange={e => setStatusFilter(e.target.value)}
+                                                    className="appearance-none pl-3 pr-8 py-2 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-semibold"
+                                                >
+                                                    <option value="all">All Status</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="confirmed">Confirmed</option>
+                                                    <option value="completed">Completed</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                             </div>
-
-                                            {b.doctorNotes && b.doctorNotes !== '—' && (
-                                                <div className="bg-amber-50 border border-amber-100 rounded-xl p-2.5 mb-3">
-                                                    <p className="text-[10px] font-bold text-amber-700 mb-0.5">Doctor Notes</p>
-                                                    <p className="text-xs text-amber-800">{b.doctorNotes}</p>
-                                                </div>
-                                            )}
-
-                                            {b.rxPending && (
-                                                <div className="bg-violet-50 border border-violet-100 rounded-xl p-2 mb-3 flex items-center gap-2">
-                                                    <AlertCircle className="w-3.5 h-3.5 text-violet-600 shrink-0" />
-                                                    <p className="text-xs font-bold text-violet-700">Prescription review pending</p>
-                                                </div>
-                                            )}
-
-                                            {b.status === 'pending' && (
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => updateStatus(b.id, 'confirmed')} className="flex-1 h-8 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:bg-emerald-600 transition-colors">Confirm</button>
-                                                    <button onClick={() => updateStatus(b.id, 'cancelled')} className="flex-1 h-8 bg-red-50 text-red-600 border border-red-200 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">Cancel</button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {nursingBookings.length === 0 && (
-                                        <div className="col-span-3 text-center py-16 text-slate-400">
-                                            <Activity className="w-12 h-12 mx-auto opacity-30 mb-3" />
-                                            <p className="text-sm font-medium">No nursing jobs yet</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ══ PRESCRIPTIONS ══════════════════════════════════════ */}
-                        {activeTab === 'prescriptions' && (
-                            <div className="space-y-4">
-                                <h2 className="text-xl font-extrabold text-slate-900">Prescriptions <span className="text-slate-400 font-normal text-base">({prescriptions.length})</span></h2>
-
-                                {/* Pending bookings that have prescription review pending */}
-                                {allBookings.filter(b => b.rxPending).length > 0 && (
-                                    <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
-                                        <p className="text-sm font-bold text-violet-800 mb-3 flex items-center gap-2">
-                                            <AlertCircle className="w-4 h-4" /> Bookings Awaiting Prescription Review ({allBookings.filter(b => b.rxPending).length})
-                                        </p>
-                                        <div className="space-y-2">
-                                            {allBookings.filter(b => b.rxPending).map(b => (
-                                                <div key={b.id} className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-900">{b.patient} — {b.service}</p>
-                                                        <p className="text-xs text-slate-500">{fmt(b.createdAt)}</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => navigate('/doctor/dashboard')}
-                                                        className="px-3 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-violet-700 transition-colors"
-                                                    >
-                                                        Review →
-                                                    </button>
-                                                </div>
-                                            ))}
                                         </div>
                                     </div>
-                                )}
 
-                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                    {prescriptions.length === 0 ? (
-                                        <div className="text-center py-16 text-slate-400">
-                                            <FileText className="w-12 h-12 mx-auto opacity-30 mb-3" />
-                                            <p className="text-sm font-medium">No prescriptions found</p>
-                                        </div>
-                                    ) : (
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm">
                                                 <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
                                                     <tr>
-                                                        {['ID', 'Patient ID', 'Doctor ID', 'Status', 'File', 'Uploaded'].map(h => (
-                                                            <th key={h} className="px-4 py-3 text-left">{h}</th>
+                                                        {['ID', 'Patient', 'Service', 'Date', 'Time', 'Nurse', 'Tracking', 'Doctor Notes', 'Payment', 'Price', 'Status', 'Actions'].map(h => (
+                                                            <th key={h} className="px-4 py-3 text-left whitespace-nowrap">{h}</th>
                                                         ))}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {prescriptions.map(rx => (
-                                                        <tr key={rx.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
-                                                            <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(rx.id).slice(0, 8)}</td>
-                                                            <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.user_id || '—').slice(0, 12)}…</td>
-                                                            <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.doctor_id || '—').slice(0, 12)}</td>
+                                                    {filterBookings(currentTabBookings).map(b => (
+                                                        <tr key={b.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
+                                                            <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(b.id).slice(0, 8)}</td>
+                                                            <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">{b.patient}</td>
+                                                            <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.service}</td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">{b.date ? fmt(b.date) : fmt(b.createdAt)}</td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500">{b.time}</td>
+                                                            <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.nurseName}</td>
+                                                            <td className="px-4 py-3 text-xs whitespace-nowrap">{TRACKING_LABELS[b.trackingStatus] || '—'}</td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500 max-w-[150px] truncate" title={b.doctorNotes}>{b.doctorNotes}</td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500 uppercase">{b.paymentMethod}</td>
+                                                            <td className="px-4 py-3 font-bold text-slate-900 whitespace-nowrap">₹{b.price}</td>
+                                                            <td className="px-4 py-3"><Badge status={b.status} /></td>
                                                             <td className="px-4 py-3">
-                                                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${rx.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                                    rx.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                                        'bg-slate-100 text-slate-600 border-slate-200'
-                                                                    }`}>
-                                                                    {rx.status || 'pending'}
-                                                                </span>
+                                                                <div className="flex flex-wrap items-center gap-1.5 min-w-[120px]">
+                                                                    {b.status === 'pending' && (
+                                                                        <>
+                                                                            <button onClick={() => updateStatus(b.id, 'confirmed')} className="px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1">
+                                                                                <CheckCircle className="w-3 h-3" /> Confirm
+                                                                            </button>
+                                                                            <button onClick={() => updateStatus(b.id, 'cancelled')} className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 text-xs font-bold rounded-lg hover:bg-red-100 transition-colors flex items-center gap-1">
+                                                                                <XCircle className="w-3 h-3" /> Cancel
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {b.status === 'confirmed' && !b.isMedicine && (
+                                                                        <button onClick={() => updateStatus(b.id, 'completed')} className="px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded hover:bg-blue-600 transition-colors flex items-center gap-1">
+                                                                            <Clock className="w-3 h-3" /> Complete
+                                                                        </button>
+                                                                    )}
+                                                                    {b.isInsurance && b.rawNotes && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const n = JSON.parse(b.rawNotes).insurance_details;
+                                                                                alert(`Insurance Info:\nName: ${n.applicantName}\nAge: ${n.age}\nNominee: ${n.nomineeName}\nRelation: ${n.nomineeRelation}`);
+                                                                            }}
+                                                                            className="px-2 py-1 bg-indigo-50 text-indigo-600 border border-indigo-200 text-[10px] font-bold rounded hover:bg-indigo-100 transition-colors"
+                                                                        >
+                                                                            View Application
+                                                                        </button>
+                                                                    )}
+                                                                    {b.isEmergency && b.rawNotes && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const n = JSON.parse(b.rawNotes);
+                                                                                alert(`Emergency Detail:\nType: ${n.emergency_type}\nSymptoms: ${n.symptoms}\nNotes: ${n.notes}`);
+                                                                            }}
+                                                                            className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded hover:bg-red-100 transition-colors"
+                                                                        >
+                                                                            Case Info
+                                                                        </button>
+                                                                    )}
+                                                                    {b.status === 'confirmed' && b.isMedicine && (
+                                                                        <>
+                                                                            {!b.trackingStatus && (
+                                                                                <button onClick={() => updateTracking(b.id, 'to_godown')} className="px-2 py-1 bg-indigo-500 text-white text-[10px] font-bold rounded hover:bg-indigo-600 transition-colors">
+                                                                                    Process
+                                                                                </button>
+                                                                            )}
+                                                                            {b.trackingStatus === 'to_godown' && (
+                                                                                <button onClick={() => updateTracking(b.id, 'items_picked')} className="px-2 py-1 bg-amber-500 text-white text-[10px] font-bold rounded hover:bg-amber-600 transition-colors">
+                                                                                    Pack
+                                                                                </button>
+                                                                            )}
+                                                                            {b.trackingStatus === 'items_picked' && (
+                                                                                <button onClick={() => updateTracking(b.id, 'on_the_way')} className="px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded hover:bg-blue-600 transition-colors">
+                                                                                    Ship
+                                                                                </button>
+                                                                            )}
+                                                                            {b.trackingStatus === 'on_the_way' && (
+                                                                                <button onClick={() => updateTracking(b.id, 'arrived')} className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded hover:bg-emerald-600 transition-colors">
+                                                                                    Delivered
+                                                                                </button>
+                                                                            )}
+                                                                            {b.trackingStatus === 'arrived' && (
+                                                                                <button onClick={() => updateStatus(b.id, 'completed')} className="px-2 py-1 bg-slate-700 text-white text-[10px] font-bold rounded hover:bg-slate-800 transition-colors">
+                                                                                    Mark Done
+                                                                                </button>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                    {/* Universal Cancel button for active bookings */}
+                                                                    {b.status !== 'pending' && b.status !== 'completed' && b.status !== 'cancelled' && (
+                                                                        <button onClick={() => updateStatus(b.id, 'cancelled')} className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded hover:bg-red-100 transition-colors flex items-center gap-1">
+                                                                            <XCircle className="w-3 h-3" /> Cancel
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                {rx.file_url ? (
-                                                                    <a href={rx.file_url} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold text-xs hover:underline">View File →</a>
-                                                                ) : <span className="text-slate-400 text-xs">—</span>}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-xs text-slate-500">{fmt(rx.created_at)}</td>
                                                         </tr>
                                                     ))}
+                                                    {filterBookings(currentTabBookings).length === 0 && (
+                                                        <tr>
+                                                            <td colSpan={12} className="px-4 py-12 text-center text-slate-400 text-sm">No bookings found</td>
+                                                        </tr>
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
+
+                        {/* ══ NURSING JOBS ══════════════════════════════════════ */}
+                        {
+                            activeTab === 'nursing' && (
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-extrabold text-slate-900">Nursing Jobs <span className="text-slate-400 font-normal text-base">({nursingBookings.length})</span></h2>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                        {nursingBookings.map(b => (
+                                            <div key={b.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 hover:shadow-md transition-shadow">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <p className="font-bold text-slate-900">{b.service}</p>
+                                                        <p className="text-xs text-slate-500 mt-0.5">👤 {b.patient}</p>
+                                                    </div>
+                                                    <Badge status={b.status} />
+                                                </div>
+
+                                                <div className="space-y-1.5 text-xs text-slate-500 mb-3">
+                                                    <div className="flex justify-between">
+                                                        <span>📅 Date</span>
+                                                        <span className="font-semibold text-slate-700">{b.date || '—'} {b.time}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>👩‍⚕️ Nurse</span>
+                                                        <span className="font-semibold text-slate-700">{b.nurseName}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>🚦 Tracking</span>
+                                                        <span className="font-semibold text-slate-700">{TRACKING_LABELS[b.trackingStatus] || 'Awaiting nurse'}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>💰 Price</span>
+                                                        <span className="font-bold text-emerald-600">₹{b.price}</span>
+                                                    </div>
+                                                </div>
+
+                                                {b.doctorNotes && b.doctorNotes !== '—' && (
+                                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-2.5 mb-3">
+                                                        <p className="text-[10px] font-bold text-amber-700 mb-0.5">Doctor Notes</p>
+                                                        <p className="text-xs text-amber-800">{b.doctorNotes}</p>
+                                                    </div>
+                                                )}
+
+                                                {b.rxPending && (
+                                                    <button
+                                                        onClick={() => { setOverviewDrill(null); setActiveTab('prescriptions'); }}
+                                                        className="w-full bg-violet-50 border border-violet-100 rounded-xl p-2.5 mb-3 flex items-center justify-between hover:bg-violet-100 transition-colors group text-left cursor-pointer"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <AlertCircle className="w-4 h-4 text-violet-600 shrink-0" />
+                                                            <p className="text-xs font-bold text-violet-800">Prescription review pending</p>
+                                                        </div>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-violet-400 group-hover:text-violet-600 group-hover:translate-x-0.5 transition-all" />
+                                                    </button>
+                                                )}
+
+                                                {b.status === 'pending' && (
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => updateStatus(b.id, 'confirmed')} className="flex-1 h-8 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:bg-emerald-600 transition-colors">Confirm</button>
+                                                        <button onClick={() => updateStatus(b.id, 'cancelled')} className="flex-1 h-8 bg-red-50 text-red-600 border border-red-200 text-xs font-bold rounded-xl hover:bg-red-100 transition-colors">Cancel</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {nursingBookings.length === 0 && (
+                                            <div className="col-span-3 text-center py-16 text-slate-400">
+                                                <Activity className="w-12 h-12 mx-auto opacity-30 mb-3" />
+                                                <p className="text-sm font-medium">No nursing jobs yet</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        }
+
+                        {/* ══ PRESCRIPTIONS ══════════════════════════════════════ */}
+                        {
+                            activeTab === 'prescriptions' && (
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-extrabold text-slate-900">Prescriptions <span className="text-slate-400 font-normal text-base">({prescriptions.length})</span></h2>
+
+                                    {/* Pending bookings that have prescription review pending */}
+                                    {allBookings.filter(b => b.rxPending).length > 0 && (
+                                        <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4">
+                                            <p className="text-sm font-bold text-violet-800 mb-3 flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4" /> Bookings Awaiting Prescription Review ({allBookings.filter(b => b.rxPending).length})
+                                            </p>
+                                            <div className="space-y-2">
+                                                {allBookings.filter(b => b.rxPending).map(b => (
+                                                    <div key={b.id} className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900">{b.patient} — {b.service}</p>
+                                                            <p className="text-xs text-slate-500">{fmt(b.createdAt)}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => navigate('/doctor/dashboard')}
+                                                            className="px-3 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-violet-700 transition-colors"
+                                                        >
+                                                            Review →
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                        {prescriptions.length === 0 ? (
+                                            <div className="text-center py-16 text-slate-400">
+                                                <FileText className="w-12 h-12 mx-auto opacity-30 mb-3" />
+                                                <p className="text-sm font-medium">No prescriptions found</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
+                                                        <tr>
+                                                            {['ID', 'Patient ID', 'Doctor ID', 'Status', 'File', 'Uploaded'].map(h => (
+                                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {prescriptions.map(rx => (
+                                                            <tr key={rx.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
+                                                                <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(rx.id).slice(0, 8)}</td>
+                                                                <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.user_id || '—').slice(0, 12)}…</td>
+                                                                <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.doctor_id || '—').slice(0, 12)}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${rx.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                                        rx.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                                            'bg-slate-100 text-slate-600 border-slate-200'
+                                                                        }`}>
+                                                                        {rx.status || 'pending'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    {rx.file_url ? (
+                                                                        <a href={rx.file_url} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold text-xs hover:underline">View File →</a>
+                                                                    ) : <span className="text-slate-400 text-xs">—</span>}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-xs text-slate-500">{fmt(rx.created_at)}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        }
 
                         {/* ══ USER LOGINS ══════════════════════════════════════ */}
-                        {activeTab === 'users' && (
-                            <div className="space-y-4">
-                                <h2 className="text-xl font-extrabold text-slate-900">All Users</h2>
+                        {
+                            activeTab === 'users' && (
+                                <div className="space-y-4">
+                                    <h2 className="text-xl font-extrabold text-slate-900">All Users</h2>
 
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                                    {/* Patients */}
-                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                            <h3 className="font-bold text-slate-900 flex items-center gap-2"><UserCheck className="w-4 h-4 text-blue-500" /> Patients ({uniqueUsers.length})</h3>
-                                        </div>
-                                        <div className="divide-y divide-slate-50">
-                                            {uniqueUsers.map(u => (
-                                                <div key={u.id} className="px-5 py-3 hover:bg-slate-50 transition-colors">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
-                                                            {u.name?.slice(0, 2).toUpperCase() || 'P'}
+                                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                                        {/* Patients */}
+                                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                                                <h3 className="font-bold text-slate-900 flex items-center gap-2"><UserCheck className="w-4 h-4 text-blue-500" /> Patients ({uniqueUsers.length})</h3>
+                                            </div>
+                                            <div className="divide-y divide-slate-50">
+                                                {uniqueUsers.map(u => (
+                                                    <div key={u.id} className="px-5 py-3 hover:bg-slate-50 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
+                                                                {u.name?.slice(0, 2).toUpperCase() || 'P'}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-semibold text-slate-800 truncate">{u.name}</p>
+                                                                <p className="text-xs text-slate-400 font-mono truncate">{String(u.id).slice(0, 16)}…</p>
+                                                            </div>
+                                                            <span className="text-xs text-slate-400">{fmt(u.lastBooking)}</span>
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-semibold text-slate-800 truncate">{u.name}</p>
-                                                            <p className="text-xs text-slate-400 font-mono truncate">{String(u.id).slice(0, 16)}…</p>
+                                                    </div>
+                                                ))}
+                                                {uniqueUsers.length === 0 && <div className="px-5 py-6 text-center text-slate-400 text-sm">No patients yet</div>}
+                                            </div>
+                                        </div>
+
+                                        {/* Nurses */}
+                                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                            <div className="px-5 py-4 border-b border-slate-100">
+                                                <h3 className="font-bold text-slate-900 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-500" /> Nurses ({uniqueNurses.length})</h3>
+                                            </div>
+                                            <div className="divide-y divide-slate-50">
+                                                {uniqueNurses.map(n => (
+                                                    <div key={n.id} className="px-5 py-3 hover:bg-slate-50 transition-colors flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">
+                                                            {n.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'N'}
                                                         </div>
-                                                        <span className="text-xs text-slate-400">{fmt(u.lastBooking)}</span>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-semibold text-slate-800">{n.name}</p>
+                                                            <p className="text-xs text-slate-400">{n.jobs} total jobs • {n.activeJobs} active now</p>
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${n.activeJobs > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {n.activeJobs > 0 ? 'Active' : 'Idle'}
+                                                        </span>
                                                     </div>
-                                                </div>
-                                            ))}
-                                            {uniqueUsers.length === 0 && <div className="px-5 py-6 text-center text-slate-400 text-sm">No patients yet</div>}
+                                                ))}
+                                                {uniqueNurses.length === 0 && <div className="px-5 py-6 text-center text-slate-400 text-sm">No nurses have accepted jobs yet</div>}
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Nurses */}
-                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                        <div className="px-5 py-4 border-b border-slate-100">
-                                            <h3 className="font-bold text-slate-900 flex items-center gap-2"><Activity className="w-4 h-4 text-emerald-500" /> Nurses ({uniqueNurses.length})</h3>
-                                        </div>
-                                        <div className="divide-y divide-slate-50">
-                                            {uniqueNurses.map(n => (
-                                                <div key={n.id} className="px-5 py-3 hover:bg-slate-50 transition-colors flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">
-                                                        {n.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'N'}
+                                        {/* Quick actions */}
+                                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                                            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-purple-500" /> Quick Actions</h3>
+                                            <div className="space-y-3">
+                                                <button onClick={() => navigate('/doctor/dashboard')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-violet-200 hover:bg-violet-50 transition-all text-left">
+                                                    <FileText className="w-5 h-5 text-violet-500" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Doctor Dashboard</p>
+                                                        <p className="text-xs text-slate-500">Review prescriptions</p>
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-sm font-semibold text-slate-800">{n.name}</p>
-                                                        <p className="text-xs text-slate-400">{n.jobs} total jobs • {n.activeJobs} active now</p>
+                                                </button>
+                                                <button onClick={() => navigate('/nurse/dashboard')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all text-left">
+                                                    <Activity className="w-5 h-5 text-emerald-500" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Nurse Dashboard</p>
+                                                        <p className="text-xs text-slate-500">View nurse jobs</p>
                                                     </div>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${n.activeJobs > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                                        {n.activeJobs > 0 ? 'Active' : 'Idle'}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                            {uniqueNurses.length === 0 && <div className="px-5 py-6 text-center text-slate-400 text-sm">No nurses have accepted jobs yet</div>}
-                                        </div>
-                                    </div>
+                                                </button>
 
-                                    {/* Quick actions */}
-                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                                        <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-purple-500" /> Quick Actions</h3>
-                                        <div className="space-y-3">
-                                            <button onClick={() => navigate('/doctor/dashboard')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-violet-200 hover:bg-violet-50 transition-all text-left">
-                                                <FileText className="w-5 h-5 text-violet-500" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">Doctor Dashboard</p>
-                                                    <p className="text-xs text-slate-500">Review prescriptions</p>
-                                                </div>
-                                            </button>
-                                            <button onClick={() => navigate('/nurse/dashboard')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all text-left">
-                                                <Activity className="w-5 h-5 text-emerald-500" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">Nurse Dashboard</p>
-                                                    <p className="text-xs text-slate-500">View nurse jobs</p>
-                                                </div>
-                                            </button>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Staff Management</p>
+                                                <button onClick={() => navigate('/staff-management?tab=doctors')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left">
+                                                    <Stethoscope className="w-5 h-5 text-blue-500" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Doctors</p>
+                                                        <p className="text-xs text-slate-500">View doctor details & stats</p>
+                                                    </div>
+                                                </button>
+                                                <button onClick={() => navigate('/staff-management?tab=nurses')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50 transition-all text-left">
+                                                    <UserCheck className="w-5 h-5 text-teal-500" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Nurses</p>
+                                                        <p className="text-xs text-slate-500">View nurse details & jobs</p>
+                                                    </div>
+                                                </button>
 
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Staff Management</p>
-                                            <button onClick={() => navigate('/staff-management?tab=doctors')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left">
-                                                <Stethoscope className="w-5 h-5 text-blue-500" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">Doctors</p>
-                                                    <p className="text-xs text-slate-500">View doctor details & stats</p>
-                                                </div>
-                                            </button>
-                                            <button onClick={() => navigate('/staff-management?tab=nurses')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50 transition-all text-left">
-                                                <UserCheck className="w-5 h-5 text-teal-500" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">Nurses</p>
-                                                    <p className="text-xs text-slate-500">View nurse details & jobs</p>
-                                                </div>
-                                            </button>
-
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Analytics</p>
-                                            <button onClick={() => navigate('/revenue-reports')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all text-left">
-                                                <TrendingUp className="w-5 h-5 text-amber-500" />
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-900">Revenue / Reports</p>
-                                                    <p className="text-xs text-slate-500">Analytics, trends & breakdowns</p>
-                                                </div>
-                                            </button>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">Analytics</p>
+                                                <button onClick={() => navigate('/revenue-reports')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-amber-200 hover:bg-amber-50 transition-all text-left">
+                                                    <TrendingUp className="w-5 h-5 text-amber-500" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900">Revenue / Reports</p>
+                                                        <p className="text-xs text-slate-500">Analytics, trends & breakdowns</p>
+                                                    </div>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        }
                     </>
                 )}
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

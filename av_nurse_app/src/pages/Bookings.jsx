@@ -55,8 +55,8 @@ const Bookings = () => {
                     status: b.status || 'pending',
                     isMedicineOrder: notesObj.is_medicine_order || false,
                     image: null,
-                    rated: b.rated || false,
-                    rating: b.rating || null,
+                    rated: b.rated || !!notesObj.feedback || false,
+                    rating: b.rating || notesObj.feedback?.rating || null,
                     trackingStatus: notesObj.tracking_status || b.tracking_status || null,
                     bookingId: b.id,
                     rejectionReason: notesObj.refund_reason || null, // re-use refund_reason as rejection reason from doctor review
