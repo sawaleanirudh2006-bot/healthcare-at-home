@@ -9,6 +9,7 @@ export default function NurseDashboard() {
     const [allBookings, setAllBookings] = useState([]);
     const [accepting, setAccepting] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [nurseProfile, setNurseProfile] = useState(null);
 
     // Nurse identity from localStorage (set at login)
     const nurseData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -79,6 +80,20 @@ export default function NurseDashboard() {
 
     useEffect(() => {
         loadBookings();
+        // Fetch nurse profile for verification status
+        const fetchProfile = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data: profile } = await supabase
+                    .from('nurse_profiles')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .single();
+                if (profile) setNurseProfile(profile);
+            }
+        };
+        fetchProfile();
+
         const interval = setInterval(loadBookings, 8000); // poll every 8s
         return () => clearInterval(interval);
     }, []);
@@ -450,16 +465,23 @@ export default function NurseDashboard() {
                 </div>
 
                 {/* Nurse Info */}
-                <div className="flex items-center gap-3 bg-emerald-50 p-3 rounded-xl mb-4">
+                <div className="flex items-center gap-3 bg-teal-50 p-3 rounded-xl mb-4 border border-teal-100">
                     <button onClick={() => navigate('/nurse/profile')} className="flex-shrink-0 relative">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
-                            <span className="font-bold text-indigo-600 text-sm">{nurseInitials}</span>
+                        <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center border-2 border-white shadow-sm">
+                            <span className="font-bold text-teal-700 text-sm">{nurseInitials}</span>
                         </div>
                         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                     </button>
                     <div>
-                        <p className="text-sm font-bold text-slate-900">{nurseName}</p>
-                        <p className="text-xs font-medium text-slate-600">Registered Nurse • On Duty</p>
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-black">{nurseProfile?.full_name || nurseName}</p>
+                            {(nurseProfile?.verification_status === 'approved' || !nurseProfile) && (
+                                <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-bold rounded-md" title="Verified Nurse">
+                                    <CheckCircle className="w-3 h-3" /> Verified
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs font-medium text-slate-600">{nurseProfile?.qualification || 'Registered Nurse'} • {nurseProfile?.specialization || 'On Duty'}</p>
                     </div>
                 </div>
 
@@ -469,9 +491,9 @@ export default function NurseDashboard() {
                         <button
                             key={tab.id}
                             onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }}
-                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
-                                ? tabColors[tab.color]
-                                : 'bg-slate-100 text-slate-600'
+                            className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap shadow-sm ${activeTab === tab.id
+                                ? 'bg-teal-600 text-white'
+                                : 'bg-white text-slate-600 border border-slate-100'
                                 }`}
                         >
                             {tab.label} {tab.count > 0 && `(${tab.count})`}
@@ -487,7 +509,7 @@ export default function NurseDashboard() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by patient, service or address..."
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 text-sm"
+                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl border border-slate-100 text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400/20 focus:border-teal-500 text-sm transition-all"
                     />
                     {searchQuery && (
                         <button
@@ -502,9 +524,9 @@ export default function NurseDashboard() {
 
             {/* New Requests Alert Banner */}
             {activeTab === 'requests' && newRequests.length > 0 && (
-                <div className="mx-5 mt-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-amber-500 shrink-0 animate-pulse" />
-                    <p className="text-sm font-bold text-amber-800">
+                <div className="mx-5 mt-4 px-4 py-3 bg-teal-50 border border-teal-100 rounded-xl flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-teal-600 shrink-0 animate-pulse" />
+                    <p className="text-sm font-bold text-teal-900">
                         {newRequests.length} new booking{newRequests.length > 1 ? 's' : ''} waiting — first to accept gets the job!
                     </p>
                 </div>
@@ -514,8 +536,10 @@ export default function NurseDashboard() {
             <main className="flex-1 px-5 py-4 space-y-4 pb-24">
                 {currentList.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                        <Calendar className="w-12 h-12 mb-3 opacity-40" />
-                        <p className="text-sm font-semibold">
+                        <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+                            <Calendar className="w-8 h-8 opacity-40" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-500">
                             {activeTab === 'requests' ? 'No new requests right now' : `No ${activeTab === 'myJobs' ? 'active' : activeTab} jobs`}
                         </p>
                         {activeTab === 'requests' && (

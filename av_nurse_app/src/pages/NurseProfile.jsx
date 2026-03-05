@@ -21,7 +21,7 @@ const NurseProfile = () => {
         rating: 4.8,
         experience: '8 Years',
         completedBookings: 142,
-        area: 'South Delhi',
+        area: 'Aundh, Pune',
         image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop'
     };
 

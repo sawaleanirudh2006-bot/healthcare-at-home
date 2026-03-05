@@ -4,20 +4,20 @@ import { supabase } from '../lib/supabaseClient';
 
 // All searchable items in the app
 const ALL_ITEMS = [
-    { label: 'Book Nurse', keywords: ['nurse', 'nursing', 'book nurse', 'home nurse'], route: '/nursing-services', icon: 'medical_services', color: 'bg-primary/10 text-primary' },
-    { label: 'Consult Doctor', keywords: ['doctor', 'consult', 'video', 'chat', 'prescription', 'physician', 'in person', 'inperson', 'appointment', 'talk to doctor', 'see doctor'], route: '/doctor-consult', icon: 'medical_services', color: 'bg-blue-50 text-blue-600' },
-    { label: 'Order Medicines', keywords: ['medicine', 'medicines', 'pharmacy', 'drug', 'store', 'pill'], route: '/store', icon: 'pill', color: 'bg-primary/10 text-primary' },
-    { label: 'Lab Tests', keywords: ['lab', 'test', 'blood', 'urine', 'sample', 'diagnostic'], route: '/lab-tests', icon: 'biotech', color: 'bg-primary/10 text-primary' },
-    { label: 'Emergency', keywords: ['emergency', 'urgent', 'sos', 'ambulance emergency'], route: '/emergency', icon: 'emergency', color: 'bg-accent-red/10 text-accent-red' },
-    { label: 'Health Insurance', keywords: ['insurance', 'cashless', 'claim', 'coverage', 'policy'], route: '/health-insurance', icon: 'shield', color: 'bg-blue-50 text-blue-600' },
-    { label: 'Treatment Packages', keywords: ['treatment', 'package', 'care plan', 'therapy', 'specialized'], route: '/treatment-packages', icon: 'medical_services', color: 'bg-purple-50 text-purple-600' },
-    { label: 'Ambulance', keywords: ['ambulance', 'transport', 'vehicle'], route: '/ambulance', icon: 'ambulance', color: 'bg-accent-red/10 text-accent-red' },
-    { label: 'Nearby Hospitals', keywords: ['hospital', 'clinic', 'nearby', 'location'], route: '/nearby-hospitals', icon: 'local_hospital', color: 'bg-secondary/10 text-secondary' },
-    { label: 'Health Checkup', keywords: ['checkup', 'full body', 'screening', 'wellness', 'health check'], route: '/health-checkup-packages', icon: 'health_metrics', color: 'bg-secondary/10 text-secondary' },
-    { label: 'IV Fluid Services', keywords: ['iv', 'fluid', 'drip', 'infusion', 'saline'], route: '/iv-fluid-services', icon: 'vaccines', color: 'bg-primary/10 text-primary' },
-    { label: 'AI Health Assistant', keywords: ['ai', 'assistant', 'chat ai', 'bot', 'health assistant'], route: '/ai-health-assistant', icon: 'smart_toy', color: 'bg-purple-50 text-purple-600' },
-    { label: 'Vitals', keywords: ['vitals', 'bp', 'blood pressure', 'pulse', 'temperature'], route: '/vitals', icon: 'favorite', color: 'bg-accent-red/10 text-accent-red' },
-    { label: 'Health Records', keywords: ['records', 'history', 'reports', 'documents'], route: '/health-records', icon: 'folder_shared', color: 'bg-blue-50 text-blue-600' },
+    { label: 'Book Nurse', keywords: ['nurse', 'nursing', 'book nurse', 'home nurse'], route: '/nursing-services', icon: 'medical_services', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Consult Doctor', keywords: ['doctor', 'consult', 'video', 'chat', 'prescription', 'physician', 'in person', 'inperson', 'appointment', 'talk to doctor', 'see doctor'], route: '/doctor-consult', icon: 'medical_services', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Order Medicines', keywords: ['medicine', 'medicines', 'pharmacy', 'drug', 'store', 'pill'], route: '/store', icon: 'pill', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Lab Tests', keywords: ['lab', 'test', 'blood', 'urine', 'sample', 'diagnostic'], route: '/lab-tests', icon: 'biotech', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Emergency', keywords: ['emergency', 'urgent', 'sos', 'ambulance emergency'], route: '/emergency', icon: 'emergency', color: 'bg-red-50 text-red-600' },
+    { label: 'Health Insurance', keywords: ['insurance', 'cashless', 'claim', 'coverage', 'policy'], route: '/health-insurance', icon: 'shield', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Treatment Packages', keywords: ['treatment', 'package', 'care plan', 'therapy', 'specialized'], route: '/treatment-packages', icon: 'medical_services', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Ambulance', keywords: ['ambulance', 'transport', 'vehicle'], route: '/ambulance', icon: 'ambulance', color: 'bg-red-50 text-red-600' },
+    { label: 'Nearby Hospitals', keywords: ['hospital', 'clinic', 'nearby', 'location'], route: '/nearby-hospitals', icon: 'local_hospital', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Health Checkup', keywords: ['checkup', 'full body', 'screening', 'wellness', 'health check'], route: '/health-checkup-packages', icon: 'health_metrics', color: 'bg-teal-50 text-teal-600' },
+    { label: 'IV Fluid Services', keywords: ['iv', 'fluid', 'drip', 'infusion', 'saline'], route: '/iv-fluid-services', icon: 'vaccines', color: 'bg-teal-50 text-teal-600' },
+    { label: 'AI Health Assistant', keywords: ['ai', 'assistant', 'chat ai', 'bot', 'health assistant'], route: '/ai-health-assistant', icon: 'smart_toy', color: 'bg-teal-50 text-teal-600' },
+    { label: 'Vitals', keywords: ['vitals', 'bp', 'blood pressure', 'pulse', 'temperature'], route: '/vitals', icon: 'favorite', color: 'bg-red-50 text-red-600' },
+    { label: 'Health Records', keywords: ['records', 'history', 'reports', 'documents'], route: '/health-records', icon: 'folder_shared', color: 'bg-teal-50 text-teal-600' },
     { label: 'Membership Plans', keywords: ['membership', 'plan', 'subscribe', 'premium'], route: '/membership-plans', icon: 'workspace_premium', color: 'bg-amber-50 text-amber-600' },
 ];
 
@@ -26,12 +26,21 @@ const Home = () => {
     const [query, setQuery] = useState('');
 
     const [profileData] = useState(() => {
+        // Priority: userProfile → userData (set during signup/login) → Supabase session (async, handled below)
         const stored = localStorage.getItem('userProfile');
-        return stored ? JSON.parse(stored) : {
-            name: 'Arjun Sharma',
-            phone: '+91 98765 43210',
-            avatar: null
-        };
+        if (stored) return JSON.parse(stored);
+
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+            const u = JSON.parse(userData);
+            return {
+                name: u.name || u.full_name || 'Patient',
+                phone: u.phone || '',
+                avatar: u.avatar || null,
+            };
+        }
+
+        return { name: 'Patient', phone: '', avatar: null };
     });
 
     const [upcomingService, setUpcomingService] = useState(null);
@@ -128,17 +137,17 @@ const Home = () => {
                     <div className="flex items-center gap-3">
                         <div
                             onClick={() => navigate('/profile')}
-                            className="h-12 w-12 rounded-full border-2 border-primary/20 p-0.5 cursor-pointer active:scale-95 transition-all shadow-sm"
+                            className="h-12 w-12 rounded-full border-2 border-primary-teal/20 p-0.5 cursor-pointer active:scale-95 transition-all shadow-sm"
                         >
                             <img
                                 alt="User"
-                                className="h-full w-full rounded-full object-cover bg-background"
+                                className="h-full w-full rounded-full object-cover bg-white"
                                 src={profileData.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA"}
                             />
                         </div>
                         <div onClick={() => navigate('/profile')} className="cursor-pointer">
-                            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">Namaste,</p>
-                            <h1 className="text-xl font-extrabold text-text-main">{profileData.name}</h1>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Namaste,</p>
+                            <h1 className="text-xl font-extrabold text-black">{profileData.name}</h1>
                         </div>
                     </div>
                     <button
@@ -152,9 +161,9 @@ const Home = () => {
 
                 {/* Search bar */}
                 <div className="relative mt-2">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
                     <input
-                        className="h-12 w-full rounded-2xl border-none bg-background pl-11 pr-10 text-[14px] text-text-muted placeholder:text-text-muted focus:ring-2 focus:ring-primary/20 outline-none"
+                        className="h-12 w-full rounded-2xl border-none bg-slate-100 pl-11 pr-10 text-[14px] text-black placeholder:text-slate-400 focus:ring-2 focus:ring-primary-teal/20 outline-none"
                         placeholder="Search for doctors, tests, services..."
                         type="text"
                         value={query}
@@ -210,16 +219,16 @@ const Home = () => {
                     <section>
                         <div
                             onClick={() => navigate('/doctor-consult')}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+                            className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
                         >
                             <div className="relative z-10">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="px-2 py-0.5 bg-surface/20 backdrop-blur-md rounded-md text-[10px] font-bold uppercase tracking-wider border border-white/20">New</span>
-                                    <span className="w-1 h-1 rounded-full bg-surface animate-pulse"></span>
+                                    <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-md text-[10px] font-bold uppercase tracking-wider border border-white/20">New</span>
+                                    <span className="w-1 h-1 rounded-full bg-white animate-pulse"></span>
                                 </div>
                                 <h3 className="text-xl font-bold mb-1 font-display tracking-tight">Consult Top Doctors</h3>
-                                <p className="text-blue-50 text-sm mb-4 opacity-90 max-w-[210px] leading-relaxed">Get expert medical advice from the comfort of your home via Video or Chat.</p>
-                                <div className="inline-flex items-center gap-2 bg-surface text-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:bg-blue-50 transition-colors">
+                                <p className="text-teal-50 text-sm mb-4 opacity-90 max-w-[210px] leading-relaxed">Get expert medical advice from the comfort of your home via Video or Chat.</p>
+                                <div className="inline-flex items-center gap-2 bg-white text-teal-700 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:bg-teal-50 transition-colors">
                                     <span>Book Consultation</span>
                                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                                 </div>
@@ -237,28 +246,28 @@ const Home = () => {
                                 onClick={() => navigate('/nursing-services')}
                                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
                             >
-                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors">
                                     <span className="material-symbols-outlined text-[28px]">medical_services</span>
                                 </div>
-                                <span className="text-[11px] font-bold text-text-muted text-center leading-tight">Book Nurse</span>
+                                <span className="text-[11px] font-bold text-slate-600 text-center leading-tight">Book Nurse</span>
                             </button>
                             <button
                                 onClick={() => navigate('/store')}
                                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
                             >
-                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors">
                                     <span className="material-symbols-outlined text-[28px]">pill</span>
                                 </div>
-                                <span className="text-[11px] font-bold text-text-muted text-center leading-tight">Medicines</span>
+                                <span className="text-[11px] font-bold text-slate-600 text-center leading-tight">Medicines</span>
                             </button>
                             <button
                                 onClick={() => navigate('/lab-tests')}
                                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
                             >
-                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors">
                                     <span className="material-symbols-outlined text-[28px]">biotech</span>
                                 </div>
-                                <span className="text-[11px] font-bold text-text-muted text-center leading-tight">Lab Tests</span>
+                                <span className="text-[11px] font-bold text-slate-600 text-center leading-tight">Lab Tests</span>
                             </button>
 
                             {/* Row 2 */}
@@ -266,10 +275,10 @@ const Home = () => {
                                 onClick={() => navigate('/emergency')}
                                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
                             >
-                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-accent-red/10 text-accent-red hover:bg-accent-red/20 transition-colors">
+                                <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
                                     <span className="material-symbols-outlined text-[28px]">emergency</span>
                                 </div>
-                                <span className="text-[11px] font-semibold text-text-muted text-center">Emergency</span>
+                                <span className="text-[11px] font-semibold text-slate-600 text-center">Emergency</span>
                             </button>
 
 
@@ -283,46 +292,46 @@ const Home = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => navigate('/health-insurance')}
-                                className="bg-surface rounded-2xl p-5 shadow-sm border border-border-subtle hover:border-blue-400 hover:shadow-md transition-all text-left active:scale-[0.98]"
+                                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-400 hover:shadow-md transition-all text-left active:scale-[0.98]"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-3">
-                                    <span className="material-symbols-outlined text-[28px] text-blue-500">shield</span>
+                                <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center mb-3">
+                                    <span className="material-symbols-outlined text-[28px] text-teal-600">shield</span>
                                 </div>
-                                <h4 className="text-sm font-bold text-text-main mb-1">Health Insurance</h4>
-                                <p className="text-xs text-text-muted">Cashless claims &amp; coverage</p>
+                                <h4 className="text-sm font-bold text-black mb-1">Health Insurance</h4>
+                                <p className="text-xs text-slate-500">Cashless claims &amp; coverage</p>
                             </button>
 
                             <button
                                 onClick={() => navigate('/treatment-packages')}
-                                className="bg-surface rounded-2xl p-5 shadow-sm border border-border-subtle hover:border-purple-500 hover:shadow-md transition-all text-left active:scale-[0.98]"
+                                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-500 hover:shadow-md transition-all text-left active:scale-[0.98]"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center mb-3">
-                                    <span className="material-symbols-outlined text-[28px] text-purple-500">medical_services</span>
+                                <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center mb-3">
+                                    <span className="material-symbols-outlined text-[28px] text-teal-600">medical_services</span>
                                 </div>
-                                <h4 className="text-sm font-bold text-text-main mb-1">Treatment Packages</h4>
-                                <p className="text-xs text-text-muted">Specialized care plans</p>
+                                <h4 className="text-sm font-bold text-black mb-1">Treatment Packages</h4>
+                                <p className="text-xs text-slate-500">Specialized care plans</p>
                             </button>
 
                             <button
                                 onClick={() => navigate('/ambulance')}
-                                className="bg-surface rounded-2xl p-5 shadow-sm border border-border-subtle hover:border-accent-red hover:shadow-md transition-all text-left active:scale-[0.98]"
+                                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-red-400 hover:shadow-md transition-all text-left active:scale-[0.98]"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-accent-red/10 flex items-center justify-center mb-3">
-                                    <span className="material-symbols-outlined text-[28px] text-accent-red">ambulance</span>
+                                <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mb-3">
+                                    <span className="material-symbols-outlined text-[28px] text-red-500">ambulance</span>
                                 </div>
-                                <h4 className="text-sm font-bold text-text-main mb-1">Ambulance</h4>
-                                <p className="text-xs text-text-muted">24/7 emergency transport</p>
+                                <h4 className="text-sm font-bold text-black mb-1">Ambulance</h4>
+                                <p className="text-xs text-slate-500">24/7 emergency transport</p>
                             </button>
 
                             <button
                                 onClick={() => navigate('/nearby-hospitals')}
-                                className="bg-surface rounded-2xl p-5 shadow-sm border border-border-subtle hover:border-secondary hover:shadow-md transition-all text-left active:scale-[0.98]"
+                                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-teal-600 hover:shadow-md transition-all text-left active:scale-[0.98]"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-3">
-                                    <span className="material-symbols-outlined text-[28px] text-secondary">local_hospital</span>
+                                <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center mb-3">
+                                    <span className="material-symbols-outlined text-[28px] text-teal-600">local_hospital</span>
                                 </div>
-                                <h4 className="text-sm font-bold text-text-main mb-1">Nearby Hospitals</h4>
-                                <p className="text-xs text-text-muted">Find hospitals near you</p>
+                                <h4 className="text-sm font-bold text-black mb-1">Nearby Hospitals</h4>
+                                <p className="text-xs text-slate-500">Find hospitals near you</p>
                             </button>
                         </div>
                     </section>
@@ -403,7 +412,7 @@ const Home = () => {
                                             Track {upcomingService.isMedicineOrder ? 'Order' : 'Service'}
                                         </button>
                                     ) : upcomingService.status === 'awaiting_doctor' ? (
-                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-200 text-violet-700 text-[11px] font-bold">
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 text-[11px] font-bold">
                                             📋 Verification Pending
                                         </span>
                                     ) : (
@@ -440,13 +449,13 @@ const Home = () => {
                     )}
 
                     <section>
-                        <div className="relative overflow-hidden rounded-3xl bg-secondary p-6 text-white shadow-lg">
+                        <div className="relative overflow-hidden rounded-3xl bg-teal-600 p-6 text-white shadow-lg">
                             <div className="relative z-10">
                                 <h4 className="text-lg font-bold leading-tight">Health Checkup Packages</h4>
                                 <p className="text-sm font-medium text-white/80 mt-1 max-w-[180px]">Complete full body screening at 40% discount.</p>
                                 <button
                                     onClick={() => navigate('/health-checkup-packages')}
-                                    className="mt-4 rounded-xl bg-surface/20 px-4 py-2 text-[12px] font-bold backdrop-blur-md border border-white/30 hover:bg-surface/30 transition-colors active:scale-95"
+                                    className="mt-4 rounded-xl bg-white/20 px-4 py-2 text-[12px] font-bold backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors active:scale-95"
                                 >
                                     Explore Now
                                 </button>
@@ -459,13 +468,13 @@ const Home = () => {
                     <section>
                         <div
                             onClick={() => navigate('/ai-health-assistant')}
-                            className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+                            className="bg-gradient-to-br from-teal-700 to-teal-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
                         >
                             <div className="relative z-10">
-                                <span className="px-2 py-0.5 bg-surface/20 backdrop-blur-md rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 inline-block border border-white/20">AI Support</span>
+                                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 inline-block border border-white/20">AI Support</span>
                                 <h3 className="text-xl font-bold mb-1 font-display tracking-tight">AI Health Assistant</h3>
-                                <p className="text-purple-50 text-sm mb-4 opacity-90 max-w-[200px] leading-relaxed">Ask anything about your health or symptoms for instant AI-powered guidance.</p>
-                                <div className="inline-flex items-center gap-2 bg-surface text-purple-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:bg-purple-50 transition-colors">
+                                <p className="text-teal-50 text-sm mb-4 opacity-90 max-w-[200px] leading-relaxed">Ask anything about your health or symptoms for instant AI-powered guidance.</p>
+                                <div className="inline-flex items-center gap-2 bg-white text-teal-800 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm group-hover:bg-teal-50 transition-colors">
                                     <span>Chat Now</span>
                                     <span className="material-symbols-outlined text-[18px]">bolt</span>
                                 </div>

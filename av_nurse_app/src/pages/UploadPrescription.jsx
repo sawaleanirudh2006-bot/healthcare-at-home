@@ -1,18 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Upload, Camera, Image, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, Camera, Image, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { supabase } from '../lib/supabaseClient';
 
 export default function UploadPrescription() {
     const navigate = useNavigate();
     const location = useLocation();
-    const {
-        serviceType, price, date, time, isIVService, isPackage, packageDetails,
-        // Post-payment flow fields:
-        paymentDone, bookingId: existingBookingId, paymentAmount, paymentMethod,
-        isMedicineOrder, cartItems
-    } = location.state || {};
+    const { serviceType, price, date, time, isIVService, isPackage, packageDetails } = location.state || {};
 
     const [uploadedFile, setUploadedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -29,8 +23,12 @@ export default function UploadPrescription() {
             setShowCamera(true);
         } catch (err) {
             setCameraError("Unable to access camera. Please check permissions.");
+            // Fallback to file input if camera fails
             document.getElementById('camera-input').click();
         }
+                setCameraError("Unable to access camera. Please check permissions.");
+                // Fallback to file input if camera fails
+                document.getElementById('camera-input').click();
     };
 
     const stopCamera = () => {
@@ -75,149 +73,83 @@ export default function UploadPrescription() {
     };
 
     const handleSubmit = async () => {
-        if (!(uploadedFile || isIVService || isPackage)) return;
+        if (uploadedFile || isIVService || isPackage) {
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                if (uploadedFile && uploadedFile.file) {
+                    formData.append('prescription', uploadedFile.file);
+                }
 
-        try {
-            setUploading(true);
+                // Add other fields
+                formData.append('serviceType', serviceType || 'Medicine Order');
+                formData.append('date', date || '');
+                formData.append('time', time || '');
+                formData.append('price', price || 0);
+                formData.append('isIVService', isIVService || false);
+                formData.append('isPackage', isPackage || false);
 
-            // Resolve user identity
-            const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
-            const userId = session?.user?.id || localUser?.user_id || localUser?.id;
-            const userName = session?.user?.user_metadata?.name
-                || localUser?.name || localUser?.full_name
-                || session?.user?.email || localUser?.email
-                || 'Patient';
+                // Add patient name if available
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                formData.append('patientName', userData.name || 'Patient User');
 
-            if (!userId) {
-                alert('Please login to continue');
-                navigate('/login/patient');
-                return;
-            }
+                if (packageDetails) {
+                    formData.append('packageDetails', JSON.stringify(packageDetails));
+                }
 
-            let fileUrl = null;
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Please login to continue');
+                    navigate('/login/patient');
+                    return;
+                }
 
-            // Upload file to Supabase Storage if a file was selected
-            if (uploadedFile && uploadedFile.file) {
-                const fileExt = uploadedFile.file.name.split('.').pop();
-                const filePath = `prescriptions/${userId}/${Date.now()}.${fileExt}`;
+                setUploading(true);
 
-                const { error: storageError } = await supabase.storage
-                    .from('prescriptions')
-                    .upload(filePath, uploadedFile.file, { upsert: true });
-
-                if (storageError) throw new Error(storageError.message);
-
-                const { data: urlData } = supabase.storage
-                    .from('prescriptions')
-                    .getPublicUrl(filePath);
-
-                fileUrl = urlData?.publicUrl || null;
-            }
-
-            // Save record to the prescriptions table in Supabase
-            // Link to existing booking if this is post-payment flow
-            const { data: record, error: dbError } = await supabase
-                .from('prescriptions')
-                .insert([
-                    {
-                        user_id: userId,
-                        patient_name: userName,
-                        service_type: serviceType || 'Nursing Service',
-                        file_url: fileUrl,
-                        file_name: uploadedFile?.name || (isIVService ? 'IV Consultation Request' : 'Service Booking'),
-                        status: 'pending',
-                        booking_details: {
-                            booking_id: existingBookingId || null,
-                            date: date || null,
-                            time: time || null,
-                            price: paymentAmount || price || 0,
-                            is_iv_service: isIVService || false,
-                            is_package: isPackage || false,
-                            package_details: packageDetails || null,
-                            payment_done: paymentDone || false,
-                            payment_method: paymentMethod || null,
-                            is_medicine_order: isMedicineOrder || false,
-                            cart_items: cartItems || null,
-                        },
+                // Send to backend
+                const response = await fetch('http://localhost:5000/api/bookings/upload-prescription', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     },
-                ])
-                .select()
-                .single();
-
-            if (dbError) throw new Error(dbError.message);
-
-            // If we have an existing booking, update its notes to include the prescription ID
-            if (existingBookingId) {
-                const { data: bData } = await supabase
-                    .from('bookings')
-                    .select('notes')
-                    .eq('id', existingBookingId)
-                    .single();
-
-                let currentNotes = {};
-                try { currentNotes = JSON.parse(bData?.notes || '{}'); } catch (_) { }
-
-                const updatedNotes = JSON.stringify({
-                    ...currentNotes,
-                    prescription_id: record.id,
-                    prescription_url: fileUrl,
-                    prescription_submitted_at: new Date().toISOString(),
-                    is_medicine_order: isMedicineOrder || false, // Ensure it's in notes too
+                    body: formData
                 });
 
-                await supabase
-                    .from('bookings')
-                    .update({
-                        notes: updatedNotes,
-                        status: 'awaiting_doctor' // reset status so patient sees 'Review' again
-                    })
-                    .eq('id', existingBookingId);
-            }
+                const data = await response.json();
 
-            setUploading(false);
+                if (!response.ok) {
+                    throw new Error(data.message || 'Upload failed');
+                }
 
-            // New post-payment flow
-            if (paymentDone) {
-                // IMPORTANT: The user wants "prescription review by doctor" AFTER payment.
-                // So we go to PrescriptionReview instead of PaymentSuccess here, 
-                // because PaymentSuccess usually means "Finished".
+                setUploading(false);
+
+                // Navigate to success/review page
                 navigate('/prescription-review', {
                     state: {
-                        prescriptionId: record.id,
-                        serviceType,
-                        price: paymentAmount || price,
-                        date,
-                        time,
-                        prescription: { name: uploadedFile?.name, url: fileUrl },
-                        status: 'pending',
-                        paymentDone: true,
-                        isMedicineOrder,
-                        cartItems,
-                        bookingId: existingBookingId,
-                        supabaseBookingId: existingBookingId,
-                    },
-                });
-            } else {
-                // Fallback for old flow/compatibility
-                navigate('/prescription-review', {
-                    state: {
-                        prescriptionId: record.id,
+                        prescriptionId: data.id,
                         serviceType,
                         price,
                         date,
                         time,
-                        prescription: { name: uploadedFile?.name, url: fileUrl },
-                        status: 'pending',
-                        isMedicineOrder,
-                        cartItems
+                        prescription: { name: uploadedFile?.name, url: data.file_url },
+                        nurse: location.state?.nurse,
+                        isRebooking: location.state?.isRebooking,
+                        isMedicineOrder: location.state?.isMedicineOrder,
+                        cartItems: location.state?.cartItems,
+                        total: location.state?.total,
+                        isIVService: isIVService,
+                        isPackage: isPackage,
+                        packageDetails: packageDetails,
+                        status: 'pending'
                     },
                 });
-            }
 
-        } catch (error) {
-            setUploading(false);
-            alert('Failed to upload: ' + error.message);
+            } catch (error) {
+                setUploading(false);
+                alert('Failed to upload prescription: ' + error.message);
+            }
+                    setUploading(false);
+                    alert('Failed to upload prescription: ' + error.message);
         }
     };
 
@@ -273,7 +205,7 @@ export default function UploadPrescription() {
                         <ArrowLeft className="w-5 h-5" />
                     </button>
                     <h1 className="text-lg font-bold text-slate-900">
-                        {isIVService ? 'Doctor Consultation' : 'Upload Prescription'}
+                        {isIVService ? 'Request Consultation' : 'Upload Prescription'}
                     </h1>
                     <div className="w-10" />
                 </div>
@@ -289,17 +221,14 @@ export default function UploadPrescription() {
                         </div>
                         <div className="flex-1">
                             <h3 className="text-sm font-bold text-slate-900">
-                                {paymentDone ? 'Payment Successful!' : (isIVService || isPackage ? 'Doctor Consultation' : 'Prescription Required')}
+                                {isIVService || isPackage ? (isIVService ? 'Doctor Consultation Required' : 'Package Assessment Required') : 'Prescription Required'}
                             </h3>
                             <p className="text-xs font-medium text-slate-600 mt-1 leading-relaxed">
-                                {paymentDone
-                                    ? 'Your payment is confirmed. Now, please upload your prescription. A doctor will verify it before we assign a nurse.'
-                                    : (isIVService
-                                        ? 'For IV fluids, our doctor will consult with you to confirm the exact dosage and package required before assigning a nurse.'
-                                        : isPackage
-                                            ? 'Our team will review your package request and coordinate with you for the initial assessment and setup.'
-                                            : 'Please upload a valid prescription from a registered doctor. Our medical team will review and approve it before assigning a nurse.')
-                                }
+                                {isIVService
+                                    ? 'For IV fluids, our doctor will consult with you to confirm the exact dosage and package required before assigning a nurse.'
+                                    : isPackage
+                                        ? 'Our team will review your package request and coordinate with you for the initial assessment and setup.'
+                                        : 'Please upload a valid prescription from a registered doctor. Our medical team will review and approve it before assigning a nurse.'}
                             </p>
                         </div>
                     </div>
@@ -319,17 +248,11 @@ export default function UploadPrescription() {
                                 {date && new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {time}
                             </span>
                         </div>
-                        {paymentDone && (
-                            <div className="flex justify-between pt-2 border-t border-slate-50">
-                                <span className="text-sm font-medium text-slate-600">Payment Status</span>
-                                <span className="text-sm font-bold text-emerald-600">₹{paymentAmount} Paid</span>
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                {/* Upload Area */}
-                {!isIVService && (
+                {/* Upload Area - Optional for IV Service and Package */}
+                {!isIVService && !isPackage && (
                     <div className="space-y-3">
                         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Upload Options</h2>
 
@@ -374,6 +297,7 @@ export default function UploadPrescription() {
                                     onClick={startCamera}
                                     className="flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-slate-200 bg-white hover:border-primary hover:bg-primary/5 cursor-pointer transition-all active:scale-95"
                                 >
+                                    {/* Fallback hidden input for permissions denied or mobile preference */}
                                     <input
                                         id="camera-input"
                                         type="file"
@@ -382,7 +306,7 @@ export default function UploadPrescription() {
                                         onChange={handleFileUpload}
                                         className="hidden"
                                         disabled={uploading}
-                                        onClick={(e) => e.stopPropagation()}
+                                        onClick={(e) => e.stopPropagation()} // Prevent double trigger
                                     />
                                     <div className="flex size-12 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                                         <Camera className="w-6 h-6" />
@@ -470,12 +394,12 @@ export default function UploadPrescription() {
                     disabled={!uploadedFile && !isIVService && !isPackage}
                     className={cn(
                         'w-full h-14 rounded-2xl font-bold text-base shadow-lg transition-all',
-                        (uploadedFile || isIVService || isPackage || (isPackage && paymentDone))
+                        (uploadedFile || isIVService || isPackage)
                             ? 'bg-primary text-white shadow-primary/20 hover:bg-primary/90 active:scale-[0.98]'
                             : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                     )}
                 >
-                    {isIVService ? 'Submit Request' : 'Finish & Book'}
+                    {isIVService ? 'Request Consultation' : isPackage ? 'Request Package' : 'Submit for Review'}
                 </button>
             </div>
         </div>

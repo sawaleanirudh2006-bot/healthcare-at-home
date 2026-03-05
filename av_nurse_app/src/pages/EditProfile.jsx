@@ -1,22 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Mail, Phone, MapPin, Camera } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 const EditProfile = () => {
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState(() => {
-        const storedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-        if (Object.keys(storedProfile).length > 0) {
-            return storedProfile;
+        // Priority 1: userProfile (previously saved edits)
+        const saved = localStorage.getItem('userProfile');
+        if (saved) return JSON.parse(saved);
+
+        // Priority 2: userData (set during signup/login)
+        const ud = localStorage.getItem('userData');
+        if (ud) {
+            const u = JSON.parse(ud);
+            return {
+                name: u.name || u.full_name || '',
+                phone: u.phone || '',
+                email: u.email || '',
+                gender: u.gender || '',
+                address: u.address || '',
+            };
         }
-        return {
-            name: 'Arjun Sharma',
-            phone: '+91 98765 43210',
-            email: 'arjun.sharma@example.com',
-            gender: 'Male',
-            address: '123, Green Park, Bengaluru'
-        };
+
+        // Fresh user — empty form
+        return { name: '', phone: '', email: '', gender: '', address: '' };
     });
 
     const handleChange = (e) => {
@@ -24,16 +33,41 @@ const EditProfile = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const role = localStorage.getItem('userRole')?.toLowerCase();
+                let table = 'patient_profiles';
+                if (role === 'doctor') table = 'doctor_profiles';
+                else if (role === 'nurse') table = 'nurse_profiles';
+
+                // Sync to Supabase
+                await supabase
+                    .from(table)
+                    .update({
+                        full_name: formData.name,
+                        phone: formData.phone,
+                        email: formData.email,
+                        address_street: formData.address // assuming column name matches or is similar
+                    })
+                    .eq('user_id', session.user.id);
+            }
+
+            // Save to local cache
             localStorage.setItem('userProfile', JSON.stringify(formData));
+            const ud = JSON.parse(localStorage.getItem('userData') || '{}');
+            localStorage.setItem('userData', JSON.stringify({ ...ud, name: formData.name, phone: formData.phone, email: formData.email }));
+
+        } catch (err) {
+            console.error('Error updating profile:', err);
+        } finally {
             setIsSubmitting(false);
             navigate('/profile');
-        }, 1000);
+        }
     };
 
     return (

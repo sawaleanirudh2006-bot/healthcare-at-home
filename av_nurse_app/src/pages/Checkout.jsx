@@ -2,28 +2,22 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, CreditCard, Smartphone, QrCode, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { supabase } from '../lib/supabaseClient';
 
 const serviceDetails = {
     'short-visit': {
-        title: 'Short Visit',
-        subtitle: 'Injection, dressing, wound care or vitals check',
+        title: '30min Nurse Visit',
+        subtitle: 'Professional In-Home Care',
         price: 499,
     },
     '12hr-shift': {
         title: '12hr Nurse Shift',
-        subtitle: 'Day or night dedicated nursing care',
+        subtitle: 'Professional In-Home Care',
         price: 1800,
     },
     '24hr-livein': {
         title: '24hr Live-in Care',
-        subtitle: 'Round-the-clock residential support',
+        subtitle: 'Professional In-Home Care',
         price: 3200,
-    },
-    'custom-care': {
-        title: 'Custom Care Plan',
-        subtitle: 'Flexible care tailored to your needs',
-        price: null,
     },
 };
 
@@ -37,6 +31,7 @@ export default function Checkout() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Get data from location state (could be service or plan)
     const {
         serviceType,
         price,
@@ -49,10 +44,7 @@ export default function Checkout() {
         nurse,
         total: stateTotal,
         isPackage,
-        packageDetails,
-        isIVService,
-        insuranceDetails,
-        isEmergency,
+        packageDetails
     } = location.state || {};
 
     // Determine if this is a plan purchase or service booking
@@ -60,14 +52,6 @@ export default function Checkout() {
 
     // For service bookings, use the old logic
     const service = serviceId ? serviceDetails[serviceId] : null;
-
-    // Is this a service/medicine that needs doctor review after payment?
-    // Nursing services: always need review.
-    // Medicine: needs review ONLY if cart has Rx items.
-    // Emergency: NO review (nurse goes immediately)
-    const needsDoctorReview = !isPlanPurchase && !isEmergency && planType !== 'lab-test' && (
-        location.state?.isMedicineOrder ? location.state?.cartHasRx : true
-    );
 
     // Calculate pricing
     const subtotal = price || stateTotal || (service?.price || 0);
@@ -79,122 +63,73 @@ export default function Checkout() {
 
     const handlePayment = async () => {
         try {
-            // ── Resolve user identity ──────────────────────────────────────────────
-            const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
-            const userId = session?.user?.id || localUser?.user_id || localUser?.id;
-            const userName = session?.user?.user_metadata?.name
-                || localUser?.name || localUser?.full_name
-                || session?.user?.email || localUser?.email
-                || 'Patient';
-
-            if (!userId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
                 alert('Please login to continue');
                 navigate('/login/patient');
                 return;
             }
 
-            // ── 1. Save booking to Supabase ─────────────────────────────────────────
-            // For nursing services: status = 'pending' → awaiting doctor review after prescription upload
-            // Nurses ONLY see 'confirmed' bookings (confirmed = doctor approved)
-            let savedBookingId = null;
-
-            const bookingNotes = JSON.stringify({
-                patient_name: userName,
-                subtotal,
-                nurse: nurse?.name || null,
+            // Prepare booking data
+            const bookingData = {
+                service_id: serviceDetails[serviceId]?.id, // Using service ID if mapped
+                service_name: serviceType || service?.title,
+                date: date,
+                time: time,
+                price: subtotal,
+                status: 'pending', // Initial status
+                nurse_id: nurse?.id,
+                // Add address from user profile or context if available
+                address_street: 'User Address', // Placeholder, ideally fetch from user profile
                 payment_method: selectedPayment,
-                is_medicine_order: location.state?.isMedicineOrder || false,
-                is_package: isPackage || false,
-                is_emergency: isEmergency || false,
-                planType: planType || null,
-                insurance_details: insuranceDetails || null,
-                prescription_review_pending: needsDoctorReview,
+                // Additional data
+                is_medicine_order: location.state?.isMedicineOrder,
+                cart_items: location.state?.cartItems,
+                doctor_notes: location.state?.doctorNotes,
+                diagnosis: location.state?.diagnosis,
+                recommendations: location.state?.recommendations,
+                doctor_prescription: location.state?.doctorPrescription
+            };
+
+            const response = await fetch('http://localhost:5000/api/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(bookingData)
             });
 
-            const { data: inserted, error: bookingErr } = await supabase
-                .from('bookings')
-                .insert([{
-                    user_id: userId,
-                    service_name: serviceType || service?.title,
-                    date: date
-                        ? new Date(date).toISOString().split('T')[0]
-                        : new Date().toISOString().split('T')[0],
-                    time: time || '09:00 AM',
-                    total_price: total,
-                    status: needsDoctorReview ? 'pending' : 'confirmed',   // pending until doctor approves if review needed
-                    notes: bookingNotes,
-                }])
-                .select('id')
-                .single();
+            const data = await response.json();
 
-            if (bookingErr) {
-                console.error('Booking insert failed:', bookingErr.message);
-            } else {
-                savedBookingId = inserted.id;
+            if (!response.ok) {
+                throw new Error(data.message || 'Booking failed');
             }
 
-            // ── 2. Loyalty points ────────────────────────────────────────────────────
-            const pointsEarned = Math.round((total || 0) / 10);
-            const currentPointsStr = localStorage.getItem('loyaltyPoints');
-            const existingPoints = (currentPointsStr === 'NaN' || !currentPointsStr) ? 0 : parseInt(currentPointsStr, 10) || 0;
-            const newTotal = existingPoints + (isNaN(pointsEarned) ? 0 : pointsEarned);
-
-            localStorage.setItem('loyaltyPoints', String(newTotal));
-            if (newTotal >= 500) {
-                localStorage.setItem('loyaltyReward', '1-free-short-visit');
-            }
-
-            // Remove used reward from localStorage
-            if (location.state?.usedReward) {
-                localStorage.removeItem('loyaltyReward');
-            }
-
-            // ── 3. Route appropriately ──────────────────────────────────────────────
-            if (needsDoctorReview && savedBookingId) {
-                // NURSING SERVICE FLOW:
-                // Payment done → Now ask user to upload prescription → Doctor reviews → Nurse assigned
-                navigate('/upload-prescription', {
-                    state: {
-                        serviceType: serviceType || service?.title,
-                        price: subtotal,
-                        date,
-                        time,
-                        nurse,
-                        isIVService,
-                        isPackage,
-                        packageDetails,
-                        bookingId: savedBookingId,        // link prescription to booking
-                        paymentDone: true,                // flag: payment already completed
-                        paymentAmount: total,
-                        paymentMethod: selectedPayment,
-                        isMedicineOrder: location.state?.isMedicineOrder,
-                        cartItems: location.state?.cartItems,
-                    },
-                });
-            } else {
-                // PLAN / MEDICINE ORDER FLOW: go straight to success
-                navigate('/payment-success', {
-                    state: {
-                        serviceType: serviceType || service?.title,
-                        price: subtotal,
-                        planType: planType || (isPackage ? 'treatment-package' : 'service'),
-                        coverage,
-                        planDetails,
-                        amount: total,
-                        bookingId: savedBookingId || `BK-${Date.now()}`,
-                        supabaseBookingId: savedBookingId,
-                        date,
-                        time,
-                        nurse,
-                        isMedicineOrder: location.state?.isMedicineOrder,
-                        cartItems: location.state?.cartItems,
-                        prescriptionPending: false,
-                    },
-                });
-            }
+            // Navigate to success page
+            navigate('/payment-success', {
+                state: {
+                    serviceType: serviceType || service?.title,
+                    price: subtotal,
+                    planType: planType || (isPackage ? 'treatment-package' : 'service'),
+                    coverage: coverage,
+                    planDetails: planDetails,
+                    amount: total,
+                    bookingId: data.id, // Use actual booking ID
+                    date: date,
+                    time: time,
+                    nurse: nurse,
+                    isMedicineOrder: location.state?.isMedicineOrder,
+                    cartItems: location.state?.cartItems,
+                    doctorNotes: location.state?.doctorNotes,
+                    diagnosis: location.state?.diagnosis,
+                    recommendations: location.state?.recommendations,
+                    doctorPrescription: location.state?.doctorPrescription
+                },
+            });
 
         } catch (error) {
+            // Optionally, show a user-friendly error message here
             alert('Failed to complete booking: ' + error.message);
         }
     };
@@ -219,35 +154,12 @@ export default function Checkout() {
 
             {/* Main Content */}
             <main className="flex-1 px-5 py-4 space-y-6 pb-24">
-
-                {/* Doctor Review Notice — shown only for nursing services */}
-                {needsDoctorReview && (
-                    <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
-                        <div className="flex gap-3 items-start">
-                            <span className="text-2xl leading-none">📋</span>
-                            <div>
-                                <p className="text-sm font-bold text-amber-900">How it works</p>
-                                <ol className="mt-1 space-y-1 text-xs font-medium text-amber-700 list-decimal list-inside leading-relaxed">
-                                    <li>Pay now to confirm your {location.state?.isMedicineOrder ? 'order' : 'slot'}</li>
-                                    <li>Upload your prescription after payment</li>
-                                    <li>Doctor reviews &amp; approves</li>
-                                    <li>{location.state?.isMedicineOrder ? 'Order placed once approved' : 'Nurse is assigned once approved'}</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Service Summary */}
                 <div className="bg-white rounded-2xl p-5 shadow-premium border border-slate-100/50">
                     <div className="flex items-center justify-between gap-4 mb-2">
                         <div className="flex-1">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">
-                                {isPlanPurchase
-                                    ? (planType === 'insurance' ? 'INSURANCE PLAN' : (planType === 'treatment-package' || isPackage) ? 'TREATMENT PACKAGE' : 'MEMBERSHIP PLAN')
-                                    : planType === 'lab-test' ? 'LAB TEST'
-                                        : location.state?.isMedicineOrder ? 'MEDICINE ORDER'
-                                            : 'SERVICE BOOKING'}
+                                {isPlanPurchase ? (planType === 'insurance' ? 'INSURANCE PLAN' : (planType === 'treatment-package' || isPackage) ? 'TREATMENT PACKAGE' : 'MEMBERSHIP PLAN') : location.state?.isMedicineOrder ? 'MEDICINE ORDER' : 'CONFIRMED SERVICE'}
                             </p>
                             <h3 className="text-xl font-bold text-slate-900 leading-tight">
                                 {serviceType || service?.title}
@@ -261,7 +173,7 @@ export default function Checkout() {
                                 <div className="flex items-center gap-3 mt-3 text-slate-600">
                                     <div className="flex items-center gap-1.5">
                                         <Calendar className="w-4 h-4" />
-                                        <span className="text-xs font-medium">{date || 'Today'}</span>
+                                        <span className="text-xs font-medium">{date || 'Oct 24, 2023'}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Clock className="w-4 h-4" />
@@ -272,9 +184,11 @@ export default function Checkout() {
                         </div>
                         <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
                             <span className="text-4xl">
-                                {isPlanPurchase
-                                    ? (planType === 'insurance' ? '🛡️' : (planType === 'treatment-package' || isPackage) ? '💊' : planDetails?.id === 'platinum' ? '👑' : planDetails?.id === 'gold' ? '💎' : '⭐')
-                                    : location.state?.isMedicineOrder ? '💊' : '👩‍⚕️'}
+                                <span className="text-4xl">
+                                    {isPlanPurchase
+                                        ? (planType === 'insurance' ? '🛡️' : (planType === 'treatment-package' || isPackage) ? '💊' : planDetails?.id === 'platinum' ? '👑' : planDetails?.id === 'gold' ? '💎' : '⭐')
+                                        : location.state?.isMedicineOrder ? '💊' : '👩‍⚕️'}
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -293,6 +207,28 @@ export default function Checkout() {
                         </div>
                     )}
                 </div>
+
+                {/* Auto-Assigned Nurse Notification */}
+                {nurse && location.state?.autoAssigned && (
+                    <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
+                        <div className="flex gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500 text-white shrink-0">
+                                <Shield className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold text-slate-900">Nurse Auto-Assigned</h3>
+                                <p className="text-xs font-medium text-slate-600 mt-1">
+                                    <span className="font-bold text-emerald-700">{nurse.name}</span> has been automatically assigned based on availability and proximity to your location.
+                                </p>
+                                {nurse.rating && (
+                                    <p className="text-xs font-medium text-slate-500 mt-2">
+                                        ⭐ {nurse.rating} rating • {nurse.experience} experience
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Bill Summary */}
                 <div className="space-y-3">
@@ -382,7 +318,7 @@ export default function Checkout() {
                         </button>
                     </div>
                 </div>
-            </main>
+            </main >
 
             {/* Fixed Bottom Button */}
             <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-5 py-4">
@@ -391,7 +327,7 @@ export default function Checkout() {
                     className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                 >
                     <Shield className="w-5 h-5" />
-                    {needsDoctorReview ? `Pay & Upload Prescription • ₹${total.toLocaleString()}` : `Secure Payment • ₹${total.toLocaleString()}`}
+                    Secure Payment • ₹{total.toLocaleString()}
                 </button>
             </div>
         </div>

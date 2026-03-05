@@ -7,8 +7,8 @@ const services = [
         id: 1,
         category: 'Membership Plans',
         icon: '💎',
-        color: 'bg-purple-50',
-        textColor: 'text-purple-600',
+        color: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
         items: [
             { name: 'Premium Membership', description: 'Unlimited consultations & benefits', path: '/membership-plans' },
             { name: 'Family Plans', description: 'Healthcare for entire family', path: '/membership-plans' },

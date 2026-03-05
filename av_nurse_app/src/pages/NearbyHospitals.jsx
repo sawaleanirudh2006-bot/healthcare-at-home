@@ -14,7 +14,7 @@ const NearbyHospitals = () => {
             specialty: 'Multi-Specialty',
             distance: '2.3 km',
             rating: 4.8,
-            address: 'Sarita Vihar, New Delhi',
+            address: 'Jahangir Hospital Road, Pune',
             phone: '+91 11 2692 5858',
             emergency: true,
             beds: 'Available'
@@ -25,7 +25,7 @@ const NearbyHospitals = () => {
             specialty: 'Cardiac Care',
             distance: '3.1 km',
             rating: 4.7,
-            address: 'Saket, New Delhi',
+            address: 'Kalyani Nagar, Pune',
             phone: '+91 11 2651 5050',
             emergency: true,
             beds: 'Limited'
@@ -36,18 +36,18 @@ const NearbyHospitals = () => {
             specialty: 'Multi-Specialty',
             distance: '4.5 km',
             rating: 4.6,
-            address: 'Vasant Kunj, New Delhi',
+            address: 'Shivajinagar, Pune',
             phone: '+91 11 4277 6222',
             emergency: true,
             beds: 'Available'
         },
         {
             id: 4,
-            name: 'AIIMS Delhi',
+            name: 'Ruby Hall Clinic',
             specialty: 'Government Hospital',
             distance: '5.2 km',
             rating: 4.5,
-            address: 'Ansari Nagar, New Delhi',
+            address: 'Sassoon Road, Pune',
             phone: '+91 11 2658 8500',
             emergency: true,
             beds: 'Full'
@@ -58,7 +58,7 @@ const NearbyHospitals = () => {
             specialty: 'Multi-Specialty',
             distance: '6.8 km',
             rating: 4.9,
-            address: 'Sector 38, Gurugram',
+            address: 'Baner, Pune',
             phone: '+91 124 4141 414',
             emergency: true,
             beds: 'Available'
@@ -135,8 +135,8 @@ const NearbyHospitals = () => {
                                 <span className="text-sm font-bold">{hospital.distance}</span>
                             </div>
                             <div className={`px-2 py-0.5 rounded-full text-xs font-bold ${hospital.beds === 'Available' ? 'bg-emerald-50 text-emerald-700' :
-                                    hospital.beds === 'Limited' ? 'bg-amber-50 text-amber-700' :
-                                        'bg-red-50 text-red-700'
+                                hospital.beds === 'Limited' ? 'bg-amber-50 text-amber-700' :
+                                    'bg-red-50 text-red-700'
                                 }`}>
                                 Beds: {hospital.beds}
                             </div>

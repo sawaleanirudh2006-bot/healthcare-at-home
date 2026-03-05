@@ -8,11 +8,13 @@
 
 @layer base {
   :root {
-    --bg-app: #F8FAFC;
-    --bg-surface: #FFFFFF;
-    --text-main: #0F172A;
-    --text-muted: #64748B;
-    --border-subtle: #F1F5F9;
+    --bg-app: #FFFFFF;
+    --bg-surface: #F8FAFC;
+    --text-main: #000000;
+    --text-muted: #475569;
+    --border-subtle: #E2E8F0;
+    --primary-teal: #0D9488;
+    --secondary-teal: #0F766E;
   }
 
   .dark {

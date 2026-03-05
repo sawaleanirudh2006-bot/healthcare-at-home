@@ -255,7 +255,7 @@ export default function ServiceTracking() {
 
 
             {/* Animated Map Area */}
-            <div className="relative h-[220px] bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50 overflow-hidden">
+            <div className="relative h-[220px] bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-50 overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                     <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
                         {[...Array(48)].map((_, i) => (

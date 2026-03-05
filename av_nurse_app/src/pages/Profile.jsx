@@ -4,9 +4,23 @@ import { supabase } from '../lib/supabaseClient';
 
 const REWARD_THRESHOLD = 500;
 
+// Helper: get real user data from any localStorage key our signup/login sets
+function loadUserData() {
+    const profile = localStorage.getItem('userProfile');
+    if (profile) return JSON.parse(profile);
+    const ud = localStorage.getItem('userData');
+    if (ud) {
+        const u = JSON.parse(ud);
+        return { name: u.name || u.full_name || '', phone: u.phone || '', email: u.email || '', avatar: u.avatar || null };
+    }
+    return { name: '', phone: '', email: '', avatar: null };
+}
+
 const Profile = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
+    const [userData] = useState(() => loadUserData());
+    const [uploading, setUploading] = useState(false);
 
     let storedPoints = localStorage.getItem('loyaltyPoints');
     if (storedPoints === 'NaN' || !storedPoints) {
@@ -17,19 +31,21 @@ const Profile = () => {
     const loyaltyReward = localStorage.getItem('loyaltyReward');
     const progressPct = isNaN(loyaltyPoints) ? 0 : Math.min((loyaltyPoints / REWARD_THRESHOLD) * 100, 100);
 
-    // Load saved photo from localStorage (fallback to default)
+
+
     const [photoUrl, setPhotoUrl] = useState(
-        localStorage.getItem('profilePhoto') ||
+        userData.avatar || localStorage.getItem('profilePhoto') ||
         'https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA'
     );
-    const [uploading, setUploading] = useState(false);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('userData');
-            navigate('/role-selection');
+            // Sign out of Supabase
+            await supabase.auth.signOut();
+            // Clear ALL user-specific localStorage keys so next user starts fresh
+            ['userRole', 'userData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
+            navigate('/');
         }
     };
 
@@ -131,8 +147,8 @@ const Profile = () => {
                         />
                     </div>
 
-                    <h1 className="text-xl font-extrabold text-text-main mt-4">Arjun Sharma</h1>
-                    <p className="text-text-muted text-sm font-medium">+91 98765 43210</p>
+                    <h1 className="text-xl font-extrabold text-text-main mt-4">{userData.name || 'My Profile'}</h1>
+                    <p className="text-text-muted text-sm font-medium">{userData.phone || userData.email || ''}</p>
 
                     {/* Tap to change label */}
                     <button

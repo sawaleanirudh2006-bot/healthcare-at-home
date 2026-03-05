@@ -8,7 +8,7 @@ const tabs = ['Active', 'Past'];
 const activeClaims = [
     {
         id: 1,
-        hospital: 'Apollo Hospital, Chennai',
+        hospital: 'Apollo Hospital, Pune',
         claimId: 'CLM-8823190',
         amount: 45000,
         status: 'UNDER REVIEW',
@@ -22,7 +22,7 @@ const activeClaims = [
     },
     {
         id: 2,
-        hospital: 'Max Healthcare, Delhi',
+        hospital: 'Max Healthcare, Pune',
         claimId: 'CLM-9901422',
         amount: 112500,
         status: 'PROCESSING',
@@ -40,7 +40,7 @@ const activeClaims = [
 const pastClaims = [
     {
         id: 3,
-        hospital: 'Fortis Hospital, Mumbai',
+        hospital: 'Fortis Hospital, Pune',
         claimId: 'CLM-7712345',
         amount: 28000,
         status: 'SETTLED',

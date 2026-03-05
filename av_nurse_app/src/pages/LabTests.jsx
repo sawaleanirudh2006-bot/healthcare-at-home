@@ -20,7 +20,7 @@ const labTests = [
         price: '₹499',
         discount: '40% OFF',
         icon: '🧪',
-        color: 'bg-purple-50 text-purple-600',
+        color: 'bg-emerald-50 text-emerald-600',
     },
     {
         id: 3,
