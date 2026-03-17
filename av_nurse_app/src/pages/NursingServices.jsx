@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Timer, Sun, Home as HomeIcon, CalendarClock, Syringe, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const ALL_SERVICES = [
     {
@@ -48,11 +49,19 @@ const ALL_SERVICES = [
 
 export default function NursingServices() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [selectedService, setSelectedService] = useState(null);
     const loyaltyReward = localStorage.getItem('loyaltyReward');
     const services = ALL_SERVICES;
 
     const handleContinue = (service) => {
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/nursing-services' }
+            });
+            return;
+        }
+
         let finalPrice = service.price;
         let appliedReward = null;
 

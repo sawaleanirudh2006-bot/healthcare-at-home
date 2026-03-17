@@ -12,7 +12,7 @@ const EditProfile = () => {
         if (saved) return JSON.parse(saved);
 
         // Priority 2: userData (set during signup/login)
-        const ud = localStorage.getItem('userData');
+        const ud = localStorage.getItem('patientData');
         if (ud) {
             const u = JSON.parse(ud);
             return {
@@ -59,8 +59,8 @@ const EditProfile = () => {
 
             // Save to local cache
             localStorage.setItem('userProfile', JSON.stringify(formData));
-            const ud = JSON.parse(localStorage.getItem('userData') || '{}');
-            localStorage.setItem('userData', JSON.stringify({ ...ud, name: formData.name, phone: formData.phone, email: formData.email }));
+            const ud = JSON.parse(localStorage.getItem('patientData') || '{}');
+            localStorage.setItem('patientData', JSON.stringify({ ...ud, name: formData.name, phone: formData.phone, email: formData.email }));
 
         } catch (err) {
             console.error('Error updating profile:', err);

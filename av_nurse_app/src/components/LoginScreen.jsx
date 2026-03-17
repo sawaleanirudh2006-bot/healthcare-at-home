@@ -70,7 +70,7 @@ const LoginScreen = ({ role, themeColor, icon: Icon, welcomeText, subText }) => 
                 name: role === 'Doctor' ? 'Dr. User' : 'User',
                 loginTime: new Date().toISOString()
             };
-            localStorage.setItem('userData', JSON.stringify(userData)); // Legacy
+            // userData is handled by specific login components now
             navigateBasedOnRole(role);
         }
     };

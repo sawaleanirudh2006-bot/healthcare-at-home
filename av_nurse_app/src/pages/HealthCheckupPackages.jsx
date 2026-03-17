@@ -2,9 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Shield, CheckCircle2, ChevronRight, Percent } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const HealthCheckupPackages = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const packages = [
         {
@@ -70,6 +72,13 @@ const HealthCheckupPackages = () => {
     ];
 
     const handleBookPackage = (pkg) => {
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/health-checkup-packages' }
+            });
+            return;
+        }
+
         navigate('/schedule-datetime', {
             state: {
                 serviceType: pkg.name,

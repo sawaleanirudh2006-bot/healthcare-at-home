@@ -123,7 +123,7 @@ export default function PaymentSuccess() {
         const gst = Math.round(subtotal * 0.18);
         const grandTotal = subtotal + gst;
         const paymentMethod = location.state?.paymentMethod || 'UPI';
-        const patientName = JSON.parse(localStorage.getItem('userData') || '{}')?.name || 'Patient';
+        const patientName = JSON.parse(localStorage.getItem('patientData') || '{}')?.name || 'Patient';
 
         const itemsHtml = cartItems ? cartItems.map(item => `
             <tr>
@@ -509,7 +509,7 @@ export default function PaymentSuccess() {
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-semibold text-slate-600">Amount Paid</span>
                             <span className="text-xl font-extrabold text-slate-900">
-                                ₹{price.toLocaleString()}
+                                ₹{(location.state?.amount || price).toLocaleString()}
                             </span>
                         </div>
                     </motion.div>
@@ -601,7 +601,7 @@ export default function PaymentSuccess() {
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-semibold text-slate-600">Amount Paid</span>
                             <span className="text-xl font-extrabold text-slate-900">
-                                ₹{price.toLocaleString()}
+                                ₹{(location.state?.amount || price).toLocaleString()}
                             </span>
                         </div>
 
@@ -661,13 +661,32 @@ export default function PaymentSuccess() {
                 )}
                 {/* Track button — only for nursing services and medicine orders, NOT for lab/packages/insurance */}
                 {isNursingService && (
-                    <button
-                        onClick={handleTrackService}
-                        className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Navigation className="w-5 h-5" />
-                        Track My Nurse
-                    </button>
+                    <>
+                        <button
+                            onClick={() => navigate('/upload-prescription', {
+                                state: {
+                                    ...location.state,
+                                    serviceType,
+                                    bookingId: location.state?.supabaseBookingId || bookingId,
+                                    supabaseBookingId: location.state?.supabaseBookingId,
+                                    paymentDone: true,
+                                    date: location.state?.date,
+                                    time: location.state?.time,
+                                }
+                            })}
+                            className="w-full bg-amber-500 text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-amber-500/25 hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <FileText className="w-5 h-5" />
+                            Upload Prescription
+                        </button>
+                        <button
+                            onClick={handleTrackService}
+                            className="w-full bg-primary text-white px-6 py-4 rounded-2xl text-base font-bold shadow-lg shadow-primary/25 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Navigation className="w-5 h-5" />
+                            Track My Nurse
+                        </button>
+                    </>
                 )}
                 {isMedicineOrderType && (
                     <button

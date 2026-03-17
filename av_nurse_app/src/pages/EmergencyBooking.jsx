@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabaseClient';
 const EmergencyBooking = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
+    const location = useLocation();
+    const [formData, setFormData] = useState(location.state?.formData || {
         patientName: '',
         phone: '',
         address: '',
@@ -34,12 +35,20 @@ const EmergencyBooking = () => {
         setLoading(true);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            // Get phone priority: form -> local state -> auth -> local storage -> fallback
+            const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
+            const phoneStr = (formData.phone || localUser.phone || session?.user?.user_metadata?.phone || '0000000000').toString();
             const userId = session?.user?.id || localUser?.user_id || localUser?.id;
 
             if (!userId) {
-                alert('Please login to request emergency help');
-                navigate('/login/patient');
+                navigate('/login/patient', {
+                    state: {
+                        returnTo: location.pathname,
+                        returnState: { formData },
+                        message: 'Please create an account to request emergency help.',
+                        tab: 'signup'
+                    }
+                });
                 return;
             }
 

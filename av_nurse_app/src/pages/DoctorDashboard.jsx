@@ -11,12 +11,15 @@ export default function DoctorDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [consultRequests, setConsultRequests] = useState([]);
     const [doctorProfile, setDoctorProfile] = useState(null);
+    const doctorData = JSON.parse(localStorage.getItem('doctorData') || '{}');
+    const fallbackName = doctorData?.name || doctorData?.full_name || 'Doctor';
+    const fallbackInitials = fallbackName.replace('Dr.', '').trim().charAt(0).toUpperCase() || 'D';
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
             localStorage.removeItem('userRole');
-            localStorage.removeItem('userData');
+            localStorage.removeItem('doctorData');
             localStorage.removeItem('token');
             navigate('/role-selection');
         }
@@ -119,11 +122,11 @@ export default function DoctorDashboard() {
                 {/* Doctor Info */}
                 <div className="flex items-center gap-3 bg-teal-50 p-3 rounded-xl mb-4 border border-teal-100">
                     <button onClick={() => navigate('/doctor/profile')} className="size-12 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-lg hover:opacity-90 transition-opacity shadow-sm">
-                        {doctorProfile ? doctorProfile.full_name?.replace('Dr.', '').trim().charAt(0).toUpperCase() : 'DK'}
+                        {doctorProfile ? doctorProfile.full_name?.replace('Dr.', '').trim().charAt(0).toUpperCase() : fallbackInitials}
                     </button>
                     <div>
                         <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-bold text-black">{doctorProfile?.full_name || 'Dr. Rajesh Kumar'}</p>
+                            <p className="text-sm font-bold text-black">{doctorProfile?.full_name || fallbackName}</p>
                             {(doctorProfile?.verification_status === 'approved' || !doctorProfile) && (
                                 <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-teal-100 text-teal-800 text-[10px] font-bold rounded-md" title="Verified Doctor">
                                     <CheckCircle className="w-3 h-3" /> Verified

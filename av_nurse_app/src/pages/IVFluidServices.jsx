@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Info, Droplets, Zap, Activity, Check, HeartPulse } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const serviceOptions = [
     {
@@ -48,9 +49,17 @@ const serviceOptions = [
 
 export default function IVFluidServices() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [selectedService, setSelectedService] = useState(null);
 
     const handleSelect = (service) => { // Accept service object
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/iv-fluid-services' }
+            });
+            return;
+        }
+
         setSelectedService(service.id);
         // Navigate to schedule with selected service
         setTimeout(() => {

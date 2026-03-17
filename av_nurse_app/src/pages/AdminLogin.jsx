@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 const ADMIN_POWERS = [
     { icon: '👥', label: 'All Users', desc: 'Manage patients, doctors & nurses' },
@@ -60,7 +61,7 @@ export default function AdminLogin() {
                             id: session.user.id,
                             email: email,
                             password: password,
-                            name: 'Administrator',
+                            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Admin',
                             role: 'admin'
                         }], { onConflict: 'id' }).then(() => { }).catch(() => { });
                     }
@@ -68,7 +69,7 @@ export default function AdminLogin() {
                     return;
                 }
                 localStorage.setItem('userRole', 'Admin');
-                localStorage.setItem('userData', JSON.stringify({ role: 'Admin', email, name: 'Administrator' }));
+                localStorage.setItem('adminData', JSON.stringify({ role: 'Admin', email, name: r.user?.user_metadata?.full_name || r.user?.user_metadata?.name || 'Admin' }));
                 navigate('/admin/dashboard');
             }
         } catch (err) {

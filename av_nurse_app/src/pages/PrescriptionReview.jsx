@@ -70,6 +70,7 @@ export default function PrescriptionReview() {
             if (paymentDone) {
                 navigate('/payment-success', {
                     state: {
+                        ...location.state,
                         serviceType: isMedicineOrder ? 'Medicine Order' : finalServiceType,
                         price: finalPrice,
                         planType: isMedicineOrder ? 'medicine-order' : isPackage ? 'treatment-package' : 'service',
@@ -327,7 +328,7 @@ export default function PrescriptionReview() {
                         onClick={handleContinue}
                         className="w-full h-14 rounded-2xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all"
                     >
-                        Proceed to Checkout →
+                        {location.state?.paymentDone ? 'Continue →' : 'Proceed to Checkout →'}
                     </button>
                 </div>
             )}

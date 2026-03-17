@@ -1,6 +1,6 @@
-# Nurse at Home Backend
+# Healnest Backend
 
-This is the backend API for the Nurse at Home application, built with Node.js, Express, and MongoDB.
+This is the backend API for the Healnest application, built with Node.js, Express, and MongoDB.
 
 ## Getting Started
 

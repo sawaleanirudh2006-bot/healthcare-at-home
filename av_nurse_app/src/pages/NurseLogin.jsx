@@ -11,7 +11,7 @@ const NURSE_PERKS = [
 ];
 
 const clearUserSession = () => {
-    ['userRole', 'userData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
+    ['userRole', 'userData', 'patientData', 'nurseData', 'doctorData', 'adminData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
 };
 
 export default function NurseLogin() {
@@ -55,14 +55,14 @@ export default function NurseLogin() {
                     return;
                 }
                 localStorage.setItem('userRole', 'Nurse');
-                localStorage.setItem('userData', JSON.stringify({ role: 'Nurse', email, name: 'Nurse User' }));
+                localStorage.setItem('nurseData', JSON.stringify({ role: 'Nurse', email, name: r.user?.user_metadata?.full_name || r.user?.user_metadata?.name || 'Nurse' }));
                 navigate('/nurse/dashboard');
             } else {
                 if (step === 'input') {
                     setStep('otp'); setTimer(45); setLoading(false); return;
                 }
                 localStorage.setItem('userRole', 'Nurse');
-                localStorage.setItem('userData', JSON.stringify({ role: 'Nurse', phone: mobile, name: 'Nurse User' }));
+                localStorage.setItem('nurseData', JSON.stringify({ role: 'Nurse', phone: mobile, name: 'Nurse' }));
                 navigate('/nurse/dashboard');
             }
         } catch (err) {
@@ -111,7 +111,7 @@ export default function NurseLogin() {
         }
         // Always proceed
         localStorage.setItem('userRole', 'Nurse');
-        localStorage.setItem('userData', JSON.stringify({ role: 'Nurse', email, name: fullName }));
+        localStorage.setItem('nurseData', JSON.stringify({ role: 'Nurse', email, name: fullName }));
         setLoading(false);
         navigate('/nurse/verify');
     };

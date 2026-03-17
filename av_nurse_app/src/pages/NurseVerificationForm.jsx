@@ -6,15 +6,17 @@ import { Upload, CheckCircle, AlertCircle, FileText, ChevronRight } from 'lucide
 export default function NurseVerificationForm() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
 
     // User data from login
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const nurseData = JSON.parse(localStorage.getItem('nurseData') || '{}');
+    const nurseId = nurseData?.id || nurseData?.user_id || `temp-nurse-${Date.now()}`;
 
     const [formData, setFormData] = useState({
-        full_name: userData.name || '',
-        email: userData.email || '',
-        phone: userData.phone || '',
+        full_name: nurseData.name || '',
+        email: nurseData.email || '',
+        phone: nurseData.phone || '',
         registration_number: '',
         qualification: '',
         specialization: '',

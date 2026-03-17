@@ -26,9 +26,9 @@ export default function UploadPrescription() {
             // Fallback to file input if camera fails
             document.getElementById('camera-input').click();
         }
-                setCameraError("Unable to access camera. Please check permissions.");
-                // Fallback to file input if camera fails
-                document.getElementById('camera-input').click();
+        setCameraError("Unable to access camera. Please check permissions.");
+        // Fallback to file input if camera fails
+        document.getElementById('camera-input').click();
     };
 
     const stopCamera = () => {
@@ -90,8 +90,8 @@ export default function UploadPrescription() {
                 formData.append('isPackage', isPackage || false);
 
                 // Add patient name if available
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                formData.append('patientName', userData.name || 'Patient User');
+                const patientData = JSON.parse(localStorage.getItem('patientData') || '{}');
+                formData.append('patientName', patientData.name || 'Patient User');
 
                 if (packageDetails) {
                     formData.append('packageDetails', JSON.stringify(packageDetails));
@@ -99,8 +99,14 @@ export default function UploadPrescription() {
 
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    alert('Please login to continue');
-                    navigate('/login/patient');
+                    navigate('/login/patient', {
+                        state: {
+                            returnTo: location.pathname,
+                            returnState: location.state,
+                            message: 'Please create an account to submit your prescription.',
+                            tab: 'signup'
+                        }
+                    });
                     return;
                 }
 
@@ -126,6 +132,7 @@ export default function UploadPrescription() {
                 // Navigate to success/review page
                 navigate('/prescription-review', {
                     state: {
+                        ...location.state,
                         prescriptionId: data.id,
                         serviceType,
                         price,
@@ -140,16 +147,21 @@ export default function UploadPrescription() {
                         isIVService: isIVService,
                         isPackage: isPackage,
                         packageDetails: packageDetails,
-                        status: 'pending'
+                        status: 'pending',
+                        // Forward payment state so PrescriptionReview knows checkout is already done
+                        paymentDone: location.state?.paymentDone || false,
+                        bookingId: location.state?.bookingId,
+                        supabaseBookingId: location.state?.supabaseBookingId || location.state?.bookingId,
                     },
                 });
+
 
             } catch (error) {
                 setUploading(false);
                 alert('Failed to upload prescription: ' + error.message);
             }
-                    setUploading(false);
-                    alert('Failed to upload prescription: ' + error.message);
+            setUploading(false);
+            alert('Failed to upload prescription: ' + error.message);
         }
     };
 

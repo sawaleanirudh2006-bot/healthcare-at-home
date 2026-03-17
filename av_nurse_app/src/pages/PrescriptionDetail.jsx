@@ -76,7 +76,7 @@ export default function PrescriptionDetail() {
 
     const handleApprove = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const localUser = JSON.parse(localStorage.getItem('doctorData') || '{}');
         const doctorId = session?.user?.id || localUser?.user_id || localUser?.id || null;
 
         // 1. Mark prescription as approved
@@ -119,7 +119,7 @@ export default function PrescriptionDetail() {
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        const localUser = JSON.parse(localStorage.getItem('doctorData') || '{}');
         const doctorId = session?.user?.id || localUser?.user_id || localUser?.id || null;
 
         // 1. Mark prescription as rejected

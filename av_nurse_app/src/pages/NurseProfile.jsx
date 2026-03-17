@@ -9,7 +9,8 @@ const NurseProfile = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
             localStorage.removeItem('userRole');
-            localStorage.removeItem('userData');
+            localStorage.removeItem('nurseData');
+            localStorage.removeItem('token');
             navigate('/role-selection');
         }
     };

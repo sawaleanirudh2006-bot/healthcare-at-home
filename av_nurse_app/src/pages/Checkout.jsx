@@ -65,8 +65,14 @@ export default function Checkout() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Please login to continue');
-                navigate('/login/patient');
+                navigate('/login/patient', {
+                    state: {
+                        returnTo: location.pathname,
+                        returnState: location.state,
+                        message: 'Please create an account to complete your booking.',
+                        tab: 'signup'
+                    }
+                });
                 return;
             }
 
@@ -103,6 +109,19 @@ export default function Checkout() {
             const data = await response.json();
 
             if (!response.ok) {
+                if (response.status === 401 || data.message?.includes('Not authorized') || data.message?.includes('token failed')) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('patientData');
+                    navigate('/login/patient', {
+                        state: {
+                            returnTo: location.pathname,
+                            returnState: location.state,
+                            message: 'Your session has expired. Please log in or sign up to complete your booking.',
+                            tab: 'signup'
+                        }
+                    });
+                    return;
+                }
                 throw new Error(data.message || 'Booking failed');
             }
 
@@ -124,7 +143,8 @@ export default function Checkout() {
                     doctorNotes: location.state?.doctorNotes,
                     diagnosis: location.state?.diagnosis,
                     recommendations: location.state?.recommendations,
-                    doctorPrescription: location.state?.doctorPrescription
+                    doctorPrescription: location.state?.doctorPrescription,
+                    prescriptionPending: location.state?.prescriptionPending
                 },
             });
 

@@ -38,7 +38,7 @@ const RoleSelection = () => {
                 <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-primary/10 mb-4">
                     <span className="material-symbols-outlined text-primary text-3xl">local_hospital</span>
                 </div>
-                <h1 className="text-2xl font-extrabold text-slate-800">Nurse @ Home</h1>
+                <h1 className="text-2xl font-extrabold text-slate-800">Healnest</h1>
                 <p className="text-slate-500 text-sm mt-2">Select your role to continue</p>
             </div>
 

@@ -120,14 +120,11 @@ export default function ServiceTracking() {
 
         // Path B: look up using every possible UID source
         const { data: { session } } = await supabase.auth.getSession();
-        const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
         const uid =
             session?.user?.id ||
             localUser?.user_id ||
             localUser?.id ||
-            userData?.user_id ||
-            userData?.id ||
             null;
 
         if (!uid) { console.warn('[ServiceTracking] No UID found'); setLoading(false); return; }

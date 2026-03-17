@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Users, FileText, Calendar, Activity, TrendingUp, ShoppingBag,
+    Users, FileText, Calendar, Activity, TrendingUp,
     Clock, CheckCircle, LogOut, LayoutDashboard, Stethoscope,
     UserCheck, RefreshCw, AlertCircle, XCircle, Search, ChevronDown,
-    ArrowRight, X, Filter, Zap, ChevronLeft, Package, ShieldCheck, Eye, ExternalLink
+    ArrowRight, X, Filter, Zap, Package, ShieldCheck, Eye, ExternalLink,
+    Gift, Plus, Trash2, ToggleLeft, ToggleRight, Tag
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -62,21 +63,12 @@ function StatCard({ icon: Icon, label, value, color, sub, onClick, active }) {
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 const TABS = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'verification', label: 'Verification', icon: ShieldCheck, highlight: true },
-    { id: 'bookings', label: 'All', icon: Calendar },
-    { id: 'nursing', label: 'Nursing', icon: Activity },
-    { id: 'medicine', label: 'Medicine', icon: ShoppingBag },
-    { id: 'emergency', label: 'Emergency', icon: AlertCircle },
-    { id: 'lab', label: 'Lab Tests', icon: Stethoscope },
-    { id: 'insurance', label: 'Insurance', icon: UserCheck },
-    { id: 'packages', label: 'Packages', icon: FileText },
-    { id: 'ambulance', label: 'Ambulance', icon: Activity },
-    { id: 'hospitals', label: 'Hospitals', icon: Search },
-    { id: 'prescriptions', label: 'Rx List', icon: FileText },
-    { id: 'doctors', label: 'Doctors', icon: Stethoscope },
     { id: 'nurses_reg', label: 'Nurses', icon: UserCheck },
     { id: 'users', label: 'Users', icon: Users },
+    { id: 'doctors', label: 'Doctors', icon: Stethoscope },
+    { id: 'verification', label: 'Verification', icon: ShieldCheck, highlight: true },
     { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'offers', label: 'Offers', icon: Gift },
 ];
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -102,13 +94,109 @@ export default function AdminDashboard() {
     const [nurseFilter, setNurseFilter] = useState('all');
     const [rejectReason, setRejectReason] = useState(''); // optional reason when rejecting
 
-    const adminData = JSON.parse(localStorage.getItem('userData') || '{}');
+    // ─── Offers state ────────────────────────────────────────────────────────
+    const [offers, setOffers] = useState([]);
+    const [showOfferForm, setShowOfferForm] = useState(false);
+    const [editingOffer, setEditingOffer] = useState(null);
+    const [offerForm, setOfferForm] = useState({
+        title: '', description: '', discount_type: 'percentage', discount_value: '',
+        occasion: 'custom', start_date: '', end_date: '', is_active: true
+    });
+
+    const OCCASIONS = [
+        { value: 'womens_day', label: "Women's Day" },
+        { value: 'mens_day', label: "Men's Day" },
+        { value: 'world_health_day', label: 'World Health Day' },
+        { value: 'heart_day', label: 'World Heart Day' },
+        { value: 'diwali', label: 'Diwali' },
+        { value: 'christmas', label: 'Christmas' },
+        { value: 'new_year', label: 'New Year' },
+        { value: 'birthday', label: "User's Birthday" },
+        { value: 'independence_day', label: 'Independence Day' },
+        { value: 'republic_day', label: 'Republic Day' },
+        { value: 'custom', label: 'Custom / Other' },
+    ];
+
+    // Load offers from Supabase (falls back to localStorage)
+    const loadOffers = useCallback(async () => {
+        try {
+            const { data, error } = await supabase.from('offers').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+                setOffers(data);
+                localStorage.setItem('admin_offers', JSON.stringify(data));
+                return;
+            }
+        } catch (_) { }
+        // Fallback: localStorage
+        const local = localStorage.getItem('admin_offers');
+        if (local) setOffers(JSON.parse(local));
+    }, []);
+
+    const saveOfferLocal = (list) => {
+        localStorage.setItem('admin_offers', JSON.stringify(list));
+        setOffers(list);
+        // Also save a public version for the patient home
+        const active = list.filter(o => o.is_active);
+        localStorage.setItem('active_offers', JSON.stringify(active));
+    };
+
+    const handleOfferSubmit = async (e) => {
+        e.preventDefault();
+        const payload = { ...offerForm, discount_value: Number(offerForm.discount_value) };
+        try {
+            if (editingOffer) {
+                const { error } = await supabase.from('offers').update(payload).eq('id', editingOffer.id);
+                if (!error) {
+                    const updated = offers.map(o => o.id === editingOffer.id ? { ...o, ...payload } : o);
+                    saveOfferLocal(updated);
+                } else {
+                    const updated = offers.map(o => o.id === editingOffer.id ? { ...o, ...payload } : o);
+                    saveOfferLocal(updated);
+                }
+            } else {
+                const newOffer = { ...payload, id: Date.now().toString(), created_at: new Date().toISOString() };
+                const { data, error } = await supabase.from('offers').insert([payload]).select().single();
+                const saved = (!error && data) ? data : newOffer;
+                saveOfferLocal([saved, ...offers]);
+            }
+        } catch (_) {
+            const newOffer = { ...payload, id: Date.now().toString(), created_at: new Date().toISOString() };
+            if (editingOffer) {
+                saveOfferLocal(offers.map(o => o.id === editingOffer.id ? { ...o, ...payload } : o));
+            } else {
+                saveOfferLocal([newOffer, ...offers]);
+            }
+        }
+        setShowOfferForm(false);
+        setEditingOffer(null);
+        setOfferForm({ title: '', description: '', discount_type: 'percentage', discount_value: '', occasion: 'custom', start_date: '', end_date: '', is_active: true });
+    };
+
+    const toggleOfferActive = async (offer) => {
+        const updated = { ...offer, is_active: !offer.is_active };
+        try { await supabase.from('offers').update({ is_active: updated.is_active }).eq('id', offer.id); } catch (_) { }
+        saveOfferLocal(offers.map(o => o.id === offer.id ? updated : o));
+    };
+
+    const deleteOffer = async (id) => {
+        if (!window.confirm('Delete this offer?')) return;
+        try { await supabase.from('offers').delete().eq('id', id); } catch (_) { }
+        saveOfferLocal(offers.filter(o => o.id !== id));
+    };
+
+    const openEditOffer = (offer) => {
+        setEditingOffer(offer);
+        setOfferForm({ ...offer });
+        setShowOfferForm(true);
+    };
+
+    const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
     const adminName = adminData?.name || adminData?.full_name || 'Admin';
 
     const handleLogout = () => {
         if (window.confirm('Logout?')) {
             localStorage.removeItem('userRole');
-            localStorage.removeItem('userData');
+            localStorage.removeItem('adminData');
             localStorage.removeItem('token');
             navigate('/role-selection');
         }
@@ -208,9 +296,10 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         loadData();
+        loadOffers();
         const i = setInterval(loadData, 10000);
         return () => clearInterval(i);
-    }, [loadData]);
+    }, [loadData, loadOffers]);
 
     const updateStatus = async (id, newStatus) => {
         await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
@@ -836,57 +925,175 @@ export default function AdminDashboard() {
                                         />
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* ── Drill-down Panel ───────────────────────────────────── */}
-                        {overviewDrill && (
-                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-top-2">
-                                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
-                                    <h3 className="font-bold text-black flex items-center gap-2">
-                                        {overviewDrill === 'bookings' && <><Calendar className="w-4 h-4 text-teal-600" /> All Bookings ({periodBookings.length})</>}
-                                        {overviewDrill === 'jobs' && <><Activity className="w-4 h-4 text-teal-600" /> Active Nursing Jobs ({activeJobs.length})</>}
-                                        {overviewDrill === 'prescriptions' && <><FileText className="w-4 h-4 text-teal-600" /> Prescriptions ({prescriptions.length})</>}
-                                        {overviewDrill === 'revenue' && <><TrendingUp className="w-4 h-4 text-teal-600" /> Revenue Breakdown — ₹{revenue.toLocaleString()}</>}
-                                        {overviewDrill === 'emergency' && <><Zap className="w-4 h-4 text-red-600" /> Emergency Cases ({emergencyBookings.length})</>}
-                                        {overviewDrill === 'completed' && <><CheckCircle className="w-4 h-4 text-teal-600" /> Completed Bookings ({completedBookings.length})</>}
-                                    </h3>
-                                    <button onClick={() => setOverviewDrill(null)} className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors">
-                                        <X className="w-4 h-4 text-slate-500" />
-                                    </button>
-                                </div>
-                                <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                                    {/* Revenue by patient */}
-                                    {overviewDrill === 'revenue' && (
+                                {/* ── Drill-down Panel ───────────────────────────────────── */}
+                                {overviewDrill && (
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-top-2">
+                                        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+                                            <h3 className="font-bold text-black flex items-center gap-2">
+                                                {overviewDrill === 'bookings' && <><Calendar className="w-4 h-4 text-teal-600" /> All Bookings ({periodBookings.length})</>}
+                                                {overviewDrill === 'jobs' && <><Activity className="w-4 h-4 text-teal-600" /> Active Nursing Jobs ({activeJobs.length})</>}
+                                                {overviewDrill === 'prescriptions' && <><FileText className="w-4 h-4 text-teal-600" /> Prescriptions ({prescriptions.length})</>}
+                                                {overviewDrill === 'revenue' && <><TrendingUp className="w-4 h-4 text-teal-600" /> Revenue Breakdown — ₹{revenue.toLocaleString()}</>}
+                                                {overviewDrill === 'emergency' && <><Zap className="w-4 h-4 text-red-600" /> Emergency Cases ({emergencyBookings.length})</>}
+                                                {overviewDrill === 'completed' && <><CheckCircle className="w-4 h-4 text-teal-600" /> Completed Bookings ({completedBookings.length})</>}
+                                            </h3>
+                                            <button onClick={() => setOverviewDrill(null)} className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors">
+                                                <X className="w-4 h-4 text-slate-500" />
+                                            </button>
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                                            {/* Revenue by patient */}
+                                            {overviewDrill === 'revenue' && (
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                                                        <tr>
+                                                            {['#', 'Patient', 'Bookings', 'Revenue', 'Last Booking'].map(h => (
+                                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {revenueByPatient.map((r, idx) => (
+                                                            <tr key={r.name} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
+                                                                <td className="px-4 py-3 text-xs text-slate-400 font-bold">{idx + 1}</td>
+                                                                <td className="px-4 py-3 font-semibold text-slate-800">{r.name}</td>
+                                                                <td className="px-4 py-3 text-slate-600">{r.bookings}</td>
+                                                                <td className="px-4 py-3 font-bold text-emerald-600">₹{r.total.toLocaleString()}</td>
+                                                                <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(r.lastDate)}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {revenueByPatient.length === 0 && (
+                                                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">No revenue data</td></tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            )}
+
+                                            {/* Booking list drill-down */}
+                                            {(overviewDrill === 'bookings' || overviewDrill === 'jobs' || overviewDrill === 'emergency' || overviewDrill === 'completed') && (
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                                                        <tr>
+                                                            {['Patient', 'Service', 'Date', 'Nurse', 'Status', 'Price'].map(h => (
+                                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {(overviewDrill === 'bookings' ? periodBookings
+                                                            : overviewDrill === 'jobs' ? activeJobs
+                                                                : overviewDrill === 'emergency' ? emergencyBookings
+                                                                    : completedBookings
+                                                        ).map(b => (
+                                                            <tr key={b.id} className={`border-t border-slate-50 hover:bg-slate-50 transition-colors ${b.isEmergency ? 'bg-red-50/30' : ''}`}>
+                                                                <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">
+                                                                    {b.patient}
+                                                                    {b.isEmergency && <span className="ml-1.5 text-[9px] font-black px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full">🚨</span>}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.service}</td>
+                                                                <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{fmtDate(b.date || b.createdAt)}</td>
+                                                                <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.nurseName}</td>
+                                                                <td className="px-4 py-3"><Badge status={b.status} /></td>
+                                                                <td className="px-4 py-3 font-bold text-slate-900">₹{b.price}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {(overviewDrill === 'bookings' ? periodBookings
+                                                            : overviewDrill === 'jobs' ? activeJobs
+                                                                : overviewDrill === 'emergency' ? emergencyBookings
+                                                                    : completedBookings
+                                                        ).length === 0 && (
+                                                                <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">No data found for this period</td></tr>
+                                                            )}
+                                                    </tbody>
+                                                </table>
+                                            )}
+
+                                            {/* Prescriptions list */}
+                                            {overviewDrill === 'prescriptions' && (
+                                                <table className="w-full text-sm">
+                                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                                                        <tr>
+                                                            {['ID', 'Patient ID', 'Status', 'File', 'Uploaded'].map(h => (
+                                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {prescriptions.map(rx => (
+                                                            <tr key={rx.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
+                                                                <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(rx.id).slice(0, 8)}</td>
+                                                                <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.user_id || '—').slice(0, 12)}…</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${rx.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                                                        {rx.status || 'pending'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    {rx.file_url ? (
+                                                                        <a href={rx.file_url} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold text-xs hover:underline">View →</a>
+                                                                    ) : <span className="text-slate-400 text-xs">—</span>}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-xs text-slate-500">{fmt(rx.created_at)}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {prescriptions.length === 0 && (
+                                                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">No prescriptions</td></tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Monthly Booking Trends ─────────────────────────────── */}
+                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                    <div className="px-5 py-4 border-b border-slate-100">
+                                        <h3 className="font-bold text-black flex items-center gap-2">
+                                            <Calendar className="w-4 h-4 text-teal-600" />
+                                            Monthly Booking Trends
+                                        </h3>
+                                    </div>
+                                    <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
-                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
                                                 <tr>
-                                                    {['#', 'Patient', 'Bookings', 'Revenue', 'Last Booking'].map(h => (
+                                                    {['Month', 'Total', 'Completed', 'Cancelled', 'Emergency', 'Medicine', 'Revenue'].map(h => (
                                                         <th key={h} className="px-4 py-3 text-left">{h}</th>
                                                     ))}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {revenueByPatient.map((r, idx) => (
-                                                    <tr key={r.name} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
-                                                        <td className="px-4 py-3 text-xs text-slate-400 font-bold">{idx + 1}</td>
-                                                        <td className="px-4 py-3 font-semibold text-slate-800">{r.name}</td>
-                                                        <td className="px-4 py-3 text-slate-600">{r.bookings}</td>
-                                                        <td className="px-4 py-3 font-bold text-emerald-600">₹{r.total.toLocaleString()}</td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(r.lastDate)}</td>
+                                                {monthlyBreakdown.map(m => (
+                                                    <tr key={m.label} className={`border-t border-slate-50 hover:bg-slate-50 transition-colors ${m.isCurrent ? 'bg-teal-50/40 font-semibold' : ''}`}>
+                                                        <td className="px-4 py-3 font-bold text-black whitespace-nowrap">
+                                                            {m.label}
+                                                            {m.isCurrent && <span className="ml-2 text-[9px] font-black px-1.5 py-0.5 bg-teal-100 text-teal-600 rounded-full uppercase">Current</span>}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-black font-bold">{m.total}</td>
+                                                        <td className="px-4 py-3 text-emerald-600 font-bold">{m.completed}</td>
+                                                        <td className="px-4 py-3 text-red-500 font-bold">{m.cancelled}</td>
+                                                        <td className="px-4 py-3 text-red-600 font-bold">{m.emergency}</td>
+                                                        <td className="px-4 py-3 text-teal-600 font-bold">{m.medicine}</td>
+                                                        <td className="px-4 py-3 font-extrabold text-black">₹{m.revenue.toLocaleString()}</td>
                                                     </tr>
                                                 ))}
-                                                {revenueByPatient.length === 0 && (
-                                                    <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">No revenue data</td></tr>
-                                                )}
                                             </tbody>
                                         </table>
-                                    )}
+                                    </div>
+                                </div>
 
-                                    {/* Booking list drill-down */}
-                                    {(overviewDrill === 'bookings' || overviewDrill === 'jobs' || overviewDrill === 'emergency' || overviewDrill === 'completed') && (
+                                {/* Recent bookings preview */}
+                                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                                        <h3 className="font-bold text-black">Recent Bookings</h3>
+                                        <button onClick={() => setActiveTab('bookings')} className="text-xs font-bold text-teal-600 hover:underline">View All →</button>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
                                         <table className="w-full text-sm">
-                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
                                                 <tr>
                                                     {['Patient', 'Service', 'Date', 'Nurse', 'Status', 'Price'].map(h => (
                                                         <th key={h} className="px-4 py-3 text-left">{h}</th>
@@ -894,158 +1101,41 @@ export default function AdminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {(overviewDrill === 'bookings' ? periodBookings
-                                                    : overviewDrill === 'jobs' ? activeJobs
-                                                        : overviewDrill === 'emergency' ? emergencyBookings
-                                                            : completedBookings
-                                                ).map(b => (
-                                                    <tr key={b.id} className={`border-t border-slate-50 hover:bg-slate-50 transition-colors ${b.isEmergency ? 'bg-red-50/30' : ''}`}>
-                                                        <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">
-                                                            {b.patient}
-                                                            {b.isEmergency && <span className="ml-1.5 text-[9px] font-black px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full">🚨</span>}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.service}</td>
-                                                        <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{fmtDate(b.date || b.createdAt)}</td>
-                                                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{b.nurseName}</td>
+                                                {allBookings.slice(0, 8).map(b => (
+                                                    <tr key={b.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
+                                                        <td className="px-4 py-3 font-semibold text-slate-800">{b.patient}</td>
+                                                        <td className="px-4 py-3 text-slate-600">{b.service}</td>
+                                                        <td className="px-4 py-3 text-slate-500 text-xs">{fmt(b.date || b.createdAt)}</td>
+                                                        <td className="px-4 py-3 text-slate-600">{b.nurseName}</td>
                                                         <td className="px-4 py-3"><Badge status={b.status} /></td>
                                                         <td className="px-4 py-3 font-bold text-slate-900">₹{b.price}</td>
                                                     </tr>
                                                 ))}
-                                                {(overviewDrill === 'bookings' ? periodBookings
-                                                    : overviewDrill === 'jobs' ? activeJobs
-                                                        : overviewDrill === 'emergency' ? emergencyBookings
-                                                            : completedBookings
-                                                ).length === 0 && (
-                                                        <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-sm">No data found for this period</td></tr>
-                                                    )}
                                             </tbody>
                                         </table>
-                                    )}
-
-                                    {/* Prescriptions list */}
-                                    {overviewDrill === 'prescriptions' && (
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
-                                                <tr>
-                                                    {['ID', 'Patient ID', 'Status', 'File', 'Uploaded'].map(h => (
-                                                        <th key={h} className="px-4 py-3 text-left">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {prescriptions.map(rx => (
-                                                    <tr key={rx.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
-                                                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{String(rx.id).slice(0, 8)}</td>
-                                                        <td className="px-4 py-3 font-mono text-xs text-slate-500">{String(rx.user_id || '—').slice(0, 12)}…</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${rx.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                                                                {rx.status || 'pending'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            {rx.file_url ? (
-                                                                <a href={rx.file_url} target="_blank" rel="noreferrer" className="text-indigo-600 font-bold text-xs hover:underline">View →</a>
-                                                            ) : <span className="text-slate-400 text-xs">—</span>}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500">{fmt(rx.created_at)}</td>
-                                                    </tr>
-                                                ))}
-                                                {prescriptions.length === 0 && (
-                                                    <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-sm">No prescriptions</td></tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* ── Monthly Booking Trends ─────────────────────────────── */}
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                            <div className="px-5 py-4 border-b border-slate-100">
-                                <h3 className="font-bold text-black flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-teal-600" />
-                                    Monthly Booking Trends
-                                </h3>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
-                                        <tr>
-                                            {['Month', 'Total', 'Completed', 'Cancelled', 'Emergency', 'Medicine', 'Revenue'].map(h => (
-                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {monthlyBreakdown.map(m => (
-                                            <tr key={m.label} className={`border-t border-slate-50 hover:bg-slate-50 transition-colors ${m.isCurrent ? 'bg-teal-50/40 font-semibold' : ''}`}>
-                                                <td className="px-4 py-3 font-bold text-black whitespace-nowrap">
-                                                    {m.label}
-                                                    {m.isCurrent && <span className="ml-2 text-[9px] font-black px-1.5 py-0.5 bg-teal-100 text-teal-600 rounded-full uppercase">Current</span>}
-                                                </td>
-                                                <td className="px-4 py-3 text-black font-bold">{m.total}</td>
-                                                <td className="px-4 py-3 text-emerald-600 font-bold">{m.completed}</td>
-                                                <td className="px-4 py-3 text-red-500 font-bold">{m.cancelled}</td>
-                                                <td className="px-4 py-3 text-red-600 font-bold">{m.emergency}</td>
-                                                <td className="px-4 py-3 text-teal-600 font-bold">{m.medicine}</td>
-                                                <td className="px-4 py-3 font-extrabold text-black">₹{m.revenue.toLocaleString()}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Recent bookings preview */}
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                                <h3 className="font-bold text-black">Recent Bookings</h3>
-                                <button onClick={() => setActiveTab('bookings')} className="text-xs font-bold text-teal-600 hover:underline">View All →</button>
-                            </div>
-
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
-                                        <tr>
-                                            {['Patient', 'Service', 'Date', 'Nurse', 'Status', 'Price'].map(h => (
-                                                <th key={h} className="px-4 py-3 text-left">{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {allBookings.slice(0, 8).map(b => (
-                                            <tr key={b.id} className="border-t border-slate-50 hover:bg-slate-50 transition-colors">
-                                                <td className="px-4 py-3 font-semibold text-slate-800">{b.patient}</td>
-                                                <td className="px-4 py-3 text-slate-600">{b.service}</td>
-                                                <td className="px-4 py-3 text-slate-500 text-xs">{fmt(b.date || b.createdAt)}</td>
-                                                <td className="px-4 py-3 text-slate-600">{b.nurseName}</td>
-                                                <td className="px-4 py-3"><Badge status={b.status} /></td>
-                                                <td className="px-4 py-3 font-bold text-slate-900">₹{b.price}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Nurses overview */}
-                        {uniqueNurses.length > 0 && (
-                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                <div className="px-5 py-4 border-b border-slate-100">
-                                    <h3 className="font-bold text-slate-900">Nurse Summary</h3>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-y divide-slate-100">
-                                    {uniqueNurses.map(n => (
-                                        <div key={n.id} className="p-4">
-                                            <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center mb-2">
-                                                {n.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-800">{n.name}</p>
-                                            <p className="text-xs text-slate-500 mt-0.5">{n.jobs} total • {n.activeJobs} active</p>
+                                {/* Nurses overview */}
+                                {uniqueNurses.length > 0 && (
+                                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                        <div className="px-5 py-4 border-b border-slate-100">
+                                            <h3 className="font-bold text-slate-900">Nurse Summary</h3>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-y divide-slate-100">
+                                            {uniqueNurses.map(n => (
+                                                <div key={n.id} className="p-4">
+                                                    <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center mb-2">
+                                                        {n.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <p className="text-sm font-bold text-slate-800">{n.name}</p>
+                                                    <p className="text-xs text-slate-500 mt-0.5">{n.jobs} total • {n.activeJobs} active</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
                         )}
 
@@ -1911,7 +2001,7 @@ export default function AdminDashboard() {
 
                                         {/* Quick actions */}
                                         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                                            <h3 className="font-bold text-black mb-4 flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-teal-600" /> Quick Actions</h3>
+                                            <h3 className="font-bold text-black mb-4 flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> Quick Actions</h3>
                                             <div className="space-y-3">
                                                 <button onClick={() => navigate('/doctor/dashboard')} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50 transition-all text-left">
                                                     <FileText className="w-5 h-5 text-teal-600" />
@@ -1968,6 +2058,163 @@ export default function AdminDashboard() {
                             )
                         }
                     </>
+                )}
+
+                {/* ══ OFFERS TAB ══════════════════════════════════════ */}
+                {activeTab === 'offers' && (
+                    <div className="space-y-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                            <div>
+                                <h2 className="text-xl font-extrabold text-black flex items-center gap-2">
+                                    <Gift className="w-6 h-6 text-rose-500" /> Offers & Promotions
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-1">Create occasion-based discounts visible to patients on the app</p>
+                            </div>
+                            <button
+                                onClick={() => { setEditingOffer(null); setOfferForm({ title: '', description: '', discount_type: 'percentage', discount_value: '', occasion: 'custom', start_date: '', end_date: '', is_active: true }); setShowOfferForm(true); }}
+                                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-bold rounded-xl hover:bg-teal-700 transition-colors shadow-sm"
+                            >
+                                <Plus className="w-4 h-4" /> Create Offer
+                            </button>
+                        </div>
+
+                        {/* Stats bar */}
+                        <div className="grid grid-cols-3 gap-4">
+                            {[{ label: 'Total Offers', value: offers.length, color: 'bg-teal-50 text-teal-700' },
+                            { label: 'Active Now', value: offers.filter(o => o.is_active).length, color: 'bg-emerald-50 text-emerald-700' },
+                            { label: 'Inactive', value: offers.filter(o => !o.is_active).length, color: 'bg-slate-50 text-slate-700' }]
+                                .map(s => (
+                                    <div key={s.label} className={`rounded-2xl p-4 ${s.color} border border-current/10`}>
+                                        <p className="text-2xl font-extrabold">{s.value}</p>
+                                        <p className="text-xs font-bold mt-1 opacity-70">{s.label}</p>
+                                    </div>
+                                ))}
+                        </div>
+
+                        {/* Offer Form Modal */}
+                        {showOfferForm && (
+                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && setShowOfferForm(false)}>
+                                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                                    <div className="bg-gradient-to-r from-teal-600 to-teal-800 p-6 rounded-t-3xl flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                                <Gift className="w-5 h-5 text-white" />
+                                            </div>
+                                            <h3 className="text-lg font-extrabold text-white">
+                                                {editingOffer ? 'Edit Offer' : 'Create New Offer'}
+                                            </h3>
+                                        </div>
+                                        <button onClick={() => setShowOfferForm(false)} className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center text-white">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <form onSubmit={handleOfferSubmit} className="p-6 space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Description</label>
+                                            <textarea className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300 resize-none" rows={2} placeholder="Short description for patients" value={offerForm.description} onChange={e => setOfferForm(p => ({ ...p, description: e.target.value }))} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Discount Type</label>
+                                                <select className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300" value={offerForm.discount_type} onChange={e => setOfferForm(p => ({ ...p, discount_type: e.target.value }))}>
+                                                    <option value="percentage">Percentage (%)</option>
+                                                    <option value="flat">Flat Amount (₹)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Discount Value *</label>
+                                                <input required type="number" min="1" className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300" placeholder={offerForm.discount_type === 'percentage' ? '20' : '200'} value={offerForm.discount_value} onChange={e => setOfferForm(p => ({ ...p, discount_value: e.target.value }))} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Occasion</label>
+                                            <select className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300" value={offerForm.occasion} onChange={e => setOfferForm(p => ({ ...p, occasion: e.target.value }))}>
+                                                {OCCASIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Start Date</label>
+                                                <input type="date" className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300" value={offerForm.start_date} onChange={e => setOfferForm(p => ({ ...p, start_date: e.target.value }))} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">End Date</label>
+                                                <input type="date" className="mt-1 w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-300" value={offerForm.end_date} onChange={e => setOfferForm(p => ({ ...p, end_date: e.target.value }))} />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 py-2 w-full mt-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setOfferForm(p => ({ ...p, is_active: !p.is_active }))} 
+                                                className={`w-[44px] h-[24px] rounded-full transition-colors flex-shrink-0 flex items-center px-0.5 ${offerForm.is_active ? 'bg-teal-500' : 'bg-slate-300'}`}
+                                            >
+                                                <span className={`w-[20px] h-[20px] bg-white rounded-full shadow transition-all ${offerForm.is_active ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                                            </button>
+                                            <span className="text-sm font-bold text-slate-700 whitespace-nowrap">
+                                                {offerForm.is_active ? 'Active — visible to patients' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                        <button type="submit" className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-colors shadow-md mt-4">
+                                            {editingOffer ? 'Save Changes' : 'Create Offer'}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Offers List */}
+                        <div className="space-y-3">
+                            {offers.length === 0 && (
+                                <div className="text-center py-20 text-slate-400 bg-white rounded-2xl border border-slate-100">
+                                    <Gift className="w-16 h-16 mx-auto opacity-20 mb-4" />
+                                    <p className="text-lg font-bold">No offers created yet</p>
+                                    <p className="text-sm mt-1">Create your first occasion-based offer!</p>
+                                </div>
+                            )}
+                            {offers.map(offer => (
+                                <div key={offer.id} className={`bg-white rounded-2xl border shadow-sm p-5 transition-all ${offer.is_active ? 'border-teal-100 hover:shadow-md' : 'border-slate-100 opacity-70'}`}>
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="flex items-start gap-4 flex-1">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${offer.is_active ? 'bg-rose-50 text-rose-500' : 'bg-slate-100 text-slate-400'}`}>
+                                                <Tag className="w-6 h-6" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <h4 className="font-extrabold text-slate-900">{offer.title}</h4>
+                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${offer.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                        {offer.is_active ? '● ACTIVE' : '○ INACTIVE'}
+                                                    </span>
+                                                </div>
+                                                {offer.description && <p className="text-sm text-slate-500 mt-1">{offer.description}</p>}
+                                                <div className="flex items-center gap-4 mt-2 flex-wrap">
+                                                    <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">
+                                                        <Gift className="w-3.5 h-3.5" />
+                                                        {offer.discount_type === 'percentage' ? `${offer.discount_value}% Off` : `₹${offer.discount_value} Off`}
+                                                    </span>
+                                                    <span className="text-xs text-slate-500 font-medium">
+                                                        {OCCASIONS.find(o => o.value === offer.occasion)?.label || offer.occasion}
+                                                    </span>
+                                                    {offer.start_date && <span className="text-xs text-slate-400">{offer.start_date} → {offer.end_date || '...'}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button onClick={() => toggleOfferActive(offer)} title={offer.is_active ? 'Deactivate' : 'Activate'} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${offer.is_active ? 'bg-teal-50 text-teal-600 hover:bg-teal-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}>
+                                                {offer.is_active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                                            </button>
+                                            <button onClick={() => openEditOffer(offer)} className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors">
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => deleteOffer(offer.id)} className="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 )}
                 {/* ── INVENTORY TAB REDIRECT ── */}
                 {activeTab === 'inventory' && (() => {

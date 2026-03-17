@@ -23,7 +23,7 @@ const Bookings = () => {
         try {
             // Prefer Supabase session uid; fall back to uid stored at login
             const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
             const uid = session?.user?.id || localUser?.user_id || localUser?.id;
 
             if (!uid) {
@@ -86,7 +86,7 @@ const Bookings = () => {
         let channel;
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
             const uid = session?.user?.id || localUser?.user_id || localUser?.id;
             if (!uid) return;
 

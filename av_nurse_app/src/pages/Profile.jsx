@@ -7,8 +7,7 @@ const REWARD_THRESHOLD = 500;
 // Helper: get real user data from any localStorage key our signup/login sets
 function loadUserData() {
     const profile = localStorage.getItem('userProfile');
-    if (profile) return JSON.parse(profile);
-    const ud = localStorage.getItem('userData');
+    const ud = localStorage.getItem('patientData');
     if (ud) {
         const u = JSON.parse(ud);
         return { name: u.name || u.full_name || '', phone: u.phone || '', email: u.email || '', avatar: u.avatar || null };
@@ -19,7 +18,7 @@ function loadUserData() {
 const Profile = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
-    const [userData] = useState(() => loadUserData());
+    const [patientData] = useState(() => loadUserData());
     const [uploading, setUploading] = useState(false);
 
     let storedPoints = localStorage.getItem('loyaltyPoints');
@@ -34,7 +33,7 @@ const Profile = () => {
 
 
     const [photoUrl, setPhotoUrl] = useState(
-        userData.avatar || localStorage.getItem('profilePhoto') ||
+        patientData.avatar || localStorage.getItem('profilePhoto') ||
         'https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA'
     );
 
@@ -44,7 +43,7 @@ const Profile = () => {
             // Sign out of Supabase
             await supabase.auth.signOut();
             // Clear ALL user-specific localStorage keys so next user starts fresh
-            ['userRole', 'userData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
+            ['userRole', 'userData', 'patientData', 'nurseData', 'doctorData', 'adminData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
             navigate('/');
         }
     };
@@ -147,8 +146,17 @@ const Profile = () => {
                         />
                     </div>
 
-                    <h1 className="text-xl font-extrabold text-text-main mt-4">{userData.name || 'My Profile'}</h1>
-                    <p className="text-text-muted text-sm font-medium">{userData.phone || userData.email || ''}</p>
+                    <h1 className="text-xl font-bold text-slate-900 mt-4">{patientData.name || 'Your Name'}</h1>
+                    <p className="text-sm font-medium text-slate-500">{patientData.phone || patientData.email || ''}</p>
+
+                    {/* Edit Profile Button */}
+                    <button
+                        onClick={() => navigate('/edit-profile')}
+                        className="mt-3 flex items-center gap-1.5 px-4 py-1.5 bg-teal-50 border border-teal-200 text-teal-700 text-sm font-bold rounded-full hover:bg-teal-100 transition-colors active:scale-95"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        Edit Profile
+                    </button>
 
                     {/* Tap to change label */}
                     <button

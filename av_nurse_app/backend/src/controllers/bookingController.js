@@ -9,12 +9,26 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // @route   POST /api/bookings
 // @access  Private
 const createBooking = async (req, res) => {
-    // Expected body: { serviceId, date, time, notes, ... }
-    // We attach user_id from req.user (set by auth middleware)
+    // Only extract fields that exist in the Supabase schema
     const bookingData = {
         user_id: req.user.id,
-        ...req.body,
+        service_id: req.body.service_id,
+        service_name: req.body.service_name,
+        date: req.body.date || new Date().toISOString().split('T')[0],
+        time: req.body.time || 'TBD',
+        total_price: req.body.price,
+        address_street: req.body.address_street,
         status: 'pending', // Default status
+        notes: req.body.notes || JSON.stringify({
+            cart_items: req.body.cart_items,
+            doctor_notes: req.body.doctor_notes,
+            diagnosis: req.body.diagnosis,
+            recommendations: req.body.recommendations,
+            doctor_prescription: req.body.doctor_prescription,
+            is_medicine_order: req.body.is_medicine_order,
+            payment_method: req.body.payment_method,
+            nurse_id: req.body.nurse_id
+        }),
         created_at: new Date().toISOString()
     };
 

@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
             if (session?.user) {
                 setUser({
                     _id: session.user.id,
-                    name: session.user.user_metadata?.name || 'User',
+                    name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
                     email: session.user.email,
                     role: session.user.user_metadata?.role || 'Patient',
                     token: session.access_token,
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
             if (session?.user) {
                 setUser({
                     _id: session.user.id,
-                    name: session.user.user_metadata?.name || 'User',
+                    name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
                     email: session.user.email,
                     role: session.user.user_metadata?.role || 'Patient',
                     token: session.access_token,
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
             if (data.user) {
                 const userData = {
                     _id: data.user.id,
-                    name: data.user.user_metadata?.name || 'User',
+                    name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || 'User',
                     email: data.user.email,
                     role: data.user.user_metadata?.role || 'Patient',
                     token: data.session.access_token,
@@ -96,9 +96,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         await supabase.auth.signOut();
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userData');
+        ['userRole', 'userData', 'patientData', 'nurseData', 'doctorData', 'adminData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
         setUser(null);
     };
 

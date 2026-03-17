@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, FileText } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 
 const Cart = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [cart, setCart] = useState(() => {
         return JSON.parse(localStorage.getItem('shoppingCart') || '[]');
     });
@@ -34,6 +36,13 @@ const Cart = () => {
     const cartHasRx = cart.some(i => i.rx);
 
     const handleCheckout = () => {
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/cart' }
+            });
+            return;
+        }
+
         if (cartHasRx) {
             navigate('/upload-prescription', {
                 state: { fromStore: true, cartItems: cart, total }

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Calendar, Pill, FileText, Ambulance, MapPin,
+    Star, Users, Wallet, Smartphone, Search,
+    Upload, Home as HomeIcon, ArrowRight, HeartPulse,
+    ShieldCheck, Activity, ChevronLeft, Building2
+} from 'lucide-react';
 
 const PatientPortalPage = () => {
     const navigate = useNavigate();
@@ -12,178 +19,283 @@ const PatientPortalPage = () => {
     }, []);
 
     const features = [
-        { icon: '📅', title: 'Book Appointments', desc: 'Schedule nursing visits at your convenience with real-time slot availability.' },
-        { icon: '💊', title: 'Order Medicines', desc: 'Get prescription medicines delivered right to your doorstep within hours.' },
-        { icon: '📋', title: 'View Health Records', desc: 'Access all your medical history, prescriptions, and clinical notes in one place.' },
-        { icon: '🚑', title: 'Emergency Services', desc: '24/7 emergency nursing support with rapid deployment to your location.' },
-        { icon: '📍', title: 'Live Service Tracking', desc: 'Track your assigned nurse in real-time from assignment to arrival.' },
-        { icon: '⭐', title: 'Rate & Review', desc: 'Share feedback on your care experience to help improve our services.' },
-        { icon: '👨‍👩‍👧', title: 'Family Management', desc: 'Manage bookings and health records for all your family members.' },
-        { icon: '💳', title: 'Health Wallet', desc: 'Store payment methods and view your complete billing history.' },
+        { icon: Calendar, title: 'Book Appointments', desc: 'Schedule nursing visits at your convenience with real-time slot availability.' },
+        { icon: Pill, title: 'Order Medicines', desc: 'Get prescription medicines delivered right to your doorstep within hours.' },
+        { icon: FileText, title: 'View Health Records', desc: 'Access all your medical history, prescriptions, and clinical notes in one place.' },
+        { icon: Ambulance, title: 'Emergency Services', desc: '24/7 emergency nursing support with rapid deployment to your location.' },
+        { icon: MapPin, title: 'Live Service Tracking', desc: 'Track your assigned nurse in real-time from assignment to arrival.' },
+        { icon: Star, title: 'Rate & Review', desc: 'Share feedback on your care experience to help improve our services.' },
+        { icon: Users, title: 'Family Management', desc: 'Manage bookings and health records for all your family members.' },
+        { icon: Wallet, title: 'Health Wallet', desc: 'Store payment methods and view your complete billing history.' },
     ];
 
     const steps = [
-        { step: '01', icon: '📱', title: 'Create Account', desc: 'Sign up in under 2 minutes with your mobile number or email.' },
-        { step: '02', icon: '🔍', title: 'Choose a Service', desc: 'Browse from nursing care, lab tests, medicines, and more.' },
-        { step: '03', icon: '📝', title: 'Upload Prescription', desc: 'Upload your prescription for doctor review and approval.' },
-        { step: '04', icon: '🏠', title: 'Care at Home', desc: 'A certified nurse arrives at your home at your scheduled time.' },
+        { step: '01', icon: Smartphone, title: 'Create Account', desc: 'Sign up in under 2 minutes with your mobile number or email.' },
+        { step: '02', icon: Search, title: 'Choose a Service', desc: 'Browse from nursing care, lab tests, medicines, and more.' },
+        { step: '03', icon: Upload, title: 'Upload Prescription', desc: 'Upload your prescription for doctor review and approval.' },
+        { step: '04', icon: HomeIcon, title: 'Care at Home', desc: 'A certified nurse arrives at your home at your scheduled time.' },
     ];
 
+    const stats = [
+        { value: '15,000+', label: 'Active Patients', icon: Users },
+        { value: '500+', label: 'Certified Nurses', icon: ShieldCheck },
+        { value: '4.9★', label: 'Average Rating', icon: Star },
+        { value: '24/7', label: 'Support', icon: Activity },
+    ];
+
+    const fadeInUp = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    };
+
+    const staggerContainer = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div className="min-h-screen bg-slate-50 selection:bg-teal-200 selection:text-teal-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             {/* Navbar */}
-            <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
-                <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-slate-200/50 py-3' : 'bg-transparent py-5'}`}>
+                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
                     <button onClick={() => navigate('/')} className="flex items-center gap-3 group text-left">
-                        <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg shadow-teal-600/20">
-                            <span className="text-white text-xl">🏥</span>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg shadow-teal-600/20 group-hover:scale-105 transition-transform duration-300">
+                            <Building2 className="text-white w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-lg font-extrabold text-black leading-none">Nurse @ Home</p>
-                            <p className="text-[10px] text-teal-600 font-bold uppercase tracking-widest">Healthcare Platform</p>
+                            <p className="text-xl font-extrabold text-slate-900 tracking-tight leading-none">Healnest</p>
+                            <p className="text-[11px] text-teal-600 font-bold uppercase tracking-widest mt-1">Healthcare Platform</p>
                         </div>
                     </button>
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/')} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-black transition-colors">← Back</button>
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate('/')} className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                            <ChevronLeft className="w-4 h-4" /> Back to Home
+                        </button>
                         <button
                             onClick={() => navigate('/login/patient')}
-                            className="px-6 py-2.5 text-sm font-bold text-white bg-teal-600 rounded-xl hover:bg-teal-700 shadow-lg shadow-teal-600/20 transition-all hover:-translate-y-0.5"
+                            className="px-6 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 shadow-xl shadow-slate-900/20 transition-all hover:-translate-y-0.5"
                         >
-                            Login as Patient
+                            Login
                         </button>
                     </div>
                 </div>
             </nav>
 
             {/* Hero */}
-            <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-24 pb-16 bg-slate-50">
-                <div className="absolute inset-0">
-                    <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-teal-600/5 rounded-full blur-3xl" />
-                    <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-600/5 rounded-full blur-3xl" />
+            <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-32 pb-20">
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <motion.div 
+                        animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.3, 0.5, 0.3],
+                            rotate: [0, 90, 0]
+                        }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute top-[10%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-teal-400/20 to-emerald-300/20 rounded-full blur-[100px]" 
+                    />
+                    <motion.div 
+                        animate={{ 
+                            scale: [1, 1.5, 1],
+                            opacity: [0.2, 0.4, 0.2],
+                            x: [0, 100, 0]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-tl from-cyan-400/20 to-teal-500/20 rounded-full blur-[80px]" 
+                    />
+                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
                 </div>
-                <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 border border-teal-100 rounded-full mb-6">
-                        <span className="w-2 h-2 bg-teal-600 rounded-full animate-pulse inline-block" />
-                        <span className="text-sm font-semibold text-teal-700">For Patients</span>
-                    </div>
-                    <div className="w-24 h-24 rounded-3xl bg-white border border-slate-100 flex items-center justify-center text-5xl mx-auto mb-6 shadow-xl text-teal-600">
-                        👤
-                    </div>
-                    <h1 className="text-5xl md:text-7xl font-extrabold text-black leading-[1.1] mb-6">
-                        Patient <span className="text-teal-600">Portal</span>
-                    </h1>
-                    <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-                        Book nursing services, track appointments, order medicines, and manage your complete health journey — all in one place.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <button
-                            onClick={() => navigate('/login/patient')}
-                            className="group w-full sm:w-auto px-10 py-4 bg-teal-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-teal-600/20 hover:bg-teal-700 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
-                        >
-                            <span>Login as Patient</span>
-                            <span className="group-hover:translate-x-1 transition-transform">→</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="w-full sm:w-auto px-10 py-4 bg-white border border-slate-200 text-black font-bold text-lg rounded-2xl hover:bg-slate-50 transition-all"
-                        >
-                            View All Portals
-                        </button>
-                    </div>
+
+                <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+                    <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="flex flex-col items-center">
+                        <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-md border border-teal-100 rounded-full mb-8 shadow-sm">
+                            <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+                            </span>
+                            <span className="text-sm font-bold text-teal-800 uppercase tracking-wide">For Patients</span>
+                        </motion.div>
+                        
+                        <motion.div variants={fadeInUp} className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-teal-500/30">
+                            <HeartPulse className="w-12 h-12 text-white" />
+                        </motion.div>
+                        
+                        <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 tracking-tight leading-[1.05] mb-6">
+                            Your Health, <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500">
+                                In Your Hands
+                            </span>
+                        </motion.h1>
+                        
+                        <motion.p variants={fadeInUp} className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+                            Experience premium healthcare at home. Book expert nurses, order medicines, and track your wellness journey seamlessly.
+                        </motion.p>
+                        
+                        <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+                            <button
+                                onClick={() => navigate('/login/patient')}
+                                className="group w-full sm:w-auto px-10 py-4 bg-slate-900 text-white font-bold text-lg rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
+                            >
+                                <span>Get Started</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <button
+                                onClick={() => navigate('/')}
+                                className="group w-full sm:w-auto px-10 py-4 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-700 font-bold text-lg rounded-2xl shadow-sm hover:bg-white hover:text-slate-900 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
+                            >
+                                View Other Portals
+                            </button>
+                        </motion.div>
+                    </motion.div>
                 </div>
             </section>
 
             {/* Stats Bar */}
-            <section className="py-8 bg-white border-y border-slate-100">
-                <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                    {[
-                        { value: '15,000+', label: 'Active Patients', icon: '👥' },
-                        { value: '500+', label: 'Certified Nurses', icon: '💉' },
-                        { value: '4.9★', label: 'Average Rating', icon: '⭐' },
-                        { value: '24/7', label: 'Support', icon: '🕐' },
-                    ].map((s, i) => (
-                        <div key={i}>
-                            <div className="text-2xl mb-1">{s.icon}</div>
-                            <p className="text-2xl font-extrabold text-black">{s.value}</p>
-                            <p className="text-sm text-slate-400 font-semibold">{s.label}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Features */}
-            <section className="py-24 px-6 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-16">
-                        <span className="inline-block px-4 py-1.5 bg-teal-50 text-teal-600 text-sm font-bold rounded-full mb-4 uppercase tracking-wider">Features</span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-black mb-4">
-                            Everything You Need,<br /><span className="text-teal-600">In One Portal</span>
-                        </h2>
-                        <p className="text-lg text-slate-500 max-w-2xl mx-auto font-medium">
-                            A comprehensive health management system designed around your comfort and convenience.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {features.map((f, i) => (
-                            <div key={i} className="group bg-white border border-slate-100 rounded-2xl p-6 hover:border-teal-400 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-600/5">
-                                <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
-                                    {f.icon}
+            <div className="relative z-20 max-w-6xl mx-auto px-6 -mt-16">
+                <motion.div 
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.7 }}
+                    className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-slate-200/50 border border-slate-100 p-8"
+                >
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 divide-x divide-slate-100/50">
+                        {stats.map((s, i) => (
+                            <div key={i} className="flex flex-col items-center text-center px-4 first:border-l-0 border-l border-slate-100">
+                                <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center mb-4 text-teal-600">
+                                    <s.icon className="w-6 h-6" />
                                 </div>
-                                <h3 className="font-extrabold text-black mb-2">{f.title}</h3>
-                                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                                <p className="text-3xl font-black text-slate-900 mb-1">{s.value}</p>
+                                <p className="text-sm text-slate-500 font-bold tracking-wide uppercase">{s.label}</p>
                             </div>
                         ))}
                     </div>
+                </motion.div>
+            </div>
+
+            {/* Features */}
+            <section className="py-32 px-6 bg-slate-50 relative">
+                <div className="max-w-7xl mx-auto">
+                    <motion.div 
+                        initial="hidden" 
+                        whileInView="visible" 
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={staggerContainer}
+                        className="text-center mb-20"
+                    >
+                        <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                            Everything You Need,<br />
+                            <span className="text-teal-600">In One Portal</span>
+                        </motion.h2>
+                        <motion.p variants={fadeInUp} className="text-lg text-slate-500 max-w-2xl mx-auto font-medium">
+                            A comprehensive, state-of-the-art health management ecosystem designed entirely around your comfort and convenience.
+                        </motion.p>
+                    </motion.div>
+                    
+                    <motion.div 
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={staggerContainer}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    >
+                        {features.map((f, i) => (
+                            <motion.div 
+                                variants={fadeInUp}
+                                key={i} 
+                                className="group bg-white p-8 rounded-3xl border border-slate-100 hover:border-teal-200 shadow-sm hover:shadow-2xl hover:shadow-teal-600/10 transition-all duration-300 hover:-translate-y-2 relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-5 transition-opacity duration-300">
+                                    <f.icon className="w-32 h-32 text-teal-600" />
+                                </div>
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 group-hover:bg-teal-50 text-slate-600 group-hover:text-teal-600 flex items-center justify-center mb-6 transition-colors duration-300">
+                                    <f.icon className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-teal-700 transition-colors">{f.title}</h3>
+                                <p className="text-slate-500 leading-relaxed font-medium">{f.desc}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 </div>
             </section>
 
             {/* How It Works */}
-            <section className="py-24 px-6 bg-slate-50">
-                <div className="max-w-5xl mx-auto">
-                    <div className="text-center mb-16">
-                        <span className="inline-block px-4 py-1.5 bg-teal-50 text-teal-600 text-sm font-bold rounded-full mb-4 uppercase tracking-wider">Simple Steps</span>
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-black">
+            <section className="py-32 px-6 bg-white relative overflow-hidden">
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <motion.div 
+                        initial="hidden" 
+                        whileInView="visible" 
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={staggerContainer}
+                        className="mb-20"
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="h-px bg-slate-200 flex-1"></div>
+                            <span className="text-sm font-bold text-teal-600 uppercase tracking-widest px-4">Streamlined Process</span>
+                            <div className="h-px bg-slate-200 flex-1"></div>
+                        </div>
+                        <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black text-slate-900 text-center">
                             How It <span className="text-teal-600">Works</span>
-                        </h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        </motion.h2>
+                    </motion.div>
+
+                    <motion.div 
+                         initial="hidden"
+                         whileInView="visible"
+                         viewport={{ once: true, margin: "-100px" }}
+                         variants={staggerContainer}
+                         className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12 relative"
+                    >
+                        {/* Connecting Line for Desktop */}
+                        <div className="hidden md:block absolute top-[44px] left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-teal-100 via-teal-300 to-teal-100 z-0"></div>
+
                         {steps.map((s, i) => (
-                            <div key={i} className="flex flex-col items-center text-center">
-                                <div className="w-20 h-20 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center mb-4 shadow-sm relative group-hover:border-teal-400">
-                                    <span className="text-2xl">{s.icon}</span>
-                                    <span className="text-[10px] font-bold text-teal-600 mt-0.5">{s.step}</span>
-                                    {i < steps.length - 1 && (
-                                        <div className="hidden md:block absolute left-full top-1/2 -translate-y-1/2 w-8 h-0.5 bg-teal-200 ml-4" />
-                                    )}
+                            <motion.div variants={fadeInUp} key={i} className="relative z-10 flex flex-col items-center text-center group">
+                                <div className="w-24 h-24 rounded-3xl bg-white border border-slate-200 flex flex-col items-center justify-center mb-6 shadow-xl shadow-slate-200/50 group-hover:border-teal-400 group-hover:shadow-teal-500/20 transition-all duration-300 group-hover:-translate-y-2 group-hover:bg-teal-50">
+                                    <s.icon className="w-8 h-8 text-slate-700 group-hover:text-teal-600 transition-colors mb-1" />
+                                    <span className="text-xs font-black text-teal-600 bg-teal-100/50 px-2 py-0.5 rounded-full mt-1.5">{s.step}</span>
                                 </div>
-                                <h3 className="font-extrabold text-black mb-2">{s.title}</h3>
-                                <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
-                            </div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-3">{s.title}</h3>
+                                <p className="text-slate-500 font-medium leading-relaxed">{s.desc}</p>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
             {/* CTA */}
-            <section className="py-20 px-6 bg-white">
-                <div className="max-w-3xl mx-auto text-center">
-                    <div className="bg-teal-600 rounded-3xl p-12 shadow-2xl shadow-teal-600/20">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to Get Started?</h2>
-                        <p className="text-teal-50 font-medium mb-8 opacity-80">Join 15,000+ patients who trust Nurse @ Home for premium healthcare at home.</p>
+            <section className="py-24 px-6 bg-slate-50">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.6 }}
+                    className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] overflow-hidden relative shadow-2xl"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900"></div>
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                    <div className="absolute -top-64 -right-64 w-[500px] h-[500px] bg-teal-500/30 rounded-full blur-[100px]"></div>
+                    
+                    <div className="relative z-10 px-8 py-20 md:p-24 text-center flex flex-col items-center">
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
+                            Ready to Transform <br/> Your Healthcare?
+                        </h2>
+                        <p className="text-teal-100/80 text-lg md:text-xl font-medium mb-12 max-w-2xl">
+                            Join over 15,000 satisfied patients who have elevated their home healthcare experience with our platform.
+                        </p>
                         <button
                             onClick={() => navigate('/login/patient')}
-                            className="group px-10 py-4 bg-white text-teal-600 font-bold text-lg rounded-2xl shadow-xl hover:bg-teal-50 transition-all hover:-translate-y-1 inline-flex items-center gap-3"
+                            className="group px-10 py-5 bg-white text-slate-900 font-black text-lg rounded-2xl shadow-xl hover:bg-teal-50 transition-all hover:-translate-y-1 hover:shadow-teal-500/20 inline-flex items-center gap-3"
                         >
-                            <span>Login as Patient</span>
-                            <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            <span>Enter Patient Portal</span>
+                            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 group-hover:text-teal-600 transition-all" />
                         </button>
                     </div>
-                </div>
+                </motion.div>
             </section>
-
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-            `}</style>
         </div>
     );
 };

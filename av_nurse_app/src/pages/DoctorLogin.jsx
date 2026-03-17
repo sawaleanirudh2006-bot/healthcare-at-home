@@ -11,7 +11,7 @@ const DOCTOR_FEATURES = [
 ];
 
 const clearUserSession = () => {
-    ['userRole', 'userData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
+    ['userRole', 'userData', 'patientData', 'nurseData', 'doctorData', 'adminData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
 };
 
 export default function DoctorLogin() {
@@ -31,12 +31,13 @@ export default function DoctorLogin() {
         clearUserSession();
         setLoading(true);
         try {
-            await login(email, password);
-
-            localStorage.setItem('userRole', 'Doctor');
-            localStorage.setItem('userData', JSON.stringify({ role: 'Doctor', email, name: 'Dr. User' }));
+            const r = await login(email, password);
 
             const { data: { session } } = await supabase.auth.getSession();
+            const doctorName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || 'Doctor';
+
+            localStorage.setItem('userRole', 'Doctor');
+            localStorage.setItem('doctorData', JSON.stringify({ role: 'Doctor', email, name: doctorName }));
 
             if (session?.user) {
                 const { data: profile, error: dbError } = await supabase
@@ -103,7 +104,7 @@ export default function DoctorLogin() {
         }
         // Always proceed
         localStorage.setItem('userRole', 'Doctor');
-        localStorage.setItem('userData', JSON.stringify({ role: 'Doctor', email, name: fullName }));
+        localStorage.setItem('doctorData', JSON.stringify({ role: 'Doctor', email, name: fullName }));
         setLoading(false);
         navigate('/doctor/verify');
     };

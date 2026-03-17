@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const TreatmentPackages = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [packages] = useState(() => {
         // Load packages from localStorage
         const defaultPackages = [
@@ -86,6 +88,13 @@ const TreatmentPackages = () => {
     });
 
     const handleBookPackage = (pkg) => {
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/treatment-packages' }
+            });
+            return;
+        }
+
         navigate('/schedule-datetime', {
             state: {
                 serviceType: pkg.name,

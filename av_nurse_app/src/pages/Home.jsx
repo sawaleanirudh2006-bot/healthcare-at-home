@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
 // All searchable items in the app
@@ -21,26 +21,142 @@ const ALL_ITEMS = [
     { label: 'Membership Plans', keywords: ['membership', 'plan', 'subscribe', 'premium'], route: '/membership-plans', icon: 'workspace_premium', color: 'bg-amber-50 text-amber-600' },
 ];
 
+const OfferCard = ({ offer }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        if (!offer.end_date) return;
+
+        let target = new Date(offer.end_date).getTime();
+        // If the date is just YYYY-MM-DD, make it end at 23:59:59 of that day local time
+        if (offer.end_date.length === 10) {
+            const d = new Date(offer.end_date);
+            d.setHours(23, 59, 59, 999);
+            target = d.getTime();
+        }
+
+        const tick = () => {
+            const now = new Date().getTime();
+            const diff = target - now;
+
+            if (diff <= 0) {
+                setTimeLeft('Expired');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if (days > 0) {
+                setTimeLeft(`Ends in ${days}d ${hours}h`);
+            } else {
+                setTimeLeft(`Ends in ${hours}h ${minutes}m ${seconds}s`);
+            }
+        };
+
+        tick();
+        const timer = setInterval(tick, 1000);
+        return () => clearInterval(timer);
+    }, [offer.end_date]);
+
+    return (
+        <div className="shrink-0 w-[280px] bg-gradient-to-br from-rose-500 to-orange-500 rounded-3xl p-5 text-white shadow-md relative overflow-hidden">
+            <div className="relative z-10">
+                <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full border border-white/30 truncate max-w-[130px]" title={offer.occasion?.replace(/_/g, ' ')?.toUpperCase() || 'SPECIAL OFFER'}>
+                        {offer.occasion?.replace(/_/g, ' ')?.toUpperCase() || 'SPECIAL OFFER'}
+                    </span>
+                    {timeLeft && timeLeft !== 'Expired' && (
+                        <span className="text-[10px] font-bold bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px] animate-pulse">timer</span>
+                            {timeLeft}
+                        </span>
+                    )}
+                </div>
+
+                <h4 className="text-base font-extrabold mt-2 leading-tight">{offer.title}</h4>
+                {offer.description && <p className="text-xs text-white/80 mt-1 line-clamp-2">{offer.description}</p>}
+                <div className="mt-3 inline-flex items-center gap-2 bg-white text-rose-600 px-3 py-1.5 rounded-xl text-sm font-black shadow-md">
+                    🎁 {offer.discount_type === 'percentage' ? `${offer.discount_value}% OFF` : `₹${offer.discount_value} OFF`}
+                </div>
+            </div>
+            <span className="absolute -right-4 -bottom-4 text-[80px] opacity-10">🏷️</span>
+        </div>
+    );
+};
+
 const Home = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [query, setQuery] = useState('');
+    const [isGuest, setIsGuest] = useState(false);
+    const [activeOffers, setActiveOffers] = useState([]);
+    const [offerSlide, setOfferSlide] = useState(0);
+
+    // Detect if user is logged in
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('userRole');
+            if (!session && !token && role !== 'Patient') {
+                setIsGuest(true);
+            } else {
+                setIsGuest(false);
+            }
+        };
+        checkAuth();
+        // Load active offers from localStorage (set by admin)
+        const offers = localStorage.getItem('active_offers');
+        if (offers) {
+            try { setActiveOffers(JSON.parse(offers)); } catch (_) { }
+        }
+    }, []);
+
+    // Guest-aware navigation: redirect to login for booking actions
+    const bookingNav = (path) => {
+        if (isGuest) {
+            navigate('/login/patient', {
+                state: {
+                    returnTo: path,
+                    message: 'Please create an account to book your service.',
+                    tab: 'signup'
+                }
+            });
+        } else {
+            navigate(path);
+        }
+    };
 
     const [profileData] = useState(() => {
         // Priority: userProfile → userData (set during signup/login) → Supabase session (async, handled below)
         const stored = localStorage.getItem('userProfile');
         if (stored) return JSON.parse(stored);
 
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-            const u = JSON.parse(userData);
-            return {
-                name: u.name || u.full_name || 'Patient',
-                phone: u.phone || '',
-                avatar: u.avatar || null,
-            };
+        let authName = 'Patient';
+        let authEmail = null;
+        let authPhone = null;
+
+        const pData = localStorage.getItem('patientData');
+        if (pData) {
+            try {
+                const u = JSON.parse(pData);
+                authName = u.name || u.full_name || 'Guest User';
+                authEmail = u.email || null;
+                authPhone = u.phone || null;
+            } catch (e) {
+                console.error("Failed to parse patientData from localStorage", e);
+            }
         }
 
-        return { name: 'Patient', phone: '', avatar: null };
+        return {
+            name: authName,
+            phone: authPhone || '',
+            avatar: null, // Assuming avatar is not in patientData or handled elsewhere
+            email: authEmail,
+        };
     });
 
     const [upcomingService, setUpcomingService] = useState(null);
@@ -51,7 +167,7 @@ const Home = () => {
         try {
             // Use Supabase session OR user_id from localStorage (JWT login)
             const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
             const uid = session?.user?.id || localUser?.user_id || localUser?.id;
             if (!uid) return;
 
@@ -98,7 +214,7 @@ const Home = () => {
         // Realtime: re-fetch immediately when any of the user's bookings change
         (async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            const localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            const localUser = JSON.parse(localStorage.getItem('patientData') || '{}');
             const uid = session?.user?.id || localUser?.user_id || localUser?.id;
             if (!uid) return;
 
@@ -136,27 +252,36 @@ const Home = () => {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div
-                            onClick={() => navigate('/profile')}
+                            onClick={() => navigate(isGuest ? '/login/patient' : '/profile')}
                             className="h-12 w-12 rounded-full border-2 border-primary-teal/20 p-0.5 cursor-pointer active:scale-95 transition-all shadow-sm"
                         >
                             <img
                                 alt="User"
                                 className="h-full w-full rounded-full object-cover bg-white"
-                                src={profileData.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA"}
+                                src={isGuest ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA' : (profileData.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh5GT-z5R38SjS9_OLHXXHnj9n0WRGrX9uqty9UxMyYfeQ-AR5aIMRTa3dqAqvFlnSYNjVBuXwwf8PkOmfpun-6t7dPZ_v5hCJ96a0vES4FLGb8N062dnXXoQlHdgKcRkhz4pWDF_-8SyKgx_vr2JTk06ggjHlRQJKnAB-3_CtV5XH5Lir25bJHgGfCrABc9XTCQFBE5yq7jn5xkDeXb03i68jSL8l64iAELwTQ8yw-YKnJbxWnRfR9jL5F0e569cldjsfySwDuA')}
                             />
                         </div>
-                        <div onClick={() => navigate('/profile')} className="cursor-pointer">
+                        <div onClick={() => navigate(isGuest ? '/login/patient' : '/profile')} className="cursor-pointer">
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Namaste,</p>
-                            <h1 className="text-xl font-extrabold text-black">{profileData.name}</h1>
+                            <h1 className="text-xl font-extrabold text-black">{isGuest ? 'Welcome!' : profileData.name}</h1>
                         </div>
                     </div>
-                    <button
-                        onClick={() => navigate('/notifications')}
-                        className="flex size-11 items-center justify-center rounded-2xl bg-surface/50 text-text-muted border border-border-subtle relative hover:bg-background active:scale-95 transition-all"
-                    >
-                        <span className="material-symbols-outlined text-[24px]">notifications</span>
-                        <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
-                    </button>
+                    {isGuest ? (
+                        <button
+                            onClick={() => navigate('/login/patient')}
+                            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-bold rounded-xl hover:bg-teal-700 transition-all active:scale-95 shadow-sm"
+                        >
+                            Sign In
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => navigate('/notifications')}
+                            className="flex size-11 items-center justify-center rounded-2xl bg-surface/50 text-text-muted border border-border-subtle relative hover:bg-background active:scale-95 transition-all"
+                        >
+                            <span className="material-symbols-outlined text-[24px]">notifications</span>
+                            <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-accent-red animate-pulse"></span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Search bar */}
@@ -215,6 +340,44 @@ const Home = () => {
             {/* Main content — hidden when search is active */}
             {!showSearchResults && (
                 <main className="px-6 py-6 space-y-8">
+
+                    {/* Guest Banner */}
+                    {isGuest && (
+                        <section>
+                            <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-3xl p-5 text-white flex items-center justify-between gap-4 shadow-lg">
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Welcome to NurseHome</p>
+                                    <h3 className="text-base font-extrabold">Sign in to book services & track orders</h3>
+                                    <p className="text-teal-50 text-xs mt-1 opacity-80">Browse all services freely. Sign in only when you're ready to book.</p>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/login/patient')}
+                                    className="shrink-0 px-4 py-2.5 bg-white text-teal-700 text-sm font-extrabold rounded-2xl hover:bg-teal-50 transition-colors shadow-md"
+                                >
+                                    Sign In
+                                </button>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Active Offers Banners (Tata 1mg style) */}
+                    {activeOffers.length > 0 && (
+                        <section>
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-text-muted">🎁 Offers & Deals</h3>
+                                <div className="flex gap-1">
+                                    {activeOffers.map((_, i) => (
+                                        <button key={i} onClick={() => setOfferSlide(i)} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === offerSlide % activeOffers.length ? 'bg-teal-600' : 'bg-slate-300'}`} />
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto flex gap-3 pb-1 no-scrollbar">
+                                {activeOffers.map((offer, i) => (
+                                    <OfferCard key={offer.id || i} offer={offer} />
+                                ))}
+                            </div>
+                        </section>
+                    )}
                     {/* Doctor Consultation Banner */}
                     <section>
                         <div
@@ -243,7 +406,7 @@ const Home = () => {
                         <h3 className="text-[13px] font-bold uppercase tracking-widest text-text-muted mb-4">Quick Actions</h3>
                         <div className="grid grid-cols-4 gap-3 sm:gap-4">
                             <button
-                                onClick={() => navigate('/nursing-services')}
+                                onClick={() => bookingNav('/nursing-services')}
                                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
                             >
                                 <div className="flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors">
@@ -439,7 +602,7 @@ const Home = () => {
                                 <p className="text-sm font-bold text-text-muted mt-3">No Upcoming Services</p>
                                 <p className="text-xs font-medium text-text-muted mt-1">Book a service to get started</p>
                                 <button
-                                    onClick={() => navigate('/nursing-services')}
+                                    onClick={() => bookingNav('/nursing-services')}
                                     className="mt-4 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 active:scale-95 transition-all"
                                 >
                                     Book Now

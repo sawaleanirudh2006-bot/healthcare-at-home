@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -11,15 +11,19 @@ const FEATURES = [
 ];
 
 const clearUserSession = () => {
-    ['userRole', 'userData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
+    ['userRole', 'userData', 'patientData', 'nurseData', 'doctorData', 'adminData', 'userProfile', 'profilePhoto', 'loyaltyPoints', 'loyaltyReward', 'token'].forEach(k => localStorage.removeItem(k));
 };
 
 export default function PatientLogin() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
+    const returnTo = location.state?.returnTo || '/home';
+    const returnState = location.state?.returnState;
 
     // ── Tab: 'signin' | 'signup'
-    const [tab, setTab] = useState('signin');
+    const [tab, setTab] = useState(location.state?.tab || 'signin');
+    const message = location.state?.message || '';
 
     // ── Sign-in state
     const [method, setMethod] = useState('mobile');
@@ -56,15 +60,15 @@ export default function PatientLogin() {
         try {
             if (method === 'email') {
                 const r = await login(email, password);
-                if (r?.success) { navigate('/home'); return; }
+                if (r?.success) { navigate(returnTo, { state: returnState }); return; }
                 setError(r?.message || 'Sign in failed.');
             } else {
                 if (step === 'input') {
                     setStep('otp'); setTimer(45); setLoading(false); return;
                 }
                 localStorage.setItem('userRole', 'Patient');
-                localStorage.setItem('userData', JSON.stringify({ role: 'Patient', phone: mobile, name: 'Patient User' }));
-                navigate('/home');
+                localStorage.setItem('patientData', JSON.stringify({ role: 'Patient', phone: mobile, name: r.user?.user_metadata?.full_name || r.user?.user_metadata?.name || 'Patient' }));
+                navigate(returnTo, { state: returnState });
             }
         } catch { /* ignore */ }
         setLoading(false);
@@ -121,20 +125,21 @@ export default function PatientLogin() {
 
             // Store in localStorage for session
             localStorage.setItem('userRole', 'Patient');
-            localStorage.setItem('userData', JSON.stringify({
-                role: 'Patient', name: full_name, email: semail, phone,
+            localStorage.setItem('patientData', JSON.stringify({
+                role: 'Patient',
+                email: semail,
+                name: full_name
             }));
-
             // If Supabase returned a session (email confirmation OFF) → auto sign-in
             if (authData?.session) {
                 localStorage.setItem('token', authData.session.access_token);
-                navigate('/home'); return;
+                navigate(returnTo, { state: returnState }); return;
             }
 
             // Email confirmation required — try manual sign-in anyway
             try {
                 const r = await login(semail, spass);
-                if (r?.success) { navigate('/home'); return; }
+                if (r?.success) { navigate(returnTo, { state: returnState }); return; }
             } catch (_) { /* ignore */ }
 
             // Show success and tell them to confirm email if needed
@@ -174,7 +179,7 @@ export default function PatientLogin() {
                                 {tab === 'signup' ? 'Create account' : 'Welcome back'}
                             </h2>
                             <p className="text-slate-500 text-sm font-medium">
-                                {tab === 'signup' ? 'Join Nurse @ Home as a patient' : 'Sign in to your patient account'}
+                                {tab === 'signup' ? 'Join Healnest as a patient' : 'Sign in to your patient account'}
                             </p>
                         </div>
 
@@ -187,6 +192,13 @@ export default function PatientLogin() {
                                 </button>
                             ))}
                         </div>
+
+                        {/* ── Redirect Message */}
+                        {message && (
+                            <div className="mb-5 flex items-center gap-2.5 p-3.5 bg-sky-50 border border-sky-200 rounded-xl text-sky-800 text-sm font-semibold">
+                                <span className="text-base">ℹ️</span> {message}
+                            </div>
+                        )}
 
                         {/* ── Error */}
                         {error && (
@@ -411,7 +423,7 @@ export default function PatientLogin() {
                 <div className="relative z-10 flex flex-col h-full p-12">
                     <div className="flex items-center gap-3 mb-auto">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">🏥</div>
-                        <span className="text-white font-extrabold text-lg tracking-tight">Nurse @ Home</span>
+                        <span className="text-white font-extrabold text-lg tracking-tight">Healnest</span>
                     </div>
                     <div className="mb-12">
                         <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6">

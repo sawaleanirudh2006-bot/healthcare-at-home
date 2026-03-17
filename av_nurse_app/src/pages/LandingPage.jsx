@@ -56,7 +56,7 @@ const LandingPage = () => {
         { name: 'Priya Sharma', role: 'Patient', text: 'The nurse arrived on time and was incredibly professional. My recovery was so much smoother at home!', avatar: 'PS', color: 'from-teal-500 to-emerald-600' },
         { name: 'Dr. Rajesh Kumar', role: 'Doctor', text: 'The platform makes it easy to review prescriptions and approve home care. Truly a game changer.', avatar: 'RK', color: 'from-sky-500 to-blue-600' },
         { name: 'Nurse Anjali', role: 'Nurse', text: 'The app keeps me organized with all patient details. Scheduling has never been this smooth.', avatar: 'AN', color: 'from-emerald-500 to-green-600' },
-        { name: 'Meera Patel', role: 'Patient', text: 'Getting a professional nurse at home for my elderly mother has been a blessing. Highly recommend!', avatar: 'MP', color: 'from-rose-500 to-pink-600' },
+        { name: 'Meera Patel', role: 'Patient', text: 'Getting a professional nurse from Healnest for my elderly mother has been a blessing. Highly recommend!', avatar: 'MP', color: 'from-rose-500 to-pink-600' },
     ];
 
     const services = [
@@ -129,7 +129,7 @@ const LandingPage = () => {
                             <span className="text-white text-xl">🏥</span>
                         </div>
                         <div>
-                            <p className="text-lg font-extrabold text-slate-900 leading-none">Nurse @ Home</p>
+                            <p className="text-lg font-extrabold text-slate-900 leading-none">Healnest</p>
                             <p className="text-[10px] text-teal-600 font-bold uppercase tracking-widest">Healthcare Platform</p>
                         </div>
                     </div>
@@ -145,7 +145,7 @@ const LandingPage = () => {
                             Sign In
                         </button>
                         <button
-                            onClick={() => navigate('/login/patient')}
+                            onClick={() => navigate('/home')}
                             className="px-5 py-2.5 text-sm font-bold text-white bg-teal-600 rounded-xl hover:bg-teal-700 shadow-lg shadow-teal-600/20 transition-all hover:-translate-y-0.5"
                         >
                             Get Started
@@ -193,7 +193,7 @@ const LandingPage = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                         <button
-                            onClick={() => navigate('/login/patient')}
+                            onClick={() => navigate('/home')}
                             className="group w-full sm:w-auto px-8 py-4 bg-teal-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-teal-600/20 hover:bg-teal-700 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                         >
                             <span>Book a Nurse Now</span>
@@ -269,7 +269,7 @@ const LandingPage = () => {
                             <div
                                 key={i}
                                 className="group p-8 rounded-3xl border border-slate-100 bg-white hover:border-teal-400 hover:shadow-2xl hover:shadow-teal-600/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                                onClick={() => navigate('/login/patient')}
+                                onClick={() => navigate('/home')}
                             >
                                 <div className="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center text-3xl mb-6 group-hover:bg-teal-600 group-hover:text-white transition-colors">
                                     {service.icon}
@@ -381,7 +381,7 @@ const LandingPage = () => {
                                 We bring hospital-quality care to your home with a team of verified, experienced healthcare professionals.
                             </p>
                             <button
-                                onClick={() => navigate('/login/patient')}
+                                onClick={() => navigate('/home')}
                                 className="px-8 py-4 bg-teal-600 text-white font-bold text-lg rounded-2xl shadow-xl shadow-teal-600/20 hover:bg-teal-700 transition-all hover:-translate-y-0.5"
                             >
                                 Start Today →
@@ -421,11 +421,11 @@ const LandingPage = () => {
                         <br />Home Healthcare?
                     </h2>
                     <p className="text-lg text-teal-50 font-medium mb-10 leading-relaxed opacity-90">
-                        Join thousands of families who trust Nurse @ Home for reliable, affordable, and professional medical care.
+                        Join thousands of families who trust Healnest for reliable, affordable, and professional medical care.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button
-                            onClick={() => navigate('/login/patient')}
+                            onClick={() => navigate('/home')}
                             className="group w-full sm:w-auto px-10 py-4 bg-white text-teal-700 font-extrabold text-lg rounded-2xl shadow-xl hover:bg-teal-50 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                         >
                             <span>🏠 Book Care Now</span>
@@ -449,7 +449,7 @@ const LandingPage = () => {
                                 <span className="text-white text-xl">🏥</span>
                             </div>
                             <div>
-                                <p className="text-lg font-extrabold text-white leading-none">Nurse @ Home</p>
+                                <p className="text-lg font-extrabold text-white leading-none">Healnest</p>
                                 <p className="text-[10px] text-teal-400 font-bold uppercase tracking-widest">Healthcare Platform</p>
                             </div>
                         </div>
@@ -470,7 +470,7 @@ const LandingPage = () => {
                         </div>
 
                         <p className="text-sm text-slate-500 font-medium">
-                            © 2026 Nurse @ Home. All rights reserved.
+                            © 2026 Healnest. All rights reserved.
                         </p>
                     </div>
                 </div>

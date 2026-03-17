@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, FlaskConical, Microscope, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const labTests = [
     {
@@ -53,12 +54,30 @@ const labTests = [
 
 export default function LabTests() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredTests = labTests.filter(test =>
         test.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         test.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const handleBook = (test) => {
+        if (!user) {
+            navigate('/login/patient', {
+                state: { returnTo: '/lab-tests' }
+            });
+            return;
+        }
+        
+        navigate('/schedule-datetime', {
+            state: {
+                serviceType: test.name,
+                price: test.price,
+                planType: 'lab-test', // No nurse needed for lab tests
+            }
+        });
+    };
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background max-w-[430px] mx-auto pb-24">
@@ -137,13 +156,7 @@ export default function LabTests() {
                                         <div className="flex items-center justify-between mt-3">
                                             <span className="text-sm font-bold text-slate-900">{test.price}</span>
                                             <button
-                                                onClick={() => navigate('/schedule-datetime', {
-                                                    state: {
-                                                        serviceType: test.name,
-                                                        price: test.price,
-                                                        planType: 'lab-test', // No nurse needed for lab tests
-                                                    }
-                                                })}
+                                                onClick={() => handleBook(test)}
                                                 className="px-4 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 active:scale-95 transition-all"
                                             >
                                                 Book

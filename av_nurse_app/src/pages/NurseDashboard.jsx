@@ -12,16 +12,16 @@ export default function NurseDashboard() {
     const [nurseProfile, setNurseProfile] = useState(null);
 
     // Nurse identity from localStorage (set at login)
-    const nurseData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const nurseData = JSON.parse(localStorage.getItem('nurseData') || '{}');
     const nurseId = nurseData?.id || nurseData?.user_id || 'nurse-1';
-    const nurseName = nurseData?.name || nurseData?.full_name || 'Nurse Sarah';
+    const nurseName = nurseData?.name || nurseData?.full_name || 'Nurse';
     const nurseInitials = nurseName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
     const handleLogout = () => {
         const confirmed = window.confirm('Are you sure you want to logout?');
         if (confirmed) {
             localStorage.removeItem('userRole');
-            localStorage.removeItem('userData');
+            localStorage.removeItem('nurseData');
             localStorage.removeItem('token');
             navigate('/role-selection');
         }

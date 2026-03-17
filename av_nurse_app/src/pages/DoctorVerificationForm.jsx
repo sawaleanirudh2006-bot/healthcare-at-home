@@ -7,13 +7,15 @@ export default function DoctorVerificationForm() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     // User data from login
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const doctorData = JSON.parse(localStorage.getItem('doctorData') || '{}');
+    const doctorId = doctorData?.id || doctorData?.user_id || `temp-doc-${Date.now()}`;
 
     const [formData, setFormData] = useState({
-        full_name: userData.name || '',
-        email: userData.email || '',
+        full_name: doctorData.name || '',
+        email: doctorData.email || '',
         phone: '',
         registration_number: '',
         qualification: '',

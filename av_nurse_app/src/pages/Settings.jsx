@@ -58,9 +58,9 @@ const Settings = () => {
             return;
         }
 
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        userData.password = passwordData.newPassword;
-        localStorage.setItem('userData', JSON.stringify(userData));
+        const patientData = JSON.parse(localStorage.getItem('patientData') || '{}');
+        patientData.password = passwordData.newPassword;
+        localStorage.setItem('patientData', JSON.stringify(patientData));
 
         alert('Password changed successfully!');
         setShowPasswordModal(false);
